@@ -1,20 +1,18 @@
 # Documento de Requerimientos de Software
 
-**SISTEMA PARA POLLERÍAS — Sistema de Gestión Web y Automatización Operativa para Pollería y Brasas (Versión 2.0)**
+<h2 align="center">SISTEMA PARA POLLERÍAS</h2>
 
-Integrantes:
-* QUISPE QUISPE, Mijail — Jefe de proyecto, Backend, DBA y UI/UX
-* ENRIQUEZ HUARHUA, Nilton — Analista, Frontend, Hardware/Red, QA y Documentación
+* **Escuela Profesional:** Ingeniería de Sistemas e Informática
+* **Curso:** Análisis y Diseño de Sistemas II
+* **Docente:** Dr. Dany Dorian Isuiza Pérez
+* **Integrantes:**
+  * ENRIQUEZ HUARHUA NILTON
+  * QUISPE QUISPE MIJAIL
+* **Fecha:** 13 de Octubre de 2026
 
-Fecha: 13/10/2026
+<p align="center"><img src="imagenes/portada_mozo_tablet.jpg" alt="Mozo mostrando una tablet en el salón de un restaurante" width="720"></p>
 
-| Dato | Detalle |
-| :--- | :--- |
-| Institución | Universidad Nacional Amazónica de Madre de Dios (UNAMAD) – E.P. Ingeniería de Sistemas e Informática |
-| Curso | Análisis y Diseño de Sistemas II |
-| Docente | Dr. Dany Dorian Isuiza Pérez |
-| Modalidad | Proyecto "Llave en Mano" (software + hardware + instalación + capacitación) |
-| Periodo del proyecto | 21/09/2026 – 24/12/2026 |
+---
 
 ## Contenido
 1. Propósito
@@ -39,6 +37,8 @@ Fecha: 13/10/2026
 
 El presente documento especifica los requerimientos del software **"SISTEMA PARA POLLERÍAS – Sistema de Gestión Web y Automatización Operativa", versión 2.0** (en adelante, *el Sistema*), que será desarrollado e implantado en la **Pollería y Brasas del Sur**, local de un solo piso con 10 mesas ubicado en Puerto Maldonado, Madre de Dios.
 
+<p align="center"><img src="imagenes/pollo_a_la_brasa.jpg" alt="Pollo a la brasa con papas fritas, ensalada y cremas" width="520"></p>
+
 Este documento cubre la **totalidad del software** de la versión 2.0, es decir, todos sus subsistemas:
 
 | Subsistema | Procesos que incluye |
@@ -57,20 +57,7 @@ Este documento cubre la **totalidad del software** de la versión 2.0, es decir,
 ### 2.1. Propósito u objetivo general
 Desarrollar e implantar un sistema web multi-dispositivo que digitalice el ciclo completo de atención de la pollería —desde que el cliente pide hasta que se cierra la caja—, eliminando las comandas de papel, acelerando el cobro con billeteras digitales y emitiendo comprobantes electrónicos, **sin detener la atención cuando falle el internet o la energía eléctrica**.
 
-### 2.2. Situación actual (línea base)
-Según la entrevista al propietario y la observación directa en hora punta (21–23/09/2026):
-
-| # | Problema detectado | Efecto medido |
-| :-: | :--- | :--- |
-| P1 | Los clientes esperan a que el mozo traiga la carta física. | ~5 minutos sin atención al sentarse. |
-| P2 | La comanda de papel se pierde, se mancha de grasa o el pollero no la ve; los gritos no se oyen por el extractor. | Retrasos de hasta 30 minutos por mesa. |
-| P3 | El mozo olvida anotar la presa (pecho o pierna) del 1/4 de pollo. | Plato devuelto y revendido como 1/8: pérdida de S/ 10.00 por plato. |
-| P4 | El cobro con Yape/Plin se verifica mirando el celular de cada cliente y la boleta es manual. | ~5 minutos por cliente y colas en caja. |
-| P5 | El cierre de caja se hace sumando vouchers y papeles a mano. | ~1 hora diaria y descuadres frecuentes. |
-| P6 | La computadora de caja se apaga con cortes de luz de segundos. | ~15 minutos sin poder cobrar. |
-| P7 | Dos mozos para 10 mesas no se dan abasto en hora punta. | Pedidos y cobros simultáneos desatendidos. |
-
-### 2.3. Beneficios para el negocio
+### 2.2. Beneficios para el negocio
 * **Cero errores de presa y de lectura:** la comanda impresa no admite caligrafía ilegible y el sistema no deja enviar un 1/4 de pollo sin presa definida.
 * **Atención inmediata:** el comensal ve la carta y pide desde su celular en segundos; los mozos se concentran en servir.
 * **Cocina sincronizada:** cada pedido llega impreso a la estación del pollero con una alarma que supera el ruido del extractor.
@@ -79,8 +66,8 @@ Según la entrevista al propietario y la observación directa en hora punta (21�
 * **Control del dinero y de los pollos:** arqueo ciego, anulaciones con PIN del administrador, inventario por presas y mermas justificadas.
 * **Continuidad:** salón, cocina y caja siguen funcionando por red local ante caídas de internet; el UPS evita apagones del equipo de caja.
 
-### 2.4. Objetivos y metas
-Los objetivos del software se alinean con el objetivo del negocio de **aumentar la rotación de mesas y reducir pérdidas**, que sustenta el beneficio anual estimado de S/ 80,000.00 del estudio de factibilidad.
+### 2.3. Objetivos y metas
+Los objetivos del software se alinean con el objetivo del negocio de **aumentar la rotación de mesas y reducir pérdidas**.
 
 | Objetivo del software | Indicador | Línea base | Meta (primer mes de operación) |
 | :--- | :--- | :---: | :---: |
@@ -92,17 +79,9 @@ Los objetivos del software se alinean con el objetivo del negocio de **aumentar 
 | Asegurar continuidad | Minutos sin poder cobrar por cortes de luz/internet | ~15 min por evento | 0 |
 | Controlar mermas | Mermas registradas con motivo y autorización | 0 % | 100 % |
 
-### 2.5. Fuera del alcance (versión 2.0)
-* Integración automática por API con PedidosYa o Rappi (sus ventas se registran manualmente en el sistema).
-* Tienda en línea pública para pedidos web de delivery (los pedidos por WhatsApp o teléfono los registra la caja).
-* Aplicación nativa (App Store / Google Play); todas las interfaces son web/PWA.
-* Contabilidad completa, planillas, compras a proveedores e inventario de insumos distintos al pollo.
-* Programa de fidelización y portal cautivo de marketing en el WiFi de clientes.
-* Integración con el terminal POS bancario (el pago con tarjeta física se registra con su número de operación).
-* Seguimiento GPS de repartidores.
-
-
 ## 3. Funcionalidades del producto
+
+<p align="center"><img src="imagenes/carta_qr_celular.jpg" alt="Comensal escaneando la carta QR desde su celular en la mesa" width="480"></p>
 
 1. **F-01 Acceso seguro y gestión de usuarios:** ingreso del personal por usuario y PIN, roles y permisos, autorización con PIN de administrador.
 2. **F-02 Administración de carta, precios y modificadores:** categorías, productos, presas, guarniciones, cremas, recargos, combos y destino de impresión configurables.
@@ -153,6 +132,8 @@ Local de un solo piso en Puerto Maldonado (clima cálido y húmedo, cortes eléc
 
 ### 5.2. Plataforma de hardware
 
+<p align="center"><img src="imagenes/terminal_caja_pos.jpg" alt="Terminal táctil de caja con ticketera" width="480"></p>
+
 | Componente | Especificación mínima | Ubicación |
 | :--- | :--- | :--- |
 | Servidor local (Edge Gateway) | Mini PC Intel N100, 16 GB RAM, SSD 512 GB, Linux (Ubuntu Server 24.04 LTS) con Docker. | Caja, conectado por cable al router y al UPS. |
@@ -178,9 +159,18 @@ Local de un solo piso en Puerto Maldonado (clima cálido y húmedo, cortes eléc
 
 ### 5.4. Arquitectura de despliegue
 
-![Arquitectura de despliegue del sistema](imagenes/arquitectura_despliegue.png)
-
-*Figura 1. Arquitectura de despliegue: dispositivos del local, servidor local (Edge), nube y servicios externos.*
+```
+   CELULARES COMENSALES ──(WiFi Clientes / Internet)──┐
+                                                       ▼
+ ┌──────────────── LOCAL (LAN – VLAN Operaciones) ────────────────┐      ┌──────── NUBE ────────┐
+ │ Tablets mozos ─┐                                                │      │ API NestJS           │
+ │ PC de caja ────┼──► SERVIDOR EDGE (API local + PostgreSQL       │◄────►│ PostgreSQL 16        │
+ │                │    + Redis + agente ESC/POS) ── UPS            │ sync │ Redis / BullMQ       │
+ │                │        │ TCP 9100            │ USB             │      └──────────┬───────────┘
+ │                │        ▼                     ▼                 │                 │
+ │                │   Ticketera pollero    Ticketera caja + gaveta │     Nubefact · Culqi/Izipay ·
+ └────────────────┴────────────────────────────────────────────────┘     ApisPeru · WhatsApp · SMTP
+```
 
 El servidor Edge es la fuente de verdad durante la operación del local; la nube recibe los datos sincronizados, atiende la carta QR cuando el comensal usa datos móviles y se comunica con los servicios externos.
 
@@ -240,6 +230,9 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   1. El mozo o cajero abre *Salón* y ve el plano con las mesas M-01 a M-10 coloreadas según su estado.
   2. Toca una mesa libre para abrirla, o una ocupada para ver su cuenta, agregar productos, transferirla o fusionarla.
   3. Cuando la cuenta se paga, la mesa pasa a *Por limpiar*; el mozo la marca como libre al terminar de limpiarla.
+
+<p align="center"><img src="imagenes/sistema_pos_restaurante.png" alt="Sistema POS para restaurantes: interfaz amigable, eficiencia, integración, analítica de ventas y seguridad" width="720"></p>
+
 * **Requerimientos funcionales:**
   * **REQ-SAL-01:** El sistema debe mostrar el plano del salón con cada mesa en uno de estos estados: **Libre** (verde), **Pedido QR por confirmar** (amarillo), **Ocupada** (rojo), **Cuenta solicitada** (azul) y **Por limpiar** (gris), indicando además el tiempo transcurrido desde que se abrió y el monto acumulado.
   * **REQ-SAL-02:** Todo cambio de estado debe reflejarse en todos los dispositivos conectados en un máximo de 2 segundos, sin recargar la página.
@@ -251,6 +244,10 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   * Mesa en edición por otro usuario: *"La mesa M-04 está siendo editada por Juan. Intente en unos segundos"*. El bloqueo se libera solo tras 60 segundos de inactividad.
   * Transferencia a una mesa ocupada: el sistema ofrece fusionar en lugar de transferir.
   * Separar mesas con ítems ya cobrados: *"No se puede separar: la cuenta tiene pagos registrados"*.
+
+![Boceto de la tablet del mozo](imagenes/boceto_tablet_mozo.png)
+
+*Figura 1. Boceto de la tablet del mozo: plano de las 10 mesas con sus estados, alertas de los comensales y acciones sobre la mesa (F-03, F-05).*
 
 ### 6.4. F-04 Carta digital y autoservicio por código QR
 * **Descripción:** Aplicación web (PWA) que el comensal abre al escanear el QR de su mesa, sin instalar nada, para ver la carta, pedir, llamar al mozo y pedir la cuenta.
@@ -275,6 +272,10 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   * Producto agotado mientras estaba en el carrito: al enviar, el sistema lo retira y avisa *"El 1/4 Pierna se agotó hace un momento. Le sugerimos 1/4 Pecho"*; el resto del pedido no se pierde.
   * Pérdida de conexión: el carrito se conserva en el celular y se reintenta el envío; el pedido nunca se registra dos veces.
   * Pedido *Por confirmar* sin atención en 3 minutos: se repite la alerta en tablets y aparece en la pantalla de caja.
+
+![Boceto de la carta digital por código QR](imagenes/boceto_carta_qr.png)
+
+*Figura 2. Boceto de la carta digital por QR: carta de la mesa, elección obligatoria de presa y pago desde el celular (F-04, F-09).*
 
 ### 6.5. F-05 Toma de pedidos móvil para mozos
 * **Descripción:** Interfaz táctil para que el mozo tome pedidos al lado de la mesa cuando el cliente prefiere la atención tradicional, y para gestionar los pedidos QR.
@@ -357,6 +358,10 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   * Pago rechazado por la pasarela: se muestra el motivo y la cuenta sigue abierta.
   * Intento de cobrar una mesa que el comensal está pagando desde su celular: *"Pago en línea en curso"* hasta que termine o expire (F-09).
 
+![Boceto del punto de venta en caja](imagenes/boceto_caja_cobro.png)
+
+*Figura 3. Boceto del punto de venta en caja: pago mixto, vuelto, boleta con DNI autocompletado y entrega del comprobante (F-08, F-10).*
+
 ### 6.9. F-09 Pago en mesa desde el celular
 * **Descripción:** Permite al comensal pagar su cuenta desde la carta QR con Yape, Plin o tarjeta mediante una pasarela autorizada, sin ir a caja.
 * **Prioridad:** Media.
@@ -410,6 +415,9 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   2. Durante el turno registra egresos menores (compras urgentes) e ingresos extraordinarios con su motivo.
   3. Al cerrar, cuenta billetes y monedas e ingresa la cantidad por denominación, sin ver el total esperado.
   4. El sistema calcula la diferencia (sobrante o faltante), cierra el turno e imprime el Reporte Z.
+
+<p align="center"><img src="imagenes/gaveta_de_dinero.jpg" alt="Gaveta de dinero abierta con billetes y monedas" width="420"></p>
+
 * **Requerimientos funcionales:**
   * **REQ-TUR-01:** El sistema no debe permitir cobros en efectivo si el cajero no tiene un turno abierto; la apertura registra el fondo inicial, el usuario y la hora.
   * **REQ-TUR-02:** El sistema debe registrar egresos e ingresos de efectivo con monto, motivo y, en egresos mayores al límite configurado (por ejemplo, S/ 50.00), PIN del administrador.
@@ -431,6 +439,9 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   3. **Delivery:** el cajero busca al cliente por teléfono (o lo registra), confirma la dirección, el pedido y con cuánto pagará; el sistema imprime la hoja de ruta con el vuelto.
   4. El pedido avanza por los estados *Pendiente → En preparación → Listo → En ruta → Entregado* (o *Entrega fallida*).
   5. Al final del turno, cada repartidor rinde el efectivo cobrado.
+
+<p align="center"><img src="imagenes/comida_para_llevar.jpg" alt="Pedido de comida para llevar con su comprobante" width="420"></p>
+
 * **Requerimientos funcionales:**
   * **REQ-DEL-01:** El sistema debe registrar pedidos para llevar con nombre del cliente y número correlativo diario, rotulados en la comanda como **PARA LLEVAR** y con la cantidad de envases y bolsas.
   * **REQ-DEL-02:** El sistema debe permitir pedidos **programados** con fecha y hora de recojo o entrega, retener su impresión y liberarlos a cocina automáticamente con la anticipación configurada (por defecto, 15 minutos).
@@ -482,6 +493,10 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
 * **Respuesta ante errores y entradas inválidas:**
   * Rango de fechas inválido (inicio posterior al fin) o mayor a 12 meses: *"Seleccione un rango válido de hasta 12 meses"*.
   * Rango sin datos: se informa *"No hay registros en el periodo seleccionado"*.
+
+![Boceto del panel de administración](imagenes/boceto_panel_admin.png)
+
+*Figura 4. Boceto del panel de administración: resumen del día, ventas por hora, presas vendidas, medios de pago y alertas de auditoría (F-13, F-14).*
 
 ### 6.15. F-15 Operación sin internet y sincronización
 * **Descripción:** Asegura que el salón, la cocina y la caja sigan trabajando cuando falla el internet, usando el servidor local, y que los datos se sincronicen con la nube sin pérdidas ni duplicados.
@@ -541,24 +556,7 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
 
 **Bocetos de pantallas**
 
-Los siguientes bocetos muestran la propuesta de diseño de las interfaces principales. Son referenciales: los colores, textos y montos son de ejemplo y se ajustarán en la fase de prototipado con el propietario.
-
-![Boceto de la carta digital por código QR](imagenes/boceto_carta_qr.png)
-
-*Figura 2. Carta digital por QR: carta de la mesa, elección obligatoria de presa y pago desde el celular (F-04, F-09).*
-
-![Boceto de la tablet del mozo](imagenes/boceto_tablet_mozo.png)
-
-*Figura 3. Tablet del mozo: plano de las 10 mesas con sus estados, alertas de los comensales y acciones sobre la mesa (F-03, F-05).*
-
-![Boceto del punto de venta en caja](imagenes/boceto_caja_cobro.png)
-
-*Figura 4. Punto de venta en caja: pago mixto, vuelto, boleta con DNI autocompletado y entrega del comprobante (F-08, F-10).*
-
-![Boceto del panel de administración](imagenes/boceto_panel_admin.png)
-
-*Figura 5. Panel de administración: resumen del día, ventas por hora, presas vendidas, medios de pago y alertas de auditoría (F-13, F-14).*
-
+Los bocetos de las pantallas principales se presentan junto a la funcionalidad que representan en la sección 6: Figura 1 (tablet del mozo, 6.3), Figura 2 (carta QR, 6.4), Figura 3 (caja, 6.8) y Figura 4 (panel de administración, 6.14). Son referenciales: los colores, textos y montos son de ejemplo y se ajustarán en la fase de prototipado con el propietario.
 
 **Estándares de interfaz gráfica y guía de estilo**
 * Idioma español; moneda con formato `S/ 1,234.50`; fecha `dd/mm/aaaa`; hora de 24 horas (zona America/Lima).
@@ -701,6 +699,8 @@ Mozo: Juan                            Cel: 987 654 321
 * Las actualizaciones se instalan fuera del horario de atención y con copia de seguridad previa.
 
 ## 11. Glosario
+
+<p align="center"><img src="imagenes/impresoras_termicas.jpg" alt="Ticketeras térmicas en una cocina de restaurante" width="420"></p>
 
 | Término | Definición |
 | :--- | :--- |
