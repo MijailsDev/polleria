@@ -13,16 +13,8 @@ Fecha: 13/10/2026
 | Institución | Universidad Nacional Amazónica de Madre de Dios (UNAMAD) – E.P. Ingeniería de Sistemas e Informática |
 | Curso | Análisis y Diseño de Sistemas II |
 | Docente | Dr. Dany Dorian Isuiza Pérez |
-| Cliente | Pollería y Brasas del Sur (Puerto Maldonado) – Propietario: Sr. Carlos Mendoza |
 | Modalidad | Proyecto "Llave en Mano" (software + hardware + instalación + capacitación) |
 | Periodo del proyecto | 21/09/2026 – 24/12/2026 |
-
-**Historial de versiones**
-
-| Versión | Fecha | Descripción |
-| :---: | :---: | :--- |
-| 1.0 | 28/09/2026 | Versión preliminar (10 funcionalidades, 25 requerimientos). |
-| 2.0 | 13/10/2026 | Reestructuración completa: 15 funcionalidades, requerimientos con identificador por módulo, criterios medibles, reglas tributarias peruanas, contingencia, alcance excluido y matriz de trazabilidad. |
 
 ## Contenido
 1. Propósito
@@ -40,8 +32,6 @@ Fecha: 13/10/2026
 9. Requerimientos no funcionales
 10. Otros requerimientos
 11. Glosario
-* Anexo A. Matriz de trazabilidad
-* Anexo B. Carta inicial de referencia
 
 ---
 
@@ -59,13 +49,6 @@ Este documento cubre la **totalidad del software** de la versión 2.0, es decir,
 | Despacho | Pedidos para llevar, pedidos programados, delivery propio y ventas por aplicaciones externas. |
 | Control y administración | Usuarios y roles, carta y precios, inventario de pollos por presas, mermas, anulaciones, reportes y auditoría. |
 | Plataforma | Operación local sin internet (servidor Edge), sincronización con la nube y respaldo. |
-
-No forman parte de este documento la compra del hardware ni el análisis económico, que se detallan en los documentos de referencia de la sección 2.6.
-
-**Convenciones del documento:**
-* Los requerimientos funcionales se identifican como `REQ-<MÓDULO>-<NN>` (por ejemplo, `REQ-CAJ-03` es el tercer requerimiento del módulo de Caja). Las reglas de negocio se identifican como `RN-NN` y los requerimientos no funcionales como `RNF-<CATEGORÍA>-<NN>`.
-* La expresión "el sistema debe" indica una obligación verificable mediante prueba.
-* **Prioridades:** **Alta** = imprescindible para la puesta en marcha del 24/12/2026; **Media** = necesaria, se construye después de las de prioridad alta dentro de la misma versión; **Baja** = deseable, puede postergarse a una versión posterior sin afectar la operación.
 
 **Público objetivo:** propietario del negocio (validación y aprobación), docente del curso (evaluación), equipo de desarrollo (diseño y programación) y responsable de QA (diseño de casos de prueba).
 
@@ -118,12 +101,6 @@ Los objetivos del software se alinean con el objetivo del negocio de **aumentar 
 * Integración con el terminal POS bancario (el pago con tarjeta física se registra con su número de operación).
 * Seguimiento GPS de repartidores.
 
-### 2.6. Documentos de referencia
-* `requerimientos/informe_tecnicas_recoleccion_datos.md` – Entrevista y observación directa.
-* `requerimientos/casos_de_uso_y_escenarios_de_pedidos.md` – 16 escenarios reales de pedidos.
-* `requerimientos/documento_de_requerimientos_v3.md` – Arquitectura, stack tecnológico y topología del local.
-* `requerimientos/plan_de_inversion_y_equipamiento.md` – Hardware (CapEx ~S/ 5,100) y servicios (OpEx ~S/ 294/mes).
-* `requerimientos/estudio_de_factibilidad_y_gantt.md` – Costos, VAN, TIR y cronograma.
 
 ## 3. Funcionalidades del producto
 
@@ -220,7 +197,6 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
 * El local cuenta con internet de fibra óptica y una línea 4G de contingencia.
 * El propietario contrata y mantiene vigentes: proveedor de facturación electrónica (PSE/OSE, p. ej. Nubefact), pasarela de pagos (Culqi o Izipay), API de consulta DNI/RUC (ApisPeru), cuenta de WhatsApp Business Cloud API, dominio y VPS.
 * El negocio cuenta con RUC activo y habido, y con series de comprobantes electrónicos autorizadas por SUNAT.
-* La carta y los precios iniciales son los de la entrevista (Anexo B) y podrán cambiarse sin programación.
 * El personal recibirá la capacitación programada en la fase 6 del cronograma.
 
 ## 6. Requerimientos funcionales
@@ -703,7 +679,7 @@ Mozo: Juan                            Cel: 987 654 321
 
 ### 10.5. Implantación, capacitación y documentación
 * Instalación del hardware, la red y el sistema en el local, y colocación de los QR en las 10 mesas (fase 6 del cronograma).
-* Carga inicial de la carta del Anexo B, de las mesas, de los usuarios y de las series de comprobantes.
+* Carga inicial de la carta, de las mesas, de los usuarios y de las series de comprobantes.
 * Capacitación por rol: mozos (toma de pedidos y alertas), pollero (lectura de comandas), cajera (cobros, comprobantes y arqueo) y dueño (administración y reportes).
 * Entregables: manual de usuario por rol (PDF), manual técnico (instalación, respaldo y restauración) y acta de conformidad firmada por el propietario.
 
@@ -753,65 +729,3 @@ Mozo: Juan                            Cel: 987 654 321
 | **VLAN** | Red virtual que separa el tráfico del personal del tráfico de los clientes en el mismo equipo de red. |
 | **Webhook** | Notificación automática que un servicio externo envía al sistema cuando ocurre un evento (por ejemplo, un pago aprobado). |
 | **Yape / Plin** | Billeteras digitales de uso masivo en el Perú para pagos inmediatos desde el celular. |
-
----
-
-## Anexo A. Matriz de trazabilidad
-
-**A.1. Problemas del negocio → requerimientos → verificación**
-
-| Problema (sección 2.2) | Funcionalidad y requerimientos | Criterio de verificación | Tareas del cronograma |
-| :--- | :--- | :--- | :--- |
-| P1 – Espera de la carta | F-04: REQ-QR-01 a 05 | RNF-REN-01, RNF-USA-03 | 3.8, 3.12 |
-| P2 – Comandas perdidas y no escuchadas | F-06: REQ-COC-01 a 05 | RNF-REN-02, RNF-USA-04 | 4.1, 4.2, 5.4 |
-| P3 – Presa equivocada | F-04/F-05: REQ-QR-04, REQ-MOZ-02; RN-01 | RNF-INT-01 | 3.9, 3.10 |
-| P4 – Cobro lento con Yape y boleta manual | F-08, F-09, F-10 | RNF-REN-04 | 4.5 a 4.10 |
-| P5 – Cierre de caja de una hora | F-11: REQ-TUR-01 a 06 | Meta de la sección 2.4 | 4.3, 4.11 |
-| P6 – Apagón de la PC de caja | F-15: REQ-CON-05, REQ-CON-06 | RNF-DIS-03 | 5.6, 5.7 |
-| P7 – Mozos sobrecargados | F-03, F-04, F-05, F-09 | RNF-REN-03 | 3.6, 3.7, 3.11 |
-
-**A.2. Escenarios reales de pedidos → requerimientos**
-*(Escenarios de `casos_de_uso_y_escenarios_de_pedidos.md`)*
-
-| Escenario | Requerimientos que lo cubren |
-| :--- | :--- |
-| 1.1 Menú de 1/8 de pollo | REQ-CAT-04, REQ-INV-02 |
-| 1.2 1/4 de pollo: pecho o pierna | REQ-QR-04, REQ-AGO-03, REQ-INV-02 |
-| 1.3 1/2 pollo estándar, 2 pechos o 2 piernas | REQ-CAT-02, REQ-INV-02, RN-15 |
-| 1.4 Pollo entero cortado en 4 u 8 presas | REQ-CAT-02, REQ-COC-02 |
-| 1.5 Mostrito | REQ-CAT-03 |
-| 2.1 Cambio de ensalada por papas | REQ-QR-05 |
-| 2.2 Papas bien doradas o sin sal | REQ-QR-05, REQ-COC-02 |
-| 2.3 Cremas, ají y potes extra para llevar | REQ-QR-05, REQ-CAT-06 |
-| 2.4 Pollo sin pellejo | REQ-QR-05, REQ-MOZ-01 |
-| 3.1 Consumo progresivo en mesa | REQ-MOZ-03 |
-| 3.2 Para llevar con nombre | REQ-DEL-01 |
-| 3.3 Delivery que paga con S/ 100 | REQ-DEL-04 |
-| 3.4 Pedido programado para recoger | REQ-DEL-02 |
-| 3.5 Pedido de PedidosYa/Rappi | REQ-DEL-06 |
-| 4.1 Cuenta dividida en 4 boletas | REQ-CAJ-05, REQ-FAC-01 |
-| 4.2 Factura con RUC | REQ-FAC-02 |
-| 4.3 Pago mixto efectivo + Yape | REQ-CAJ-04 |
-| 4.4 Cambio y fusión de mesas | REQ-SAL-03, REQ-SAL-04 |
-| 5.1 Cambio de presa a último segundo | REQ-MOZ-05, REQ-COC-04 |
-| 5.2 Plato devuelto (crudo o quemado) | REQ-INV-05 |
-| 5.3 Fuga de comensal | REQ-INV-06 |
-| 5.4 Delivery fallido | REQ-DEL-08 |
-
-## Anexo B. Carta inicial de referencia
-Precios con impuestos incluidos, según la entrevista al propietario (Puerto Maldonado, setiembre de 2026). Podrán modificarse desde el panel de administración (RN-09).
-
-| Producto | Precio | Incluye / modificadores | Consumo de pollo |
-| :--- | :---: | :--- | :---: |
-| 1/8 Pollo a la brasa | S/ 14.00 | Papas, ensalada, cremas. Presa: pecho o pierna. | 0.125 |
-| 1/4 Pollo a la brasa | S/ 24.00 | Papas, ensalada, cremas. **Presa obligatoria:** pecho con ala o pierna con encuentro. | 0.250 |
-| 1/2 Pollo a la brasa | S/ 45.00 | Para 2 personas. 1 pecho + 1 pierna; 2 pechos (+S/ 2.00); 2 piernas. | 0.500 |
-| 1 Pollo entero a la brasa | S/ 80.00 | Papas familiares, ensalada grande, cremas. Corte en 4 u 8 presas. | 1.000 |
-| Mostrito 1/8 | S/ 18.00 | 1/8 de pollo + arroz chaufa + papas. Presa: pecho o pierna. | 0.125 |
-| Mostrito 1/4 | S/ 28.00 | 1/4 de pollo + arroz chaufa + papas. Presa obligatoria. | 0.250 |
-| Porción de papas fritas | S/ 12.00 | — | — |
-| Porción de ensalada | S/ 8.00 | Clásica o cocida. | — |
-| Gaseosa personal 500 ml | S/ 4.50 | Sabor a elegir. | — |
-| Gaseosa 1.5 L | S/ 12.00 | Sabor a elegir. | — |
-| Jarra de chicha morada 1 L | S/ 12.00 | — | — |
-| Pote de ají extra (solo para llevar y delivery) | S/ 1.50 | — | — |
