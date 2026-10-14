@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="840" viewBox="0 0 1440 840">
+  <defs>
+    <style>
+      text { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      .h1 { font-size: 26px; font-weight: 700; fill: #0f172a; }
+      .h2 { font-size: 14px; fill: #475569; }
+      .zone { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; }
+      .t { font-size: 14.5px; font-weight: 600; fill: #0f172a; }
+      .s { font-size: 12px; fill: #475569; }
+      .pill { font-size: 13px; font-weight: 600; fill: #312e81; }
+      .lbl { font-size: 11.5px; font-weight: 600; fill: #334155; }
+      .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; fill: #64748b; }
+    </style>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.10"/>
+    </filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="aO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d97706"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
+  </defs>
+
+  <rect width="1440" height="840" fill="#ffffff"/>
+
+  <text x="40" y="50" class="h1">Arquitectura de despliegue</text>
+  <text x="40" y="76" class="h2">Sistema para Pollerías · el servidor local mantiene la atención sin internet y se sincroniza con la nube</text>
+
+  <!-- ===================== LOCAL ===================== -->
+  <rect x="30" y="100" width="880" height="710" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="52" y="130" class="zone" fill="#334155">LOCAL DE LA POLLERÍA · RED LAN (UN PISO, 10 MESAS)</text>
+
+  <!-- VLAN Clientes -->
+  <rect x="48" y="146" width="280" height="160" rx="14" fill="#fff7ed" stroke="#fdba74" stroke-dasharray="6 5"/>
+  <text x="64" y="170" class="tag" fill="#c2410c" style="fill:#c2410c">VLAN CLIENTES · WIFI ABIERTO</text>
+  <g transform="translate(64,184)">
+    <rect width="248" height="106" rx="12" fill="#fff" stroke="#fdba74" filter="url(#sh)"/>
+    <rect x="12" y="33" width="40" height="40" rx="10" fill="#ffedd5"/>
+    <rect x="24" y="40" width="16" height="26" rx="3" fill="none" stroke="#c2410c" stroke-width="2"/>
+    <circle cx="32" cy="61" r="1.6" fill="#c2410c"/>
+    <text x="64" y="34" class="t">Celulares de comensales</text>
+    <text x="64" y="56" class="s">Carta QR (PWA) y pago en mesa</text>
+    <text x="64" y="74" class="s">QR en mesas M-01 a M-10</text>
+    <text x="64" y="92" class="s">WiFi del local o datos móviles</text>
+  </g>
+
+  <!-- VLAN Operaciones -->
+  <rect x="48" y="326" width="280" height="300" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-dasharray="6 5"/>
+  <text x="64" y="350" class="tag" style="fill:#1d4ed8">VLAN OPERACIONES · WIFI OCULTO + CABLE</text>
+  <g transform="translate(64,364)">
+    <rect width="248" height="96" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/>
+    <rect x="12" y="28" width="40" height="40" rx="10" fill="#dbeafe"/>
+    <rect x="19" y="37" width="26" height="22" rx="3" fill="none" stroke="#1d4ed8" stroke-width="2"/>
+    <circle cx="42" cy="48" r="1.4" fill="#1d4ed8"/>
+    <text x="64" y="36" class="t">Tablets de mozos</text>
+    <text x="64" y="58" class="s">Android 8.7" · funda anticaídas</text>
+    <text x="64" y="76" class="s">Plano de mesas y pedidos</text>
+  </g>
+  <g transform="translate(64,480)">
+    <rect width="248" height="128" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/>
+    <rect x="12" y="44" width="40" height="40" rx="10" fill="#dbeafe"/>
+    <rect x="19" y="52" width="26" height="18" rx="2" fill="none" stroke="#1d4ed8" stroke-width="2"/>
+    <path d="M32 70 v6 M26 77 h12" stroke="#1d4ed8" stroke-width="2"/>
+    <text x="64" y="38" class="t">Terminal de caja</text>
+    <text x="64" y="60" class="s">All-in-One táctil 15.6"</text>
+    <text x="64" y="78" class="s">Cobros, comprobantes,</text>
+    <text x="64" y="96" class="s">turnos y arqueo ciego</text>
+  </g>
+
+  <!-- Router -->
+  <g transform="translate(390,146)">
+    <rect width="250" height="106" rx="12" fill="#fff" stroke="#94a3b8" filter="url(#sh)"/>
+    <rect x="12" y="33" width="40" height="40" rx="10" fill="#e2e8f0"/>
+    <rect x="18" y="52" width="28" height="12" rx="3" fill="none" stroke="#334155" stroke-width="2"/>
+    <path d="M24 52 l-3 -10 M40 52 l3 -10" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="25" cy="58" r="1.4" fill="#334155"/><circle cx="31" cy="58" r="1.4" fill="#334155"/>
+    <text x="64" y="34" class="t">Router Dual-WAN + AP</text>
+    <text x="64" y="56" class="s">WiFi 6 · separa las 2 VLAN</text>
+    <text x="64" y="74" class="s">Fibra óptica + 4G de respaldo</text>
+    <text x="64" y="92" class="s">DNS local para la carta QR</text>
+  </g>
+
+  <!-- Edge server -->
+  <g transform="translate(390,316)" filter="url(#sh)">
+    <rect width="250" height="332" rx="14" fill="#ffffff" stroke="#4338ca" stroke-width="1.5"/>
+    <path d="M0 14 a14 14 0 0 1 14 -14 h222 a14 14 0 0 1 14 14 v58 h-250 z" fill="#312e81"/>
+    <text x="20" y="32" style="font-size:15.5px;font-weight:700;fill:#ffffff">Servidor local (Edge)</text>
+    <text x="20" y="54" style="font-size:12px;fill:#c7d2fe">Mini PC N100 · 16 GB · SSD 512 GB</text>
+  </g>
+  <g transform="translate(406,404)">
+    <rect width="218" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="109" y="22" text-anchor="middle" class="pill">API NestJS + WebSockets</text>
+    <text x="109" y="39" text-anchor="middle" class="s">Pedidos, mesas, caja</text>
+  </g>
+  <g transform="translate(406,462)">
+    <rect width="218" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="109" y="22" text-anchor="middle" class="pill">PostgreSQL 16 (local)</text>
+    <text x="109" y="39" text-anchor="middle" class="s">Fuente de verdad del local</text>
+  </g>
+  <g transform="translate(406,520)">
+    <rect width="218" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="109" y="22" text-anchor="middle" class="pill">Redis + BullMQ</text>
+    <text x="109" y="39" text-anchor="middle" class="s">Colas de impresión y envío</text>
+  </g>
+  <g transform="translate(406,578)">
+    <rect width="218" height="50" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="109" y="22" text-anchor="middle" class="pill">Agente de impresión</text>
+    <text x="109" y="39" text-anchor="middle" class="s">Comandos ESC/POS</text>
+  </g>
+
+  <!-- UPS -->
+  <g transform="translate(390,700)">
+    <rect width="250" height="92" rx="12" fill="#fff" stroke="#f59e0b" filter="url(#sh)"/>
+    <rect x="12" y="26" width="40" height="40" rx="10" fill="#fef3c7"/>
+    <path d="M35 32 L25 49 h8 l-4 12 L41 43 h-8 z" fill="#b45309"/>
+    <text x="64" y="32" class="t">UPS 1200 VA</text>
+    <text x="64" y="54" class="s">30–45 min de respaldo</text>
+    <text x="64" y="72" class="s">Edge, router, AP y caja</text>
+  </g>
+
+  <!-- Printers -->
+  <text x="690" y="306" class="tag">ESTACIÓN DEL POLLERO</text>
+  <g transform="translate(690,316)">
+    <rect width="200" height="128" rx="12" fill="#fff" stroke="#fb923c" filter="url(#sh)"/>
+    <rect x="12" y="16" width="40" height="40" rx="10" fill="#ffedd5"/>
+    <rect x="21" y="23" width="22" height="9" fill="none" stroke="#c2410c" stroke-width="2"/>
+    <rect x="17" y="32" width="30" height="14" rx="3" fill="none" stroke="#c2410c" stroke-width="2"/>
+    <rect x="22" y="44" width="20" height="8" fill="#fff" stroke="#c2410c" stroke-width="2"/>
+    <text x="64" y="32" class="t">Ticketera del</text>
+    <text x="64" y="50" class="t">pollero</text>
+    <text x="16" y="80" class="s">Ethernet · TCP 9100 · 80 mm</text>
+    <text x="16" y="98" class="s">Buzzer 85 dB en cada comanda</text>
+    <text x="16" y="116" class="s">Gabinete contra grasa y calor</text>
+  </g>
+  <text x="690" y="486" class="tag">MOSTRADOR DE CAJA</text>
+  <g transform="translate(690,496)">
+    <rect width="200" height="98" rx="12" fill="#fff" stroke="#fb923c" filter="url(#sh)"/>
+    <rect x="12" y="16" width="40" height="40" rx="10" fill="#ffedd5"/>
+    <rect x="21" y="23" width="22" height="9" fill="none" stroke="#c2410c" stroke-width="2"/>
+    <rect x="17" y="32" width="30" height="14" rx="3" fill="none" stroke="#c2410c" stroke-width="2"/>
+    <rect x="22" y="44" width="20" height="8" fill="#fff" stroke="#c2410c" stroke-width="2"/>
+    <text x="64" y="32" class="t">Ticketera de</text>
+    <text x="64" y="50" class="t">caja</text>
+    <text x="16" y="80" class="s">USB · comprobantes con QR</text>
+  </g>
+  <g transform="translate(690,650)">
+    <rect width="200" height="76" rx="12" fill="#fff" stroke="#fb923c" filter="url(#sh)"/>
+    <rect x="12" y="18" width="40" height="40" rx="10" fill="#ffedd5"/>
+    <rect x="18" y="30" width="28" height="18" rx="2" fill="none" stroke="#c2410c" stroke-width="2"/>
+    <path d="M26 39 h12" stroke="#c2410c" stroke-width="2.4" stroke-linecap="round"/>
+    <text x="64" y="34" class="t">Gaveta de dinero</text>
+    <text x="64" y="54" class="s">Abre solo con efectivo</text>
+  </g>
+
+  <!-- LOCAL connections -->
+  <path d="M312 237 C 350 237, 352 199, 390 199" fill="none" stroke="#ea580c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#aG)"/>
+  <text x="331" y="226" class="lbl" text-anchor="middle">WiFi</text>
+  <path d="M312 412 C 352 412, 352 430, 390 430" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#aG)"/>
+  <text x="350" y="404" class="lbl" text-anchor="middle">WiFi</text>
+  <path d="M312 544 L 390 544" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#aG)"/>
+  <text x="350" y="536" class="lbl" text-anchor="middle">Cat6</text>
+  <path d="M515 252 L 515 316" fill="none" stroke="#475569" stroke-width="2.2" marker-start="url(#aG)" marker-end="url(#aG)"/>
+  <text x="523" y="289" class="lbl">Cat6</text>
+  <path d="M640 380 L 690 380" fill="none" stroke="#475569" stroke-width="2.2" marker-end="url(#aG)"/>
+  <text x="665" y="372" class="lbl" text-anchor="middle">Cat6</text>
+  <path d="M640 545 L 690 545" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round" marker-end="url(#aG)"/>
+  <text x="665" y="537" class="lbl" text-anchor="middle">USB</text>
+  <path d="M790 594 L 790 650" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round" marker-end="url(#aG)"/>
+  <text x="798" y="626" class="lbl">RJ11</text>
+  <path d="M515 700 L 515 648" fill="none" stroke="#d97706" stroke-width="2.4" marker-end="url(#aO)"/>
+  <text x="523" y="680" class="lbl" style="fill:#b45309">Energía</text>
+
+  <!-- ===================== NUBE ===================== -->
+  <rect x="950" y="100" width="240" height="510" rx="18" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="970" y="130" class="zone" style="fill:#1d4ed8">NUBE · VPS LINUX + DOCKER</text>
+  <g transform="translate(966,150)"><rect width="208" height="70" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/><text x="16" y="30" class="t">Next.js</text><text x="16" y="50" class="s">Carta QR (PWA) y paneles</text></g>
+  <g transform="translate(966,236)"><rect width="208" height="70" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/><text x="16" y="30" class="t">API NestJS</text><text x="16" y="50" class="s">REST + WebSockets</text></g>
+  <g transform="translate(966,322)"><rect width="208" height="70" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/><text x="16" y="30" class="t">PostgreSQL 16</text><text x="16" y="50" class="s">Base de datos central</text></g>
+  <g transform="translate(966,408)"><rect width="208" height="70" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/><text x="16" y="30" class="t">Redis + BullMQ</text><text x="16" y="50" class="s">Comprobantes y mensajes</text></g>
+  <g transform="translate(966,494)"><rect width="208" height="70" rx="12" fill="#fff" stroke="#93c5fd" filter="url(#sh)"/><text x="16" y="30" class="t">Copias de seguridad</text><text x="16" y="50" class="s">Diarias, cifradas · 30 días</text></g>
+
+  <!-- Local <-> Nube -->
+  <path d="M640 180 C 800 180, 820 271, 966 271" fill="none" stroke="#2563eb" stroke-width="3.5" marker-start="url(#aB)" marker-end="url(#aB)"/>
+  <rect x="700" y="146" width="236" height="44" rx="8" fill="#ffffff" stroke="#bfdbfe"/>
+  <text x="818" y="164" class="lbl" text-anchor="middle" style="fill:#1d4ed8">Internet · HTTPS / WSS</text>
+  <text x="818" y="181" class="s" text-anchor="middle">Sincronización bidireccional</text>
+
+  <!-- ===================== EXTERNOS ===================== -->
+  <rect x="1222" y="100" width="198" height="510" rx="18" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1.5"/>
+  <text x="1240" y="130" class="zone" style="fill:#6d28d9">SERVICIOS EXTERNOS</text>
+  <g transform="translate(1238,150)"><rect width="166" height="70" rx="12" fill="#fff" stroke="#d8b4fe" filter="url(#sh)"/><text x="14" y="30" class="t">Nubefact → SUNAT</text><text x="14" y="50" class="s">Comprobantes (PSE/OSE)</text></g>
+  <g transform="translate(1238,236)"><rect width="166" height="70" rx="12" fill="#fff" stroke="#d8b4fe" filter="url(#sh)"/><text x="14" y="30" class="t">Culqi / Izipay</text><text x="14" y="50" class="s">Pagos · webhooks HMAC</text></g>
+  <g transform="translate(1238,322)"><rect width="166" height="70" rx="12" fill="#fff" stroke="#d8b4fe" filter="url(#sh)"/><text x="14" y="30" class="t">ApisPeru</text><text x="14" y="50" class="s">Consulta DNI / RUC</text></g>
+  <g transform="translate(1238,408)"><rect width="166" height="70" rx="12" fill="#fff" stroke="#d8b4fe" filter="url(#sh)"/><text x="14" y="30" class="t">WhatsApp Cloud API</text><text x="14" y="50" class="s">Envío de comprobantes</text></g>
+  <g transform="translate(1238,494)"><rect width="166" height="70" rx="12" fill="#fff" stroke="#d8b4fe" filter="url(#sh)"/><text x="14" y="30" class="t">Correo SMTP</text><text x="14" y="50" class="s">PDF + XML adjuntos</text></g>
+
+  <path d="M1174 271 L 1206 271" stroke="#7c3aed" stroke-width="2.2"/>
+  <path d="M1206 185 L 1206 529" stroke="#7c3aed" stroke-width="2.2"/>
+  <path d="M1206 185 H 1238" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#aP)"/>
+  <path d="M1206 271 H 1238" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#aP)"/>
+  <path d="M1206 357 H 1238" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#aP)"/>
+  <path d="M1206 443 H 1238" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#aP)"/>
+  <path d="M1206 529 H 1238" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#aP)"/>
+
+  <!-- ===================== LEYENDA ===================== -->
+  <rect x="950" y="636" width="470" height="174" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="970" y="664" class="zone" fill="#334155">LEYENDA</text>
+  <path d="M972 688 h44" stroke="#475569" stroke-width="2.2"/><text x="1026" y="692" class="s">Cable Ethernet Cat6</text>
+  <path d="M972 714 h44" stroke="#475569" stroke-width="2.2" stroke-dasharray="7 5"/><text x="1026" y="718" class="s">WiFi</text>
+  <path d="M972 740 h44" stroke="#475569" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/><text x="1026" y="744" class="s">USB / RJ11</text>
+  <path d="M1186 688 h44" stroke="#2563eb" stroke-width="3.5"/><text x="1240" y="692" class="s">Internet (HTTPS)</text>
+  <path d="M1186 714 h44" stroke="#d97706" stroke-width="2.4"/><text x="1240" y="718" class="s">Energía de respaldo</text>
+  <path d="M1186 740 h44" stroke="#7c3aed" stroke-width="2.2"/><text x="1240" y="744" class="s">API de terceros</text>
+  <rect x="970" y="760" width="430" height="36" rx="8" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text x="984" y="783" class="s" style="fill:#166534">Sin internet: pedidos, comandas y cobros siguen en la red local.</text>
+</svg>

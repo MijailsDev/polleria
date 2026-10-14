@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="900" viewBox="0 0 1260 900">
+  <defs>
+    <style>
+      text { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill: #0f172a; }
+      .h1 { font-size: 26px; font-weight: 700; }
+      .h2 { font-size: 14px; fill: #475569; }
+      .ttl { font-size: 17px; font-weight: 700; }
+      .t { font-size: 14px; font-weight: 600; }
+      .s { font-size: 11.5px; fill: #64748b; }
+      .p { font-size: 14px; font-weight: 700; fill: #c2410c; }
+      .sec { font-size: 13px; font-weight: 700; }
+      .chip { font-size: 12px; font-weight: 600; fill: #334155; }
+      .chipOn { font-size: 12px; font-weight: 600; fill: #ffffff; }
+      .tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; fill: #64748b; }
+      .w { fill: #ffffff; }
+      .cap { font-size: 15px; font-weight: 600; fill: #334155; }
+    </style>
+    <clipPath id="scr"><rect x="12" y="12" width="316" height="696" rx="32"/></clipPath>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.18"/></filter>
+    <symbol id="muslo" viewBox="0 0 64 64">
+      <g transform="rotate(-35 30 30)"><ellipse cx="27" cy="30" rx="18" ry="13" fill="#b45309"/><ellipse cx="22" cy="25" rx="9" ry="4" fill="#f59e0b" opacity="0.7"/></g>
+      <path d="M40 39 L50 49" stroke="#fffbeb" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="53" cy="48" r="4.2" fill="#fffbeb"/><circle cx="49" cy="52.5" r="4.2" fill="#fffbeb"/>
+    </symbol>
+    <symbol id="frame" viewBox="0 0 340 720">
+      <rect width="340" height="720" rx="46" fill="#111827"/>
+      <rect x="12" y="12" width="316" height="696" rx="32" fill="#ffffff"/>
+    </symbol>
+  </defs>
+
+  <rect width="1260" height="900" fill="#ffffff"/>
+  <text x="40" y="50" class="h1">Boceto: carta digital por código QR (comensal)</text>
+  <text x="40" y="76" class="h2">F-04 y F-09 · el comensal pide, elige su presa y paga desde su propio celular, sin instalar nada</text>
+
+  <!-- ============ TELÉFONO 1: CARTA ============ -->
+  <g transform="translate(40,100)">
+    <use href="#frame" width="340" height="720" filter="url(#sh)"/>
+    <g clip-path="url(#scr)">
+      <rect x="12" y="12" width="316" height="132" fill="#c2410c"/>
+      <text x="36" y="38" class="w" style="font-size:12px;font-weight:600">19:42</text>
+      <rect x="130" y="12" width="80" height="22" rx="11" fill="#111827"/>
+      <text x="32" y="80" class="w" style="font-size:20px;font-weight:700">Pollería y Brasas</text>
+      <rect x="32" y="96" width="132" height="28" rx="14" fill="#ffffff" opacity="0.18"/>
+      <text x="46" y="115" class="w" style="font-size:12.5px;font-weight:600">Mesa M-04 · Salón</text>
+      <circle cx="294" cy="74" r="18" fill="#ffffff" opacity="0.18"/>
+      <path d="M286 80 h16 l-2 -4 v-5 a6 6 0 0 0 -12 0 v5 z M292 83 h4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+
+      <rect x="24" y="154" width="292" height="34" rx="10" fill="#fef3c7"/>
+      <circle cx="44" cy="171" r="7" fill="none" stroke="#92400e" stroke-width="1.8"/><path d="M44 167 v4 l3 2" stroke="#92400e" stroke-width="1.6" fill="none"/>
+      <text x="58" y="175" style="font-size:12px;fill:#92400e;font-weight:600">Tiempo estimado: 25 a 35 min</text>
+
+      <rect x="24" y="198" width="66" height="30" rx="15" fill="#c2410c"/><text x="57" y="218" text-anchor="middle" class="chipOn">Pollos</text>
+      <rect x="96" y="198" width="82" height="30" rx="15" fill="#f1f5f9"/><text x="137" y="218" text-anchor="middle" class="chip">Mostritos</text>
+      <rect x="184" y="198" width="60" height="30" rx="15" fill="#f1f5f9"/><text x="214" y="218" text-anchor="middle" class="chip">Extras</text>
+      <rect x="250" y="198" width="66" height="30" rx="15" fill="#f1f5f9"/><text x="283" y="218" text-anchor="middle" class="chip">Bebidas</text>
+
+      <g transform="translate(24,240)">
+        <rect width="292" height="80" rx="14" fill="#fff" stroke="#e2e8f0"/>
+        <rect x="8" y="8" width="64" height="64" rx="12" fill="#ffedd5"/><use href="#muslo" x="8" y="8" width="64" height="64"/>
+        <text x="84" y="28" class="t">1/8 Pollo a la brasa</text><text x="84" y="46" class="s">Papas, ensalada y cremas</text><text x="84" y="67" class="p">S/ 14.00</text>
+        <circle cx="266" cy="58" r="14" fill="#c2410c"/><path d="M266 51 v14 M259 58 h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(24,328)">
+        <rect width="292" height="80" rx="14" fill="#fff" stroke="#e2e8f0"/>
+        <rect x="8" y="8" width="64" height="64" rx="12" fill="#ffedd5"/><use href="#muslo" x="8" y="8" width="64" height="64"/>
+        <text x="84" y="28" class="t">1/4 Pollo a la brasa</text><text x="84" y="46" class="s">Elige pecho o pierna</text><text x="84" y="67" class="p">S/ 24.00</text>
+        <circle cx="266" cy="58" r="14" fill="#c2410c"/><path d="M266 51 v14 M259 58 h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(24,416)">
+        <rect width="292" height="80" rx="14" fill="#fff" stroke="#e2e8f0"/>
+        <rect x="8" y="8" width="64" height="64" rx="12" fill="#ffedd5"/><use href="#muslo" x="8" y="8" width="64" height="64"/>
+        <text x="84" y="28" class="t">1/2 Pollo a la brasa</text><text x="84" y="46" class="s">Para 2 · papas y ensalada</text><text x="84" y="67" class="p">S/ 45.00</text>
+        <circle cx="266" cy="58" r="14" fill="#c2410c"/><path d="M266 51 v14 M259 58 h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(24,504)">
+        <rect width="292" height="80" rx="14" fill="#fff" stroke="#e2e8f0"/>
+        <rect x="8" y="8" width="64" height="64" rx="12" fill="#ffedd5"/><use href="#muslo" x="8" y="8" width="64" height="64"/>
+        <text x="84" y="28" class="t">Pollo entero</text><text x="84" y="46" class="s">Familiar · corte en 4 u 8</text><text x="84" y="67" class="p">S/ 80.00</text>
+        <circle cx="266" cy="58" r="14" fill="#c2410c"/><path d="M266 51 v14 M259 58 h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+
+      <rect x="24" y="600" width="142" height="38" rx="12" fill="#fff" stroke="#c2410c" stroke-width="1.5"/><text x="95" y="624" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:#c2410c">Llamar al mozo</text>
+      <rect x="174" y="600" width="142" height="38" rx="12" fill="#fff" stroke="#c2410c" stroke-width="1.5"/><text x="245" y="624" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:#c2410c">Pedir la cuenta</text>
+      <rect x="24" y="648" width="292" height="46" rx="23" fill="#c2410c"/>
+      <circle cx="52" cy="671" r="13" fill="#fff" opacity="0.22"/><text x="52" y="676" text-anchor="middle" class="w" style="font-size:13px;font-weight:700">2</text>
+      <text x="74" y="676" class="w" style="font-size:14px;font-weight:700">Ver mi pedido</text>
+      <text x="300" y="676" text-anchor="end" class="w" style="font-size:15px;font-weight:700">S/ 38.00</text>
+    </g>
+  </g>
+
+  <!-- ============ TELÉFONO 2: DETALLE ============ -->
+  <g transform="translate(460,100)">
+    <use href="#frame" width="340" height="720" filter="url(#sh)"/>
+    <g clip-path="url(#scr)">
+      <rect x="12" y="12" width="316" height="176" fill="#fed7aa"/>
+      <circle cx="170" cy="104" r="62" fill="#fdba74"/>
+      <use href="#muslo" x="114" y="50" width="112" height="112"/>
+      <rect x="130" y="12" width="80" height="22" rx="11" fill="#111827"/>
+      <circle cx="46" cy="64" r="18" fill="#ffffff"/><path d="M50 56 l-8 8 l8 8" stroke="#0f172a" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+      <text x="28" y="222" class="ttl">1/4 Pollo a la brasa</text>
+      <text x="28" y="242" class="s">Con papas fritas, ensalada y cremas</text>
+      <text x="312" y="222" text-anchor="end" class="p" style="font-size:16px">S/ 24.00</text>
+
+      <text x="28" y="276" class="sec">Presa</text>
+      <rect x="72" y="263" width="80" height="18" rx="9" fill="#fee2e2"/><text x="112" y="276" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:#b91c1c">OBLIGATORIO</text>
+      <rect x="24" y="288" width="292" height="40" rx="12" fill="#fff7ed" stroke="#c2410c" stroke-width="1.6"/>
+      <circle cx="46" cy="308" r="8" fill="none" stroke="#c2410c" stroke-width="2"/><circle cx="46" cy="308" r="4" fill="#c2410c"/>
+      <text x="64" y="313" class="t">Pecho con ala</text>
+      <rect x="24" y="336" width="292" height="40" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+      <circle cx="46" cy="356" r="8" fill="none" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="64" y="361" class="t" style="fill:#94a3b8">Pierna con encuentro</text>
+      <rect x="240" y="346" width="64" height="20" rx="10" fill="#e2e8f0"/><text x="272" y="360" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:#64748b">AGOTADO</text>
+
+      <text x="28" y="404" class="sec">Papas</text>
+      <rect x="24" y="414" width="86" height="30" rx="15" fill="#f1f5f9"/><text x="67" y="434" text-anchor="middle" class="chip">Normales</text>
+      <rect x="116" y="414" width="104" height="30" rx="15" fill="#c2410c"/><text x="168" y="434" text-anchor="middle" class="chipOn">Bien doradas</text>
+      <rect x="226" y="414" width="72" height="30" rx="15" fill="#f1f5f9"/><text x="262" y="434" text-anchor="middle" class="chip">Sin sal</text>
+
+      <text x="28" y="470" class="sec">Ensalada</text>
+      <rect x="24" y="480" width="76" height="30" rx="15" fill="#c2410c"/><text x="62" y="500" text-anchor="middle" class="chipOn">Clásica</text>
+      <rect x="106" y="480" width="72" height="30" rx="15" fill="#f1f5f9"/><text x="142" y="500" text-anchor="middle" class="chip">Cocida</text>
+      <rect x="184" y="480" width="132" height="30" rx="15" fill="#f1f5f9"/><text x="250" y="500" text-anchor="middle" class="chip">Cambiar por papas</text>
+
+      <text x="28" y="536" class="sec">Cremas</text><text x="84" y="536" class="s">(puedes elegir varias)</text>
+      <rect x="24" y="546" width="50" height="30" rx="15" fill="#c2410c"/><text x="49" y="566" text-anchor="middle" class="chipOn">Ají</text>
+      <rect x="80" y="546" width="86" height="30" rx="15" fill="#c2410c"/><text x="123" y="566" text-anchor="middle" class="chipOn">Mayonesa</text>
+      <rect x="172" y="546" width="72" height="30" rx="15" fill="#f1f5f9"/><text x="208" y="566" text-anchor="middle" class="chip">Mostaza</text>
+      <rect x="250" y="546" width="66" height="30" rx="15" fill="#f1f5f9"/><text x="283" y="566" text-anchor="middle" class="chip">Kétchup</text>
+
+      <rect x="24" y="590" width="292" height="40" rx="12" fill="#fff" stroke="#cbd5e1"/>
+      <text x="40" y="615" style="font-size:12.5px;fill:#94a3b8">Nota para cocina: vinagreta aparte…</text>
+
+      <rect x="24" y="648" width="292" height="46" rx="23" fill="#c2410c"/>
+      <text x="170" y="677" text-anchor="middle" class="w" style="font-size:14.5px;font-weight:700">Agregar al pedido · S/ 24.00</text>
+    </g>
+  </g>
+
+  <!-- ============ TELÉFONO 3: CUENTA Y PAGO ============ -->
+  <g transform="translate(880,100)">
+    <use href="#frame" width="340" height="720" filter="url(#sh)"/>
+    <g clip-path="url(#scr)">
+      <rect x="130" y="12" width="80" height="22" rx="11" fill="#111827"/>
+      <path d="M40 58 l-8 8 l8 8" stroke="#0f172a" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="52" y="72" class="ttl">Cuenta de la mesa M-04</text>
+      <text x="52" y="92" class="s">Abierta 19:30 · 2 rondas</text>
+
+      <rect x="24" y="106" width="292" height="210" rx="14" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="40" y="130" class="tag">RONDA 1 · 19:30</text>
+      <text x="40" y="154" style="font-size:13px">1/4 Pollo · Pecho con ala</text><text x="300" y="154" text-anchor="end" style="font-size:13px">24.00</text>
+      <text x="40" y="178" style="font-size:13px">1/8 Pollo · Pierna</text><text x="300" y="178" text-anchor="end" style="font-size:13px">14.00</text>
+      <text x="40" y="206" class="tag">RONDA 2 · 19:52</text>
+      <text x="40" y="230" style="font-size:13px">Gaseosa personal 500 ml</text><text x="300" y="230" text-anchor="end" style="font-size:13px">4.50</text>
+      <text x="40" y="254" style="font-size:13px">Porción de papas fritas</text><text x="300" y="254" text-anchor="end" style="font-size:13px">12.00</text>
+      <path d="M40 270 H300" stroke="#e2e8f0"/>
+      <text x="40" y="298" style="font-size:16px;font-weight:700">Total</text>
+      <text x="300" y="300" text-anchor="end" style="font-size:21px;font-weight:800">S/ 54.50</text>
+
+      <text x="28" y="344" class="sec">Comprobante</text>
+      <rect x="24" y="354" width="292" height="36" rx="12" fill="#f1f5f9"/>
+      <rect x="28" y="358" width="142" height="28" rx="9" fill="#ffffff" stroke="#c2410c"/>
+      <text x="99" y="377" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:#c2410c">Boleta</text>
+      <text x="242" y="377" text-anchor="middle" class="chip">Factura (RUC)</text>
+
+      <text x="28" y="414" class="sec">Recibir comprobante por</text>
+      <rect x="24" y="424" width="292" height="36" rx="12" fill="#f1f5f9"/>
+      <rect x="28" y="428" width="142" height="28" rx="9" fill="#ffffff" stroke="#c2410c"/>
+      <text x="99" y="447" text-anchor="middle" style="font-size:12.5px;font-weight:700;fill:#c2410c">WhatsApp</text>
+      <text x="242" y="447" text-anchor="middle" class="chip">Correo</text>
+      <rect x="24" y="468" width="292" height="38" rx="12" fill="#fff" stroke="#cbd5e1"/>
+      <text x="40" y="492" style="font-size:13px">987 654 321</text>
+
+      <text x="28" y="532" class="sec">Pagar con</text>
+      <rect x="24" y="542" width="92" height="50" rx="12" fill="#fff7ed" stroke="#c2410c" stroke-width="1.6"/><text x="70" y="572" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#c2410c">Yape</text>
+      <rect x="124" y="542" width="92" height="50" rx="12" fill="#fff" stroke="#cbd5e1"/><text x="170" y="572" text-anchor="middle" class="chip" style="font-size:13px">Plin</text>
+      <rect x="224" y="542" width="92" height="50" rx="12" fill="#fff" stroke="#cbd5e1"/><text x="270" y="572" text-anchor="middle" class="chip" style="font-size:13px">Tarjeta</text>
+
+      <path d="M58 616 v-4 a5 5 0 0 1 10 0 v4" stroke="#64748b" stroke-width="1.6" fill="none"/><rect x="55" y="616" width="16" height="11" rx="2" fill="#64748b"/>
+      <text x="78" y="626" class="s">Pago seguro: no guardamos datos de tarjeta</text>
+
+      <rect x="24" y="648" width="292" height="46" rx="23" fill="#c2410c"/>
+      <text x="170" y="677" text-anchor="middle" class="w" style="font-size:15px;font-weight:700">Pagar S/ 54.50</text>
+    </g>
+  </g>
+
+  <!-- Captions -->
+  <g>
+    <circle cx="74" cy="858" r="14" fill="#c2410c"/><text x="74" y="863" text-anchor="middle" class="w" style="font-size:13px;font-weight:700">1</text>
+    <text x="98" y="863" class="cap">Carta de la mesa y botones de ayuda</text>
+    <circle cx="494" cy="858" r="14" fill="#c2410c"/><text x="494" y="863" text-anchor="middle" class="w" style="font-size:13px;font-weight:700">2</text>
+    <text x="518" y="863" class="cap">Presa obligatoria y preferencias</text>
+    <circle cx="914" cy="858" r="14" fill="#c2410c"/><text x="914" y="863" text-anchor="middle" class="w" style="font-size:13px;font-weight:700">3</text>
+    <text x="938" y="863" class="cap">Precuenta, comprobante y pago</text>
+  </g>
+</svg>
