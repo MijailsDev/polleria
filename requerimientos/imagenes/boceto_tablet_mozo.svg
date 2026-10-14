@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="880" viewBox="0 0 1260 880">
+  <defs>
+    <style>
+      text { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill: #0f172a; }
+      .h1 { font-size: 26px; font-weight: 700; }
+      .h2 { font-size: 14px; fill: #475569; }
+      .mesa { font-size: 22px; font-weight: 800; }
+      .st { font-size: 13px; font-weight: 700; }
+      .s { font-size: 12px; fill: #64748b; }
+      .amt { font-size: 16px; font-weight: 700; }
+      .t { font-size: 14px; font-weight: 700; }
+      .b { font-size: 13px; font-weight: 700; }
+      .w { fill: #ffffff; }
+    </style>
+    <clipPath id="scr"><rect width="1124" height="684" rx="18"/></clipPath>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="115%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.20"/></filter>
+    <filter id="sh2" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.10"/></filter>
+  </defs>
+
+  <rect width="1260" height="880" fill="#ffffff"/>
+  <text x="50" y="50" class="h1">Boceto: tablet del mozo · plano del salón</text>
+  <text x="50" y="76" class="h2">F-03 y F-05 · estado de las 10 mesas en tiempo real, alertas de los comensales y acciones sobre la mesa</text>
+
+  <rect x="50" y="100" width="1160" height="720" rx="36" fill="#1f2937" filter="url(#sh)"/>
+  <circle cx="1192" cy="460" r="6" fill="#374151"/>
+
+  <g transform="translate(68,118)">
+    <rect width="1124" height="684" rx="18" fill="#ffffff"/>
+    <g clip-path="url(#scr)">
+      <!-- Top bar -->
+      <rect width="1124" height="60" fill="#1e293b"/>
+      <text x="24" y="38" class="w" style="font-size:20px;font-weight:700">Salón</text>
+      <rect x="100" y="16" width="96" height="28" rx="14" fill="#334155"/><text x="148" y="35" text-anchor="middle" class="w" style="font-size:12.5px;font-weight:600">Mesas</text>
+      <text x="236" y="35" text-anchor="middle" style="font-size:12.5px;font-weight:600;fill:#94a3b8">Mis pedidos</text>
+      <rect x="760" y="16" width="104" height="28" rx="14" fill="#dcfce7"/><circle cx="778" cy="30" r="5" fill="#16a34a"/>
+      <text x="790" y="35" style="font-size:12.5px;font-weight:700;fill:#166534">En línea</text>
+      <path d="M902 38 h18 l-2.5 -4 v-6 a6.5 6.5 0 0 0 -13 0 v6 z M908 41 h6" stroke="#e2e8f0" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+      <circle cx="922" cy="20" r="9" fill="#dc2626"/><text x="922" y="24" text-anchor="middle" class="w" style="font-size:11px;font-weight:700">3</text>
+      <circle cx="966" cy="30" r="15" fill="#c2410c"/><text x="966" y="35" text-anchor="middle" class="w" style="font-size:13px;font-weight:700">J</text>
+      <text x="990" y="27" class="w" style="font-size:13px;font-weight:700">Juan</text>
+      <text x="990" y="44" style="font-size:11px;fill:#94a3b8">Mozo · turno noche</text>
+
+      <!-- Plano header -->
+      <text x="24" y="96" style="font-size:17px;font-weight:700">Plano del salón</text>
+      <text x="736" y="96" text-anchor="end" class="s">10 mesas · 6 ocupadas · actualizado al instante</text>
+
+      <!-- Fila 1 -->
+      <g transform="translate(24,112)">
+        <rect width="128" height="150" rx="16" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-01</text><circle cx="110" cy="28" r="6" fill="#16a34a"/>
+        <text x="16" y="64" class="st" style="fill:#15803d">✓ Libre</text>
+        <text x="16" y="84" class="s">4 sillas</text>
+        <text x="16" y="132" class="s">Toca para abrir</text>
+      </g>
+      <g transform="translate(170,112)">
+        <rect x="-4" y="-4" width="136" height="158" rx="19" fill="none" stroke="#0f172a" stroke-width="2.5"/>
+        <rect width="128" height="150" rx="16" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-02</text><circle cx="110" cy="28" r="6" fill="#dc2626"/>
+        <text x="16" y="64" class="st" style="fill:#b91c1c">● Ocupada</text>
+        <text x="16" y="84" class="s">00:35 en mesa</text>
+        <text x="16" y="132" class="amt">S/ 71.00</text>
+      </g>
+      <g transform="translate(316,112)">
+        <rect width="128" height="150" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-03</text><circle cx="110" cy="28" r="6" fill="#2563eb"/>
+        <text x="16" y="64" class="st" style="fill:#1d4ed8">Pidió la cuenta</text>
+        <text x="16" y="84" class="s">00:52 en mesa</text>
+        <text x="16" y="132" class="amt">S/ 54.50</text>
+      </g>
+      <g transform="translate(462,112)">
+        <rect width="128" height="150" rx="16" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-04</text><circle cx="110" cy="28" r="6" fill="#d97706"/>
+        <text x="16" y="64" class="st" style="fill:#b45309">Por confirmar</text>
+        <text x="16" y="84" class="s">Pedido QR · 1 min</text>
+        <text x="16" y="132" class="amt">S/ 28.50</text>
+      </g>
+      <g transform="translate(608,112)">
+        <rect width="128" height="150" rx="16" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-05</text><circle cx="110" cy="28" r="6" fill="#dc2626"/>
+        <text x="16" y="64" class="st" style="fill:#b91c1c">● Ocupada</text>
+        <text x="16" y="84" class="s">00:12 en mesa</text>
+        <text x="16" y="132" class="amt">S/ 24.00</text>
+      </g>
+
+      <!-- Fila 2 -->
+      <g transform="translate(24,278)">
+        <rect width="128" height="150" rx="16" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-06</text><circle cx="110" cy="28" r="6" fill="#dc2626"/>
+        <text x="16" y="64" class="st" style="fill:#b91c1c">● Ocupada</text>
+        <text x="16" y="84" class="s">Unida con M-07</text>
+        <text x="16" y="132" class="amt">S/ 98.00</text>
+      </g>
+      <g transform="translate(170,278)">
+        <rect width="128" height="150" rx="16" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-07</text><circle cx="110" cy="28" r="6" fill="#dc2626"/>
+        <text x="16" y="64" class="st" style="fill:#b91c1c">● Ocupada</text>
+        <text x="16" y="84" class="s">Cuenta en M-06</text>
+        <text x="16" y="132" class="s">—</text>
+      </g>
+      <g transform="translate(149,341)">
+        <rect width="24" height="24" rx="12" fill="#ffffff" stroke="#dc2626" stroke-width="1.6"/>
+        <rect x="4.5" y="9" width="9" height="6" rx="3" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+        <rect x="10.5" y="9" width="9" height="6" rx="3" fill="none" stroke="#dc2626" stroke-width="1.6"/>
+      </g>
+      <g transform="translate(316,278)">
+        <rect width="128" height="150" rx="16" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-08</text><circle cx="110" cy="28" r="6" fill="#64748b"/>
+        <text x="16" y="64" class="st" style="fill:#475569">Por limpiar</text>
+        <text x="16" y="84" class="s">Pagada 20:05</text>
+        <rect x="14" y="108" width="100" height="30" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+        <text x="64" y="128" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#334155">Marcar libre</text>
+      </g>
+      <g transform="translate(462,278)">
+        <rect width="128" height="150" rx="16" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-09</text><circle cx="110" cy="28" r="6" fill="#16a34a"/>
+        <text x="16" y="64" class="st" style="fill:#15803d">✓ Libre</text>
+        <text x="16" y="84" class="s">2 sillas</text>
+        <text x="16" y="132" class="s">Toca para abrir</text>
+      </g>
+      <g transform="translate(608,278)">
+        <rect width="128" height="150" rx="16" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+        <text x="16" y="36" class="mesa">M-10</text><circle cx="110" cy="28" r="6" fill="#dc2626"/>
+        <text x="16" y="64" class="st" style="fill:#b91c1c">● Ocupada</text>
+        <text x="16" y="84" class="s">00:48 en mesa</text>
+        <text x="16" y="132" class="amt">S/ 112.50</text>
+      </g>
+
+      <!-- Leyenda -->
+      <g transform="translate(24,446)">
+        <rect width="12" height="12" rx="3" fill="#16a34a"/><text x="18" y="11" class="s">Libre</text>
+        <rect x="74" width="12" height="12" rx="3" fill="#d97706"/><text x="92" y="11" class="s">Por confirmar</text>
+        <rect x="196" width="12" height="12" rx="3" fill="#dc2626"/><text x="214" y="11" class="s">Ocupada</text>
+        <rect x="288" width="12" height="12" rx="3" fill="#2563eb"/><text x="306" y="11" class="s">Cuenta solicitada</text>
+        <rect x="422" width="12" height="12" rx="3" fill="#64748b"/><text x="440" y="11" class="s">Por limpiar</text>
+      </g>
+
+      <!-- Panel mesa seleccionada -->
+      <g transform="translate(24,474)">
+        <rect width="712" height="192" rx="16" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="20" y="34" style="font-size:18px;font-weight:800">Mesa M-02</text>
+        <rect x="128" y="17" width="76" height="24" rx="12" fill="#fee2e2"/><text x="166" y="34" text-anchor="middle" style="font-size:12px;font-weight:700;fill:#b91c1c">Ocupada</text>
+        <text x="692" y="34" text-anchor="end" class="s">Mozo: Juan · 4 comensales · abierta 19:20</text>
+        <text x="20" y="64" style="font-size:13px"><tspan font-weight="700">Ronda 1 · 19:20</tspan>  1/2 Pollo (2 pechos) · Gaseosa 1.5 L</text>
+        <text x="20" y="86" style="font-size:13px"><tspan font-weight="700">Ronda 2 · 19:41</tspan>  Porción de papas fritas</text>
+        <text x="692" y="86" text-anchor="end" style="font-size:18px;font-weight:800">Total S/ 71.00</text>
+        <rect x="16" y="112" width="159" height="58" rx="14" fill="#c2410c"/><text x="95.5" y="146" text-anchor="middle" class="w" style="font-size:14px;font-weight:700">+ Agregar pedido</text>
+        <rect x="191" y="112" width="159" height="58" rx="14" fill="#ffffff" stroke="#cbd5e1"/><text x="270.5" y="146" text-anchor="middle" class="b">Transferir mesa</text>
+        <rect x="366" y="112" width="159" height="58" rx="14" fill="#ffffff" stroke="#cbd5e1"/><text x="445.5" y="146" text-anchor="middle" class="b">Unir mesas</text>
+        <rect x="541" y="112" width="159" height="58" rx="14" fill="#ffffff" stroke="#cbd5e1"/><text x="620.5" y="146" text-anchor="middle" class="b">Imprimir precuenta</text>
+      </g>
+
+      <!-- Alertas -->
+      <rect x="760" y="76" width="348" height="590" rx="16" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="780" y="106" style="font-size:17px;font-weight:700">Alertas</text>
+      <rect x="846" y="91" width="26" height="20" rx="10" fill="#dc2626"/><text x="859" y="105" text-anchor="middle" class="w" style="font-size:11.5px;font-weight:700">3</text>
+
+      <g transform="translate(776,122)" filter="url(#sh2)">
+        <rect width="316" height="152" rx="12" fill="#ffffff"/><rect width="5" height="152" rx="2.5" fill="#d97706"/>
+        <text x="18" y="28" class="t">M-04 · Pedido QR por confirmar</text>
+        <text x="18" y="52" style="font-size:13px">1x 1/4 Pollo · Pecho con ala</text>
+        <text x="18" y="72" style="font-size:13px">1x Gaseosa personal 500 ml</text>
+        <text x="18" y="94" class="s">Celular nuevo en la mesa · hace 1 min</text>
+        <rect x="18" y="108" width="136" height="34" rx="10" fill="#16a34a"/><text x="86" y="130" text-anchor="middle" class="w b">Confirmar</text>
+        <rect x="164" y="108" width="136" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1"/><text x="232" y="130" text-anchor="middle" class="b">Rechazar</text>
+      </g>
+      <g transform="translate(776,288)" filter="url(#sh2)">
+        <rect width="316" height="110" rx="12" fill="#ffffff"/><rect width="5" height="110" rx="2.5" fill="#2563eb"/>
+        <text x="18" y="28" class="t">M-03 · Pidió la cuenta</text>
+        <text x="18" y="50" class="s">Total S/ 54.50 · hace 2 min</text>
+        <rect x="18" y="64" width="166" height="34" rx="10" fill="#2563eb"/><text x="101" y="86" text-anchor="middle" class="w b">Imprimir precuenta</text>
+        <rect x="194" y="64" width="106" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1"/><text x="247" y="86" text-anchor="middle" class="b">Atendido</text>
+      </g>
+      <g transform="translate(776,412)" filter="url(#sh2)">
+        <rect width="316" height="106" rx="12" fill="#ffffff"/><rect width="5" height="106" rx="2.5" fill="#ea580c"/>
+        <text x="18" y="28" class="t">M-05 · Llama al mozo</text>
+        <text x="18" y="50" class="s">Motivo: consulta de la carta · hace 30 s</text>
+        <rect x="18" y="62" width="106" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1"/><text x="71" y="84" text-anchor="middle" class="b">Atendido</text>
+      </g>
+      <g transform="translate(776,532)" filter="url(#sh2)">
+        <rect width="316" height="118" rx="12" fill="#ffffff"/><rect width="5" height="118" rx="2.5" fill="#64748b"/>
+        <text x="18" y="28" class="t">Pierna con encuentro: AGOTADO</text>
+        <text x="18" y="50" class="s">Marcado por caja · 20:10</text>
+        <rect x="18" y="64" width="282" height="38" rx="10" fill="#f1f5f9"/>
+        <text x="32" y="88" style="font-size:12.5px;font-weight:600;fill:#334155">Sugiera pecho con ala a los clientes</text>
+      </g>
+    </g>
+  </g>
+
+  <text x="630" y="858" text-anchor="middle" style="font-size:15px;font-weight:600;fill:#334155">Cada mesa muestra su estado con color, ícono y texto; los cambios llegan a todos los dispositivos en menos de 2 segundos</text>
+</svg>

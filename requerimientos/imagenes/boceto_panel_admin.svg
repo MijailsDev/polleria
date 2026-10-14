@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="880" viewBox="0 0 1260 880">
+  <defs>
+    <style>
+      text { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill: #0f172a; }
+      .h1 { font-size: 26px; font-weight: 700; }
+      .h2 { font-size: 14px; fill: #475569; }
+      .w { fill: #ffffff; }
+      .nav { font-size: 13.5px; font-weight: 600; fill: #cbd5e1; }
+      .ct { font-size: 14px; font-weight: 700; }
+      .kl { font-size: 12.5px; font-weight: 600; fill: #64748b; }
+      .kv { font-size: 26px; font-weight: 800; }
+      .ks { font-size: 12px; fill: #64748b; }
+      .ax { font-size: 11px; fill: #64748b; }
+      .val { font-size: 11.5px; font-weight: 700; fill: #0f172a; }
+      .rk { font-size: 12.5px; fill: #334155; }
+      .rkv { font-size: 12.5px; font-weight: 700; fill: #0f172a; }
+      .lg { font-size: 12px; fill: #334155; }
+      .al { font-size: 12.5px; font-weight: 600; }
+    </style>
+    <clipPath id="scr"><rect width="1160" height="664" rx="0"/></clipPath>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="120%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.18"/></filter>
+  </defs>
+
+  <rect width="1260" height="880" fill="#ffffff"/>
+  <text x="50" y="50" class="h1">Boceto: panel de administración del dueño</text>
+  <text x="50" y="76" class="h2">F-02, F-13 y F-14 · resumen del día, horas punta, presas vendidas, medios de pago y alertas de auditoría</text>
+
+  <!-- Ventana del navegador -->
+  <g filter="url(#sh)">
+    <rect x="50" y="100" width="1160" height="700" rx="14" fill="#e2e8f0"/>
+  </g>
+  <circle cx="74" cy="118" r="6" fill="#f87171"/><circle cx="94" cy="118" r="6" fill="#fbbf24"/><circle cx="114" cy="118" r="6" fill="#4ade80"/>
+  <rect x="380" y="107" width="500" height="22" rx="11" fill="#ffffff"/>
+  <text x="630" y="122" text-anchor="middle" style="font-size:12px;fill:#64748b">mirestaurante.pe/admin</text>
+
+  <g transform="translate(50,136)">
+    <g clip-path="url(#scr)">
+      <rect width="1160" height="664" fill="#f8fafc"/>
+      <!-- Sidebar -->
+      <rect width="200" height="664" fill="#1e293b"/>
+      <rect x="20" y="22" width="34" height="34" rx="10" fill="#c2410c"/>
+      <text x="37" y="45" text-anchor="middle" class="w" style="font-size:16px;font-weight:800">P</text>
+      <text x="64" y="38" class="w" style="font-size:14px;font-weight:700">Pollería</text>
+      <text x="64" y="54" style="font-size:11px;fill:#94a3b8">Administración</text>
+      <rect x="12" y="84" width="176" height="36" rx="10" fill="#334155"/>
+      <text x="28" y="107" class="w" style="font-size:13.5px;font-weight:700">Inicio</text>
+      <text x="28" y="151" class="nav">Carta y precios</text>
+      <text x="28" y="195" class="nav">Mesas</text>
+      <text x="28" y="239" class="nav">Usuarios y roles</text>
+      <text x="28" y="283" class="nav">Inventario de pollos</text>
+      <text x="28" y="327" class="nav">Reportes</text>
+      <text x="28" y="371" class="nav">Bitácora</text>
+      <text x="28" y="415" class="nav">Parámetros</text>
+      <path d="M20 600 H180" stroke="#334155"/>
+      <circle cx="36" cy="630" r="14" fill="#475569"/><text x="36" y="635" text-anchor="middle" class="w" style="font-size:12px;font-weight:700">CM</text>
+      <text x="58" y="627" class="w" style="font-size:12.5px;font-weight:700">Administrador</text>
+      <text x="58" y="643" style="font-size:11px;fill:#94a3b8">Dueño del local</text>
+
+      <!-- Encabezado -->
+      <text x="228" y="44" style="font-size:22px;font-weight:800">Resumen de hoy</text>
+      <text x="228" y="64" class="ks">Martes 13/10/2026 · turno de noche en curso</text>
+      <rect x="878" y="24" width="96" height="34" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="900" y="46" style="font-size:13px;font-weight:600;fill:#334155">Hoy</text><path d="M948 38 l5 5 l5 -5" stroke="#334155" stroke-width="1.8" fill="none"/>
+      <rect x="984" y="24" width="156" height="34" rx="10" fill="#c2410c"/>
+      <text x="1062" y="46" text-anchor="middle" class="w" style="font-size:13px;font-weight:700">Exportar a Excel</text>
+
+      <!-- KPIs -->
+      <g transform="translate(228,80)"><rect width="216" height="96" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+        <text x="18" y="28" class="kl">Ventas del día</text><text x="18" y="62" class="kv">S/ 2,845.50</text><text x="18" y="83" class="ks">+12 % frente al martes pasado</text></g>
+      <g transform="translate(460,80)"><rect width="216" height="96" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+        <text x="18" y="28" class="kl">Pedidos</text><text x="18" y="62" class="kv">132</text><text x="18" y="83" class="ks">Ticket promedio S/ 21.56</text></g>
+      <g transform="translate(692,80)"><rect width="216" height="96" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+        <text x="18" y="28" class="kl">Tiempo de atención</text><text x="18" y="62" class="kv">9 min</text><text x="18" y="83" class="ks">Promedio pedido → servido</text></g>
+      <g transform="translate(924,80)"><rect width="216" height="96" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+        <text x="18" y="28" class="kl">Mermas registradas</text><text x="18" y="62" class="kv">2</text><text x="18" y="83" class="ks">S/ 38.00 · con motivo y PIN</text></g>
+
+      <!-- Ventas por franja horaria -->
+      <rect x="228" y="192" width="560" height="262" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="248" y="220" class="ct">Ventas por franja horaria</text>
+      <text x="768" y="220" text-anchor="end" class="ks">en soles</text>
+      <g>
+        <path d="M268 250 H768 M268 306 H768 M268 362 H768" stroke="#eef2f6"/>
+        <path d="M268 418 H768" stroke="#cbd5e1"/>
+        <text x="262" y="254" text-anchor="end" class="ax">600</text>
+        <text x="262" y="310" text-anchor="end" class="ax">400</text>
+        <text x="262" y="366" text-anchor="end" class="ax">200</text>
+        <text x="262" y="422" text-anchor="end" class="ax">0</text>
+      </g>
+      <g fill="#2a78d6">
+        <rect x="276.7" y="367.6" width="28" height="50.4" rx="4"/><rect x="276.7" y="410" width="28" height="8"/>
+        <rect x="322.2" y="300.4" width="28" height="117.6" rx="4"/><rect x="322.2" y="410" width="28" height="8"/>
+        <rect x="367.6" y="331.2" width="28" height="86.8" rx="4"/><rect x="367.6" y="410" width="28" height="8"/>
+        <rect x="413.1" y="384.4" width="28" height="33.6" rx="4"/><rect x="413.1" y="410" width="28" height="8"/>
+        <rect x="458.5" y="392.8" width="28" height="25.2" rx="4"/><rect x="458.5" y="410" width="28" height="8"/>
+        <rect x="504.0" y="378.8" width="28" height="39.2" rx="4"/><rect x="504.0" y="410" width="28" height="8"/>
+        <rect x="549.4" y="353.6" width="28" height="64.4" rx="4"/><rect x="549.4" y="410" width="28" height="8"/>
+        <rect x="594.9" y="311.6" width="28" height="106.4" rx="4"/><rect x="594.9" y="410" width="28" height="8"/>
+        <rect x="640.3" y="272.4" width="28" height="145.6" rx="4"/><rect x="640.3" y="410" width="28" height="8"/>
+        <rect x="685.8" y="334.0" width="28" height="84.0" rx="4"/><rect x="685.8" y="410" width="28" height="8"/>
+        <rect x="731.2" y="374.5" width="28" height="43.5" rx="4"/><rect x="731.2" y="410" width="28" height="8"/>
+      </g>
+      <text x="336.2" y="292" text-anchor="middle" class="val">S/ 420</text>
+      <text x="654.3" y="264" text-anchor="middle" class="val">S/ 520</text>
+      <g text-anchor="middle" class="ax">
+        <text x="290.7" y="438" class="ax">12h</text><text x="336.2" y="438" class="ax">13h</text><text x="381.6" y="438" class="ax">14h</text>
+        <text x="427.1" y="438" class="ax">15h</text><text x="472.5" y="438" class="ax">16h</text><text x="518.0" y="438" class="ax">17h</text>
+        <text x="563.4" y="438" class="ax">18h</text><text x="608.9" y="438" class="ax">19h</text><text x="654.3" y="438" class="ax">20h</text>
+        <text x="699.8" y="438" class="ax">21h</text><text x="745.2" y="438" class="ax">22h</text>
+      </g>
+
+      <!-- Presas y medios de pago -->
+      <rect x="804" y="192" width="336" height="262" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="824" y="220" class="ct">Venta por presa</text><text x="1120" y="220" text-anchor="end" class="ks">cuartos vendidos</text>
+      <rect x="824" y="234" width="170.7" height="22" rx="4" fill="#2a78d6"/><rect x="990" y="234" width="4.7" height="22" fill="#2a78d6"/>
+      <rect x="996.7" y="234" width="123.3" height="22" rx="4" fill="#eb6834"/><rect x="996.7" y="234" width="5" height="22" fill="#eb6834"/>
+      <rect x="824" y="270" width="12" height="12" rx="3" fill="#2a78d6"/><text x="842" y="281" class="lg">Pecho con ala · <tspan font-weight="700">58 %</tspan></text>
+      <rect x="980" y="270" width="12" height="12" rx="3" fill="#eb6834"/><text x="998" y="281" class="lg">Pierna · <tspan font-weight="700">42 %</tspan></text>
+
+      <text x="824" y="324" class="ct">Medios de pago</text>
+      <rect x="824" y="338" width="134.2" height="22" rx="4" fill="#2a78d6"/><rect x="950" y="338" width="8.2" height="22" fill="#2a78d6"/>
+      <rect x="960.2" y="338" width="89.8" height="22" fill="#eb6834"/>
+      <rect x="1052" y="338" width="42.4" height="22" fill="#1baf7a"/>
+      <rect x="1096.4" y="338" width="23.6" height="22" rx="4" fill="#eda100"/><rect x="1096.4" y="338" width="6" height="22" fill="#eda100"/>
+      <rect x="824" y="376" width="12" height="12" rx="3" fill="#2a78d6"/><text x="842" y="387" class="lg">Yape · <tspan font-weight="700">46 %</tspan></text>
+      <rect x="980" y="376" width="12" height="12" rx="3" fill="#eb6834"/><text x="998" y="387" class="lg">Efectivo · <tspan font-weight="700">31 %</tspan></text>
+      <rect x="824" y="402" width="12" height="12" rx="3" fill="#1baf7a"/><text x="842" y="413" class="lg">Tarjeta · <tspan font-weight="700">15 %</tspan></text>
+      <rect x="980" y="402" width="12" height="12" rx="3" fill="#eda100"/><text x="998" y="413" class="lg">Plin · <tspan font-weight="700">8 %</tspan></text>
+
+      <!-- Ranking de productos -->
+      <rect x="228" y="470" width="560" height="178" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="248" y="498" class="ct">Productos más vendidos</text><text x="768" y="498" text-anchor="end" class="ks">unidades</text>
+      <g>
+        <text x="248" y="527" class="rk">1/4 Pollo a la brasa</text><rect x="420" y="516" width="300" height="14" rx="4" fill="#2a78d6"/><rect x="420" y="516" width="6" height="14" fill="#2a78d6"/><text x="728" y="527" class="rkv">48</text>
+        <text x="248" y="551" class="rk">1/8 Pollo a la brasa</text><rect x="420" y="540" width="218.8" height="14" rx="4" fill="#2a78d6"/><rect x="420" y="540" width="6" height="14" fill="#2a78d6"/><text x="646.8" y="551" class="rkv">35</text>
+        <text x="248" y="575" class="rk">1/2 Pollo a la brasa</text><rect x="420" y="564" width="112.5" height="14" rx="4" fill="#2a78d6"/><rect x="420" y="564" width="6" height="14" fill="#2a78d6"/><text x="540.5" y="575" class="rkv">18</text>
+        <text x="248" y="599" class="rk">Mostrito 1/4</text><rect x="420" y="588" width="75" height="14" rx="4" fill="#2a78d6"/><rect x="420" y="588" width="6" height="14" fill="#2a78d6"/><text x="503" y="599" class="rkv">12</text>
+        <text x="248" y="623" class="rk">Pollo entero</text><rect x="420" y="612" width="56.3" height="14" rx="4" fill="#2a78d6"/><rect x="420" y="612" width="6" height="14" fill="#2a78d6"/><text x="484.3" y="623" class="rkv">9</text>
+      </g>
+
+      <!-- Alertas y auditoría -->
+      <rect x="804" y="470" width="336" height="178" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="824" y="498" class="ct">Alertas y auditoría</text>
+      <g transform="translate(824,514)">
+        <rect width="296" height="36" rx="10" fill="#fffbeb"/>
+        <path d="M18 9 L28 27 H8 Z" fill="#d97706"/><text x="18" y="25" text-anchor="middle" class="w" style="font-size:11px;font-weight:800">!</text>
+        <text x="38" y="23" class="al" style="fill:#92400e">Stock de piernas: 3 cuartos (mín. 4)</text>
+      </g>
+      <g transform="translate(824,556)">
+        <rect width="296" height="36" rx="10" fill="#f1f5f9"/>
+        <rect x="11" y="13" width="14" height="11" rx="2" fill="#475569"/><path d="M14 13 v-3 a4 4 0 0 1 8 0 v3" stroke="#475569" stroke-width="1.6" fill="none"/>
+        <text x="38" y="23" class="al" style="fill:#334155">Anulación con PIN · M-05 · 19:58</text>
+      </g>
+      <g transform="translate(824,598)">
+        <rect width="296" height="36" rx="10" fill="#fef2f2"/>
+        <circle cx="18" cy="18" r="9" fill="#dc2626"/><path d="M14 18 h8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        <text x="38" y="23" class="al" style="fill:#991b1b">Arqueo turno tarde: faltan S/ 1.50</text>
+      </g>
+    </g>
+  </g>
+
+  <text x="630" y="846" text-anchor="middle" style="font-size:15px;font-weight:600;fill:#334155">El dueño ve en un solo lugar cuánto se vende, a qué hora, qué presas salen más y qué acciones requirieron su autorización</text>
+</svg>

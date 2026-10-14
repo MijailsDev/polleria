@@ -178,18 +178,9 @@ Local de un solo piso en Puerto Maldonado (clima cálido y húmedo, cortes eléc
 
 ### 5.4. Arquitectura de despliegue
 
-```
-   CELULARES COMENSALES ──(WiFi Clientes / Internet)──┐
-                                                       ▼
- ┌──────────────── LOCAL (LAN – VLAN Operaciones) ────────────────┐      ┌──────── NUBE ────────┐
- │ Tablets mozos ─┐                                                │      │ API NestJS           │
- │ PC de caja ────┼──► SERVIDOR EDGE (API local + PostgreSQL       │◄────►│ PostgreSQL 16        │
- │                │    + Redis + agente ESC/POS) ── UPS            │ sync │ Redis / BullMQ       │
- │                │        │ TCP 9100            │ USB             │      └──────────┬───────────┘
- │                │        ▼                     ▼                 │                 │
- │                │   Ticketera pollero    Ticketera caja + gaveta │     Nubefact · Culqi/Izipay ·
- └────────────────┴────────────────────────────────────────────────┘     ApisPeru · WhatsApp · SMTP
-```
+![Arquitectura de despliegue del sistema](imagenes/arquitectura_despliegue.png)
+
+*Figura 1. Arquitectura de despliegue: dispositivos del local, servidor local (Edge), nube y servicios externos.*
 
 El servidor Edge es la fuente de verdad durante la operación del local; la nube recibe los datos sincronizados, atiende la carta QR cuando el comensal usa datos móviles y se comunica con los servicios externos.
 
@@ -547,6 +538,27 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
 | Punto de venta | Cajero | Pantalla táctil 15.6" (1366 × 768 px) | Salón, cobro, división de cuenta, comprobantes, tablero llevar/delivery, agotados, turno y arqueo, stock de presas. |
 | Panel de administración | Administrador | PC o celular (diseño adaptable) | Carta y modificadores, mesas, usuarios, parámetros, reportes, bitácora. |
 | Pantalla de llamado (opcional, prioridad baja) | Clientes en mostrador | TV 43" horizontal | Columnas *En preparación* y *Listo para recoger* con número y nombre. |
+
+**Bocetos de pantallas**
+
+Los siguientes bocetos muestran la propuesta de diseño de las interfaces principales. Son referenciales: los colores, textos y montos son de ejemplo y se ajustarán en la fase de prototipado con el propietario.
+
+![Boceto de la carta digital por código QR](imagenes/boceto_carta_qr.png)
+
+*Figura 2. Carta digital por QR: carta de la mesa, elección obligatoria de presa y pago desde el celular (F-04, F-09).*
+
+![Boceto de la tablet del mozo](imagenes/boceto_tablet_mozo.png)
+
+*Figura 3. Tablet del mozo: plano de las 10 mesas con sus estados, alertas de los comensales y acciones sobre la mesa (F-03, F-05).*
+
+![Boceto del punto de venta en caja](imagenes/boceto_caja_cobro.png)
+
+*Figura 4. Punto de venta en caja: pago mixto, vuelto, boleta con DNI autocompletado y entrega del comprobante (F-08, F-10).*
+
+![Boceto del panel de administración](imagenes/boceto_panel_admin.png)
+
+*Figura 5. Panel de administración: resumen del día, ventas por hora, presas vendidas, medios de pago y alertas de auditoría (F-13, F-14).*
+
 
 **Estándares de interfaz gráfica y guía de estilo**
 * Idioma español; moneda con formato `S/ 1,234.50`; fecha `dd/mm/aaaa`; hora de 24 horas (zona America/Lima).
