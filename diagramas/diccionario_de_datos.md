@@ -120,7 +120,7 @@ Cada envío de productos a cocina (ronda).
 | `registrado_por` | uuid | S | FK | Mozo o cajero (usuario.id); nulo si es por QR. |
 | `numero` | integer | N |  | Número correlativo del día. |
 | `canal` | varchar(15) | N |  | SALON, LLEVAR, DELIVERY o APP_EXTERNA. |
-| `estado` | varchar(20) | N |  | Estado del pedido (ver diagrama de estados). |
+| `estado` | varchar(20) | N |  | REGISTRADO, PROGRAMADO, POR_CONFIRMAR, CONFIRMADO, EN_PREPARACION, SERVIDO o ANULADO. |
 | `clave_idempotencia` | uuid | N | UQ | Evita registrar el mismo pedido dos veces. |
 | `hora_programada` | timestamptz | S |  | Hora pactada en pedidos programados. |
 | `creado_en` | timestamptz | N |  | Hora de registro. |
