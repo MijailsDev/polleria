@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* Colores del sistema: naranja brasa como en los bocetos */
+@theme {
+  --color-brasa-50: #fff7ed;
+  --color-brasa-100: #ffedd5;
+  --color-brasa-200: #fed7aa;
+  --color-brasa-500: #f97316;
+  --color-brasa-600: #ea580c;
+  --color-brasa-700: #c2410c;
+  --color-brasa-800: #9a3412;
+  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Botones táctiles de al menos 48 px (REQ-MOZ-01) */
+@utility btn {
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primario {
+  @apply btn bg-brasa-700 text-white hover:bg-brasa-800;
+}
+@utility btn-secundario {
+  @apply btn border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+}
+@utility btn-verde {
+  @apply btn bg-green-700 text-white hover:bg-green-800;
+}
+@utility btn-rojo {
+  @apply btn bg-red-600 text-white hover:bg-red-700;
+}
+@utility chip {
+  @apply min-h-10 rounded-full border px-4 text-sm font-semibold transition;
+}
+@utility chip-on {
+  @apply chip border-brasa-700 bg-brasa-700 text-white;
+}
+@utility chip-off {
+  @apply chip border-slate-300 bg-white text-slate-700 hover:border-brasa-500;
+}
+@utility tarjeta {
+  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+@utility campo {
+  @apply min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base outline-none focus:border-brasa-600 focus:ring-2 focus:ring-brasa-200;
+}
+
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.animar-entrada {
+  animation: entrar 0.25s ease-out;
+}
+@keyframes parpadeo {
+  50% { box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.35); }
+}
+.parpadeo {
+  animation: parpadeo 1.2s ease-in-out infinite;
+}
+
+@media print {
+  .no-imprimir { display: none !important; }
+  body { background: #fff; }
+}

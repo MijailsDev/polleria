@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model bitacora {
+  id              BigInt   @id(map: "pk_bitacora") @default(autoincrement())
+  usuario_id      String?  @db.Uuid
+  accion          String   @db.VarChar(50)
+  entidad         String   @db.VarChar(40)
+  entidad_id      String?  @db.Uuid
+  valores_antes   Json?
+  valores_despues Json?
+  fecha           DateTime @default(now()) @db.Timestamptz(6)
+  usuario         usuario? @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_bitacora_usuario_id")
+
+  @@index([entidad, entidad_id], map: "ix_bitacora_entidad")
+  @@index([fecha], map: "ix_bitacora_fecha")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model categoria {
+  id       String     @id(map: "pk_categoria") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre   String     @db.VarChar(50)
+  orden    Int        @default(0) @db.SmallInt
+  producto producto[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cliente {
+  id              String            @id(map: "pk_cliente") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  celular         String            @unique(map: "uq_cliente_celular") @db.VarChar(9)
+  nombre          String            @db.VarChar(80)
+  documento       String?           @db.VarChar(11)
+  pedido_delivery pedido_delivery[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model comprobante {
+  id                String        @id(map: "pk_comprobante") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cuenta_id         String        @db.Uuid
+  referencia_id     String?       @db.Uuid
+  tipo              String        @db.VarChar(15)
+  serie             String        @db.VarChar(4)
+  correlativo       Int
+  documento_cliente String?       @db.VarChar(11)
+  nombre_cliente    String?       @db.VarChar(120)
+  base_imponible    Decimal       @db.Decimal(10, 2)
+  impuesto          Decimal       @db.Decimal(10, 2)
+  total             Decimal       @db.Decimal(10, 2)
+  estado_sunat      String        @default("PENDIENTE") @db.VarChar(20)
+  emitido_en        DateTime      @default(now()) @db.Timestamptz(6)
+  cuenta            cuenta        @relation(fields: [cuenta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comprobante_cuenta_id")
+  comprobante       comprobante?  @relation("comprobanteTocomprobante", fields: [referencia_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comprobante_referencia_id")
+  other_comprobante comprobante[] @relation("comprobanteTocomprobante")
+
+  @@unique([serie, correlativo], map: "uq_comprobante_serie_correlativo")
+  @@index([cuenta_id], map: "ix_comprobante_cuenta")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cuenta {
+  id             String        @id(map: "pk_cuenta") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesion_mesa_id String?       @db.Uuid
+  total          Decimal       @default(0) @db.Decimal(10, 2)
+  saldo          Decimal       @default(0) @db.Decimal(10, 2)
+  estado         String        @default("ABIERTA") @db.VarChar(20)
+  creada_en      DateTime      @default(now()) @db.Timestamptz(6)
+  comprobante    comprobante[]
+  sesion_mesa    sesion_mesa?  @relation(fields: [sesion_mesa_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuenta_sesion_mesa_id")
+  pago           pago[]
+  pedido         pedido[]
+
+  @@index([sesion_mesa_id], map: "ix_cuenta_sesion_mesa")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model grupo_modificador {
+  id                 String               @id(map: "pk_grupo_modificador") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  producto_id        String               @db.Uuid
+  nombre             String               @db.VarChar(40)
+  obligatorio        Boolean              @default(false)
+  minimo             Int                  @default(0) @db.SmallInt
+  maximo             Int                  @default(1) @db.SmallInt
+  producto           producto             @relation(fields: [producto_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grupo_modificador_producto_id")
+  opcion_modificador opcion_modificador[]
+
+  @@index([producto_id], map: "ix_grupo_modificador_producto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model item_opcion {
+  item_id            String             @db.Uuid
+  opcion_id          String             @db.Uuid
+  recargo            Decimal            @default(0) @db.Decimal(10, 2)
+  item_pedido        item_pedido        @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_item_opcion_item_id")
+  opcion_modificador opcion_modificador @relation(fields: [opcion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_opcion_opcion_id")
+
+  @@id([item_id, opcion_id], map: "pk_item_opcion")
+  @@index([opcion_id], map: "ix_item_opcion_opcion")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model item_pedido {
+  id              String        @id(map: "pk_item_pedido") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pedido_id       String        @db.Uuid
+  producto_id     String        @db.Uuid
+  cantidad        Int           @default(1) @db.SmallInt
+  precio_unitario Decimal       @db.Decimal(10, 2)
+  nota            String?       @db.VarChar(100)
+  estado          String        @default("ACTIVO") @db.VarChar(20)
+  item_opcion     item_opcion[]
+  pedido          pedido        @relation(fields: [pedido_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_item_pedido_pedido_id")
+  producto        producto      @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_pedido_producto_id")
+
+  @@index([pedido_id], map: "ix_item_pedido_pedido")
+  @@index([producto_id], map: "ix_item_pedido_producto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model mesa {
+  id          String        @id(map: "pk_mesa") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  numero      String        @unique(map: "uq_mesa_numero") @db.VarChar(5)
+  capacidad   Int           @default(4) @db.SmallInt
+  estado      String        @default("LIBRE") @db.VarChar(20)
+  pos_x       Int           @default(0)
+  pos_y       Int           @default(0)
+  activa      Boolean       @default(true)
+  sesion_mesa sesion_mesa[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model movimiento_caja {
+  id             String   @id(map: "pk_movimiento_caja") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  turno_id       String   @db.Uuid
+  autorizado_por String?  @db.Uuid
+  tipo           String   @db.VarChar(10)
+  monto          Decimal  @db.Decimal(10, 2)
+  motivo         String   @db.VarChar(150)
+  fecha          DateTime @default(now()) @db.Timestamptz(6)
+  usuario        usuario? @relation(fields: [autorizado_por], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_caja_autorizado_por")
+  turno          turno    @relation(fields: [turno_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_caja_turno_id")
+
+  @@index([turno_id], map: "ix_movimiento_caja_turno")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model movimiento_inventario {
+  id             String    @id(map: "pk_movimiento_inventario") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  producto_id    String?   @db.Uuid
+  pedido_id      String?   @db.Uuid
+  autorizado_por String?   @db.Uuid
+  tipo           String    @db.VarChar(15)
+  pollos         Decimal   @default(0) @db.Decimal(6, 3)
+  cuartos_pecho  Decimal   @default(0) @db.Decimal(6, 2)
+  cuartos_pierna Decimal   @default(0) @db.Decimal(6, 2)
+  motivo         String?   @db.VarChar(150)
+  fecha          DateTime  @default(now()) @db.Timestamptz(6)
+  usuario        usuario?  @relation(fields: [autorizado_por], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_inventario_autorizado_por")
+  pedido         pedido?   @relation(fields: [pedido_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_inventario_pedido_id")
+  producto       producto? @relation(fields: [producto_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_movimiento_inventario_producto_id")
+
+  @@index([fecha], map: "ix_movimiento_inventario_fecha")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model opcion_modificador {
+  id                String            @id(map: "pk_opcion_modificador") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  grupo_id          String            @db.Uuid
+  nombre            String            @db.VarChar(60)
+  recargo           Decimal           @default(0) @db.Decimal(10, 2)
+  efecto_inventario Json?
+  agotado           Boolean           @default(false)
+  item_opcion       item_opcion[]
+  grupo_modificador grupo_modificador @relation(fields: [grupo_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_opcion_modificador_grupo_id")
+
+  @@index([grupo_id], map: "ix_opcion_modificador_grupo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model pago {
+  id               String   @id(map: "pk_pago") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cuenta_id        String   @db.Uuid
+  turno_id         String?  @db.Uuid
+  medio            String   @db.VarChar(20)
+  monto            Decimal  @db.Decimal(10, 2)
+  recibido         Decimal? @db.Decimal(10, 2)
+  numero_operacion String?  @unique(map: "uq_pago_numero_operacion") @db.VarChar(30)
+  id_transaccion   String?  @db.VarChar(60)
+  fecha            DateTime @default(now()) @db.Timestamptz(6)
+  cuenta           cuenta   @relation(fields: [cuenta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_cuenta_id")
+  turno            turno?   @relation(fields: [turno_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_turno_id")
+
+  @@index([cuenta_id], map: "ix_pago_cuenta")
+  @@index([turno_id], map: "ix_pago_turno")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model pedido {
+  id                    String                  @id(map: "pk_pedido") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cuenta_id             String                  @db.Uuid
+  registrado_por        String?                 @db.Uuid
+  numero                Int
+  canal                 String                  @db.VarChar(15)
+  estado                String                  @default("REGISTRADO") @db.VarChar(20)
+  clave_idempotencia    String                  @unique(map: "uq_pedido_clave_idempotencia") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  hora_programada       DateTime?               @db.Timestamptz(6)
+  creado_en             DateTime                @default(now()) @db.Timestamptz(6)
+  impreso_en            DateTime?               @db.Timestamptz(6)
+  servido_en            DateTime?               @db.Timestamptz(6)
+  item_pedido           item_pedido[]
+  movimiento_inventario movimiento_inventario[]
+  cuenta                cuenta                  @relation(fields: [cuenta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pedido_cuenta_id")
+  usuario               usuario?                @relation(fields: [registrado_por], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pedido_registrado_por")
+  pedido_delivery       pedido_delivery?
+
+  @@index([creado_en], map: "ix_pedido_creado_en")
+  @@index([cuenta_id], map: "ix_pedido_cuenta")
+  @@index([estado], map: "ix_pedido_estado")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model pedido_delivery {
+  pedido_id       String   @id(map: "pk_pedido_delivery") @db.Uuid
+  cliente_id      String   @db.Uuid
+  repartidor_id   String?  @db.Uuid
+  direccion       String   @db.VarChar(200)
+  referencia      String?  @db.VarChar(150)
+  paga_con        Decimal? @db.Decimal(10, 2)
+  estado_despacho String   @default("PENDIENTE") @db.VarChar(20)
+  cliente         cliente  @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pedido_delivery_cliente_id")
+  pedido          pedido   @relation(fields: [pedido_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pedido_delivery_pedido_id")
+  usuario         usuario? @relation(fields: [repartidor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pedido_delivery_repartidor_id")
+
+  @@index([cliente_id], map: "ix_pedido_delivery_cliente")
+  @@index([repartidor_id], map: "ix_pedido_delivery_repartidor")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model producto {
+  id                    String                  @id(map: "pk_producto") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoria_id          String                  @db.Uuid
+  nombre                String                  @db.VarChar(80)
+  precio                Decimal                 @db.Decimal(10, 2)
+  fraccion_pollo        Decimal                 @default(0) @db.Decimal(4, 3)
+  destino_impresion     String                  @default("POLLERO") @db.VarChar(20)
+  foto_url              String?                 @db.VarChar(255)
+  activo                Boolean                 @default(true)
+  agotado               Boolean                 @default(false)
+  grupo_modificador     grupo_modificador[]
+  item_pedido           item_pedido[]
+  movimiento_inventario movimiento_inventario[]
+  categoria             categoria               @relation(fields: [categoria_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_producto_categoria_id")
+
+  @@index([categoria_id], map: "ix_producto_categoria")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sesion_mesa {
+  id         String    @id(map: "pk_sesion_mesa") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mesa_id    String    @db.Uuid
+  token      String    @unique(map: "uq_sesion_mesa_token") @default(dbgenerated("encode(gen_random_bytes(32), 'hex'::text)")) @db.VarChar(64)
+  apertura   DateTime  @default(now()) @db.Timestamptz(6)
+  cierre     DateTime? @db.Timestamptz(6)
+  comensales Int?      @db.SmallInt
+  cuenta     cuenta[]
+  mesa       mesa      @relation(fields: [mesa_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sesion_mesa_mesa_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model turno {
+  id                 String            @id(map: "pk_turno") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuario_id         String            @db.Uuid
+  apertura           DateTime          @default(now()) @db.Timestamptz(6)
+  cierre             DateTime?         @db.Timestamptz(6)
+  fondo_inicial      Decimal           @db.Decimal(10, 2)
+  efectivo_declarado Decimal?          @db.Decimal(10, 2)
+  diferencia         Decimal?          @db.Decimal(10, 2)
+  comentario         String?           @db.VarChar(200)
+  movimiento_caja    movimiento_caja[]
+  pago               pago[]
+  usuario            usuario           @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_turno_usuario_id")
+
+  @@index([usuario_id], map: "ix_turno_usuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model usuario {
+  id                    String                  @id(map: "pk_usuario") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre                String                  @db.VarChar(80)
+  rol                   String                  @db.VarChar(20)
+  pin_hash              String                  @db.VarChar(100)
+  password_hash         String?                 @db.VarChar(100)
+  intentos_fallidos     Int                     @default(0) @db.SmallInt
+  activo                Boolean                 @default(true)
+  creado_en             DateTime                @default(now()) @db.Timestamptz(6)
+  bitacora              bitacora[]
+  movimiento_caja       movimiento_caja[]
+  movimiento_inventario movimiento_inventario[]
+  pedido                pedido[]
+  pedido_delivery       pedido_delivery[]
+  turno                 turno[]
+}

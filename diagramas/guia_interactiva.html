@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de Diagramas</title>
+<style>
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--card:#151c2e;--card2:#1b2440;--line:#2a3555;
+  --tx:#e8ecf6;--tx2:#a7b0c8;--tx3:#6f7a96;
+  --or:#ff8a3d;--or2:#ffb37a;--bl:#5b9dff;--gr:#34d399;--pu:#a78bfa;--ye:#fbbf24;--re:#f87171;--cy:#22d3ee;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;line-height:1.55;overflow-x:hidden}
+a{color:var(--or2)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+/* barra de progreso y navegación */
+#prog{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--or),var(--pu),var(--cy));z-index:60}
+nav{position:sticky;top:0;z-index:50;background:rgba(11,15,26,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:6px;align-items:center;height:56px;overflow-x:auto;scrollbar-width:none}
+nav .brand{font-weight:800;margin-right:10px;white-space:nowrap}
+nav .brand span{color:var(--or)}
+nav a{color:var(--tx2);text-decoration:none;font-size:14px;padding:7px 12px;border-radius:999px;white-space:nowrap;transition:.2s}
+nav a:hover,nav a.on{color:var(--tx);background:var(--card2)}
+/* hero */
+.hero{position:relative;min-height:88vh;display:flex;align-items:center;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.45;animation:float 14s ease-in-out infinite}
+.b1{width:420px;height:420px;background:var(--or);top:-80px;left:-60px}
+.b2{width:380px;height:380px;background:var(--pu);bottom:-120px;right:8%;animation-delay:-5s}
+.b3{width:300px;height:300px;background:var(--cy);top:30%;right:-80px;animation-delay:-9s;opacity:.3}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,30px) scale(1.12)}}
+.hero h1{font-size:clamp(34px,6vw,68px);line-height:1.05;margin:0 0 18px;font-weight:850;letter-spacing:-1px}
+.hero h1 .grad{background:linear-gradient(90deg,var(--or),var(--ye),var(--pu));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:clamp(16px,2vw,20px);color:var(--tx2);max-width:680px}
+.pill{display:inline-block;padding:6px 14px;border:1px solid var(--line);border-radius:999px;color:var(--tx2);font-size:13px;margin-bottom:20px;background:rgba(21,28,46,.6)}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{border:0;cursor:pointer;font:inherit;font-weight:700;padding:13px 22px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:transform .15s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.pri{background:linear-gradient(135deg,var(--or),#ff5f6d);color:#fff;box-shadow:0 10px 30px -10px var(--or)}
+.btn.sec{background:var(--card2);color:var(--tx);border:1px solid var(--line)}
+.btn.sm{padding:8px 14px;font-size:14px;border-radius:10px}
+section{padding:80px 0}
+h2.t{font-size:clamp(26px,4vw,40px);margin:0 0 8px;letter-spacing:-.5px}
+.sub{color:var(--tx2);margin:0 0 34px;max-width:760px}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+/* clasificación */
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grp{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;position:relative;overflow:hidden}
+.grp::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
+.grp h3{margin:0 0 6px;font-size:19px}
+.grp .q{color:var(--tx2);font-size:14px;margin:0 0 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{text-decoration:none;font-size:12.5px;padding:5px 10px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--tx);cursor:pointer;transition:.2s}
+.chip:hover{border-color:var(--c,var(--or));transform:translateY(-1px)}
+/* tarjetas de diagrama */
+.dgrid{display:grid;gap:26px}
+.dcard{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:26px;background:linear-gradient(180deg,var(--card),#121a2c);border:1px solid var(--line);border-radius:24px;padding:26px;scroll-margin-top:80px}
+.stage{background:#0d1324;border:1px solid var(--line);border-radius:16px;padding:12px;position:relative;align-self:start}
+.stage svg{width:100%;height:auto;display:block}
+.stage .ctl{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.stage .ctl span{font-size:12px;color:var(--tx3)}
+.num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--c);color:#0b0f1a;font-weight:800;margin-right:10px}
+.dcard h3{margin:0;font-size:24px;display:flex;align-items:center}
+.tag{display:inline-block;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--c);color:var(--c);margin:10px 6px 0 0}
+.def{font-size:16px;margin:14px 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
+.box{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.box h4{margin:0 0 6px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--c)}
+.box p,.box ul{margin:0;font-size:14.5px;color:var(--tx)}
+.box ul{padding-left:18px}
+.box li{margin:3px 0}
+.one{margin-top:14px;padding:12px 16px;border-left:3px solid var(--c);background:rgba(255,255,255,.03);border-radius:0 12px 12px 0;font-style:italic;color:var(--tx)}
+.trap{color:var(--ye)}
+/* animaciones de los mini diagramas */
+.stage .s{opacity:0}
+.stage.play .s{animation:pop .55s cubic-bezier(.2,.8,.2,1.2) forwards;animation-delay:calc(var(--i)*.38s)}
+.stage.play .ln{stroke-dasharray:400;stroke-dashoffset:400;opacity:1;animation:draw .9s ease forwards;animation-delay:calc(var(--i)*.38s)}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes draw{to{stroke-dashoffset:0}}
+.stage svg *{transform-box:fill-box;transform-origin:center}
+svg text{font-family:"Segoe UI",system-ui,sans-serif}
+/* flujo */
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.fnode{padding:12px 16px;border-radius:14px;background:var(--card2);border:1px solid var(--c);font-weight:700;font-size:14px;position:relative}
+.farrow{color:var(--tx3);font-size:22px;animation:pulse 2s infinite}
+@keyframes pulse{50%{color:var(--or);transform:translateX(3px)}}
+.rel-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:28px}
+.rel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14.5px}
+.rel b{color:var(--or2)}
+/* práctica */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tab{background:var(--card);border:1px solid var(--line);color:var(--tx2);padding:10px 18px;border-radius:12px;cursor:pointer;font:inherit;font-weight:700}
+.tab.on{background:linear-gradient(135deg,var(--or),#ff5f6d);color:#fff;border-color:transparent}
+.panel{display:none}.panel.on{display:block;animation:pop .4s ease}
+/* matriz */
+.mx-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+table.mx{border-collapse:collapse;min-width:820px;width:100%}
+.mx th,.mx td{border:1px solid var(--line);text-align:center;font-size:12px;padding:0}
+.mx th{background:var(--card2);padding:8px 4px;font-weight:700;color:var(--tx2);position:sticky;top:0}
+.mx th.rowh{position:sticky;left:0;text-align:left;padding-left:10px;z-index:1}
+.mx td button{width:100%;height:42px;border:0;background:transparent;cursor:pointer;color:var(--tx3);font-size:16px;transition:.15s}
+.mx td button:hover{background:var(--card2);transform:scale(1.08)}
+.mx td button.d{color:var(--gr)}
+.mx td button.i{color:var(--ye)}
+.mx td button.sel{outline:2px solid var(--or);background:rgba(255,138,61,.12)}
+.mx td.diag{background:#0d1324;color:var(--tx3)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--tx2);margin:12px 0}
+.mx-out{margin-top:18px;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:20px;min-height:110px}
+.mx-out h4{margin:0 0 10px;font-size:18px}
+.mx-out .lab{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx3);margin-top:12px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.d{background:rgba(52,211,153,.15);color:var(--gr)}.badge.i{background:rgba(251,191,36,.15);color:var(--ye)}
+/* tarjetas */
+.fbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+select{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit}
+.flip{perspective:1400px;max-width:760px;margin:0 auto}
+.flip .in{position:relative;height:300px;transition:transform .7s cubic-bezier(.3,.7,.2,1);transform-style:preserve-3d;cursor:pointer}
+.flip.on .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:22px;padding:28px;display:flex;flex-direction:column;justify-content:center;border:1px solid var(--line)}
+.front{background:radial-gradient(circle at 20% 10%,#24305a,var(--card))}
+.back{background:radial-gradient(circle at 80% 90%,#3a2a1a,var(--card));transform:rotateY(180deg)}
+.face .k{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--or2);margin-bottom:12px}
+.face .qq{font-size:clamp(20px,3vw,26px);font-weight:750}
+.face .aa{font-size:16.5px}
+.face .hint{position:absolute;bottom:14px;right:20px;font-size:12px;color:var(--tx3)}
+.cnav{display:flex;justify-content:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.counter{text-align:center;color:var(--tx3);font-size:13px;margin-top:10px}
+.btn.ok{background:rgba(52,211,153,.15);color:var(--gr);border:1px solid rgba(52,211,153,.4)}
+.btn.no{background:rgba(248,113,113,.12);color:var(--re);border:1px solid rgba(248,113,113,.4)}
+/* quiz */
+.quiz{max-width:820px;margin:0 auto}
+.qhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:var(--tx2);font-size:14px;gap:10px;flex-wrap:wrap}
+.qbar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:22px}
+.qbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--or),var(--pu));transition:width .4s}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px}
+.qcard .qq{font-size:20px;font-weight:750;margin:0 0 18px}
+.opt{display:block;width:100%;text-align:left;margin:10px 0;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--card2);color:var(--tx);font:inherit;font-size:15px;cursor:pointer;transition:.15s}
+.opt:hover:not(:disabled){border-color:var(--or);transform:translateX(4px)}
+.opt.good{border-color:var(--gr);background:rgba(52,211,153,.12)}
+.opt.bad{border-color:var(--re);background:rgba(248,113,113,.12);animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.expl{margin-top:16px;padding:14px;border-radius:12px;background:#0d1324;border:1px solid var(--line);font-size:14.5px;display:none}
+.expl.on{display:block;animation:pop .35s}
+.score{text-align:center;padding:30px}
+.score .big{font-size:64px;font-weight:850;background:linear-gradient(90deg,var(--or),var(--ye));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px}
+/* lightbox */
+#lb{position:fixed;inset:0;background:rgba(3,6,14,.92);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+#lb.on{display:flex;animation:pop .3s}
+#lb img{max-width:100%;max-height:92vh;border-radius:12px;background:#fff}
+footer{padding:40px 0;color:var(--tx3);font-size:13px;text-align:center;border-top:1px solid var(--line)}
+@media (max-width:820px){.dcard{grid-template-columns:1fr;padding:18px}.flip .in{height:340px}section{padding:56px 0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.stage .s,.stage .ln{opacity:1!important;stroke-dashoffset:0!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<nav><div class="wrap">
+  <div class="brand">🍗 Diagramas <span>UML</span></div>
+  <a href="#mapa">Mapa</a><a href="#diagramas">Los 11 diagramas</a><a href="#relaciones">Cómo se conectan</a><a href="#practica">Práctica</a>
+</div></nav>
+
+<header class="hero">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="wrap" style="position:relative">
+    <div class="pill">Sistema para Pollerías · Capítulo I: Análisis · ADS II</div>
+    <h1>Entiende los <span class="grad">11 diagramas</span><br>antes de exponerlos</h1>
+    <p>Cada diagrama se arma frente a ti paso a paso, con su teoría formal y el ejemplo de nuestra pollería. Al final, practica todas las combinaciones de preguntas: diferencias y relaciones entre diagramas.</p>
+    <div class="btns">
+      <a class="btn pri" href="#diagramas">▶ Empezar</a>
+      <a class="btn sec" href="#practica">🎯 Ir directo a practicar</a>
+    </div>
+  </div>
+</header>
+
+<section id="mapa"><div class="wrap">
+  <h2 class="t reveal">1. El mapa: cómo se clasifican</h2>
+  <p class="sub reveal">UML 2 divide sus diagramas en <b>estructura</b> (qué partes existen) y <b>comportamiento</b> (qué hace y cómo cambia). El modelo físico y el diccionario no son UML: son <b>modelado de datos</b>. Toca un diagrama para ir a su explicación.</p>
+  <div class="groups" id="groups"></div>
+</div></section>
+
+<section id="diagramas" style="background:linear-gradient(180deg,transparent,#0d1222 10%,#0d1222 90%,transparent)"><div class="wrap">
+  <h2 class="t reveal">2. Los 11 diagramas, uno por uno</h2>
+  <p class="sub reveal">Mira cómo se construye cada uno (botón ↻ para repetir la animación), lee la teoría y abre el diagrama real del proyecto.</p>
+  <div class="dgrid" id="dgrid"></div>
+</div></section>
+
+<section id="relaciones"><div class="wrap">
+  <h2 class="t reveal">3. Cómo se conectan entre sí</h2>
+  <p class="sub reveal">Cada diagrama se construye a partir de otro. Si entiendes esta cadena, puedes responder casi cualquier pregunta de relación.</p>
+  <div class="flow reveal" id="flow"></div>
+  <div class="rel-list" id="rels"></div>
+</div></section>
+
+<section id="practica"><div class="wrap">
+  <h2 class="t reveal">4. Práctica: diferencias y relaciones</h2>
+  <p class="sub reveal">Todas las combinaciones entre los 11 diagramas (55 pares). Explora en la <b>matriz</b>, repasa con <b>tarjetas</b> y evalúate con el <b>quiz</b>. Tu progreso se guarda en este navegador.</p>
+  <div class="tabs">
+    <button class="tab on" data-p="pm">🧩 Matriz</button>
+    <button class="tab" data-p="pt">🃏 Tarjetas</button>
+    <button class="tab" data-p="pq">🎯 Quiz</button>
+  </div>
+  <div class="panel on" id="pm">
+    <div class="legend"><span><b style="color:var(--gr)">●</b> relación directa</span><span><b style="color:var(--ye)">◐</b> relación indirecta (a través de otro diagrama)</span><span>Haz clic en cualquier cruce</span></div>
+    <div class="mx-wrap"><table class="mx" id="mx"></table></div>
+    <div class="mx-out" id="mxout"><span style="color:var(--tx3)">Elige un cruce de la matriz para ver la diferencia y la relación entre esos dos diagramas.</span></div>
+  </div>
+  <div class="panel" id="pt">
+    <div class="fbar">
+      <select id="fDiag"></select>
+      <select id="fType"><option value="all">Diferencias y relaciones</option><option value="dif">Solo «¿qué diferencia hay?»</option><option value="rel">Solo «¿tienen relación?»</option></select>
+      <select id="fState"><option value="all">Todas</option><option value="todo">Solo las que debo repasar</option><option value="new">Solo las no vistas</option></select>
+      <button class="btn sec sm" id="shuffle">🔀 Mezclar</button>
+    </div>
+    <div class="flip" id="flip"><div class="in">
+      <div class="face front"><div class="k" id="fk"></div><div class="qq" id="fq"></div><div class="hint">clic o barra espaciadora para voltear</div></div>
+      <div class="face back"><div class="k" id="bk"></div><div class="aa" id="ba"></div></div>
+    </div></div>
+    <div class="cnav">
+      <button class="btn sec sm" id="prev">◀ Anterior</button>
+      <button class="btn no sm" id="mkNo">🔁 Repasar</button>
+      <button class="btn ok sm" id="mkOk">✅ Lo sé</button>
+      <button class="btn sec sm" id="next">Siguiente ▶</button>
+    </div>
+    <div class="counter" id="counter"></div>
+  </div>
+  <div class="panel" id="pq"><div class="quiz" id="quiz"></div></div>
+</div></section>
+
+<footer>Sistema para Pollerías · UNAMAD · Análisis y Diseño de Sistemas II · Los diagramas reales están en la carpeta <code>png/</code></footer>
+<div id="lb"><img alt=""></div>
+<style>.stage .ln{opacity:0}</style>
+<script>
+/* ===================== CONTENIDO ===================== */
+const GR = {
+  est:{n:'Estructura (UML)',c:'#5b9dff',q:'¿Qué partes tiene el sistema y cómo se relacionan? Vista estática.'},
+  com:{n:'Comportamiento (UML)',c:'#ff8a3d',q:'¿Qué hace el sistema y cómo cambia con el tiempo? Vista dinámica.'},
+  int:{n:'Interacción (UML)',c:'#a78bfa',q:'¿Cómo colaboran los objetos enviándose mensajes? Subtipo de comportamiento.'},
+  dat:{n:'Modelado de datos (no UML)',c:'#34d399',q:'¿Cómo se guarda y qué significa la información?'}
+};
+// stroke/fill helpers para los mini diagramas
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" fill="#e8ecf6" font-size="10" text-anchor="middle" ${o}>${t}</text>`;
+const actor=(x,y,c,lab,i)=>`<g class="s" style="--i:${i}"><circle cx="${x}" cy="${y}" r="7" fill="none" stroke="${c}" stroke-width="2"/><path d="M${x} ${y+7}v18M${x-11} ${y+13}h22M${x} ${y+25}l-9 13M${x} ${y+25}l9 13" stroke="${c}" stroke-width="2" fill="none"/>${T(x,y+52,lab)}</g>`;
+const ln=(d,i,c='#6f7a96',dash='')=>`<path class="ln" style="--i:${i}" d="${d}" stroke="${c}" stroke-width="1.6" fill="none" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+const box=(x,y,w,h,c,lab,i,rx=8,fs=10)=>`<g class="s" style="--i:${i}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${c}22" stroke="${c}" stroke-width="1.5"/><text x="${x+w/2}" y="${y+h/2+3.5}" fill="#e8ecf6" font-size="${fs}" text-anchor="middle">${lab}</text></g>`;
+const ell=(x,y,c,lab,i)=>`<g class="s" style="--i:${i}"><ellipse cx="${x}" cy="${y}" rx="52" ry="16" fill="${c}22" stroke="${c}" stroke-width="1.5"/>${T(x,y+3.5,lab)}</g>`;
+const arr=(x1,y1,x2,y2,i,c='#e8ecf6',lab='',dash=false)=>{const a=Math.atan2(y2-y1,x2-x1),h=6;const p=`${x2},${y2} ${x2-h*Math.cos(a-.45)},${y2-h*Math.sin(a-.45)} ${x2-h*Math.cos(a+.45)},${y2-h*Math.sin(a+.45)}`;return `<g class="s" style="--i:${i}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="1.5" ${dash?'stroke-dasharray="4 3"':''}/><polygon points="${p}" fill="${c}"/>${lab?`<text x="${(x1+x2)/2}" y="${(y1+y2)/2-4}" fill="#a7b0c8" font-size="8.5" text-anchor="middle">${lab}</text>`:''}</g>`};
+const SV=b=>`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">${b}</svg>`;
+
+const D = [
+ {id:'act',n:'Actores del sistema',sec:'1.1.1.1',g:'com',c:'#ff8a3d',png:'01_actores_del_sistema.png',
+  que:'quién interactúa con el sistema desde afuera',vista:'dinámica',nivel:'análisis',
+  def:'Un <b>actor</b> es un <b>rol</b> externo que interactúa con el sistema: una persona, otro sistema o el tiempo. No es una persona concreta: el mismo trabajador puede ser cajero un día y mozo otro.',
+  pregunta:'¿Quién usa el sistema y con qué sistemas externos se comunica?',
+  notacion:['Monigote = actor humano','Rectángulo «sistema» = actor no humano','Flecha con triángulo hueco = generalización (herencia de rol)','Actor principal (inicia) vs. secundario (apoya)'],
+  polleria:'Comensal; mozo, maestro pollero, cajero, repartidor y administrador (heredan de «Personal del local»); pasarela de pagos, SUNAT, ApisPeru, WhatsApp y el temporizador.',
+  trampa:'Confundir actor con clase: el actor está FUERA del sistema; la clase Usuario está DENTRO y guarda sus datos.',
+  frase:'Los actores responden a «quién»: quién usa el sistema y con quién se comunica.',
+  svg:SV(actor(60,40,'#ff8a3d','Comensal',0)+actor(160,40,'#5b9dff','Mozo',1)+actor(260,40,'#5b9dff','Cajero',2)+box(115,150,90,30,'#a78bfa','«sistema» SUNAT',4)+arr(160,118,160,148,5,'#a78bfa','secundario',true)+`<text class="s" style="--i:3" x="160" y="132" fill="#6f7a96" font-size="8" text-anchor="middle"></text>`)},
+ {id:'cu',n:'Casos de uso',sec:'1.1.1.2',g:'com',c:'#ff8a3d',png:'02_casos_de_uso.png',
+  que:'qué funciones ofrece el sistema a cada actor',vista:'dinámica',nivel:'análisis',
+  def:'Describe la <b>funcionalidad</b> del sistema vista desde afuera: qué puede hacer cada actor, sin decir cómo se programa. Cada óvalo es un objetivo del usuario.',
+  pregunta:'¿Qué funciones ofrece el sistema y quién usa cada una?',
+  notacion:['Óvalo = caso de uso','Rectángulo grande = límite del sistema','Línea simple = asociación actor–caso','«include» = siempre usa al otro','«extend» = lo agrega solo a veces'],
+  polleria:'25 casos de uso en 5 módulos. «Cobrar cuenta» incluye «Emitir comprobante»; «Dividir cuenta» extiende «Cobrar cuenta».',
+  trampa:'Al revés de lo que parece: en «extend» la flecha va DEL caso opcional AL caso base.',
+  frase:'Los casos de uso responden a «qué»: qué puede hacer cada actor con el sistema.',
+  svg:SV(`<rect class="s" style="--i:0" x="95" y="14" width="210" height="172" rx="6" fill="none" stroke="#e8ecf6" stroke-width="1.4"/>`+T(200,30,'Sistema para Pollerías','class="s" style="--i:0" font-weight="bold"')+actor(45,70,'#5b9dff','Cajero',1)+ell(200,70,'#ff8a3d','Cobrar cuenta',2)+ln('M57 92 L148 72',3)+ell(200,128,'#ff8a3d','Emitir comprobante',4)+arr(200,86,200,111,5,'#a7b0c8','«include»',true)+ell(200,172,'#ff8a3d','Dividir cuenta',6)+arr(170,158,178,89,7,'#a7b0c8','',true)+`<text class="s" style="--i:7" x="122" y="150" fill="#a7b0c8" font-size="8.5">«extend»</text>`)},
+ {id:'seq',n:'Secuencia',sec:'1.1.2.1',g:'int',c:'#a78bfa',png:'03_secuencia_pedido_qr.png',
+  que:'el orden en el tiempo de los mensajes entre participantes en un escenario',vista:'dinámica',nivel:'diseño',
+  def:'Muestra <b>un escenario</b> (normalmente un caso de uso) como una conversación entre participantes, <b>ordenada en el tiempo</b> de arriba hacia abajo.',
+  pregunta:'¿Qué mensajes se envían, en qué orden y quién responde?',
+  notacion:['Línea de vida = línea punteada vertical','Activación = rectángulo delgado (está trabajando)','Flecha llena = mensaje · punteada = retorno','Fragmento alt = si / si no · opt = opcional · loop = repetición'],
+  polleria:'Tres flujos: pedido por QR hasta la cocina; cobro con efectivo + Yape y boleta; cierre de turno con arqueo ciego.',
+  trampa:'No es un diagrama de flujo: no tiene decisiones con rombos, las alternativas van dentro de un fragmento alt.',
+  frase:'La secuencia responde a «cómo, paso a paso en el tiempo».',
+  svg:SV(box(10,12,80,24,'#ff8a3d','Comensal',0)+box(120,12,80,24,'#5b9dff','Carta QR',0)+box(230,12,80,24,'#818cf8','API',0)+ln('M50 36V190',1,'#6f7a96','3 3')+ln('M160 36V190',1,'#6f7a96','3 3')+ln('M270 36V190',1,'#6f7a96','3 3')+arr(50,62,158,62,2,'#e8ecf6','1: elegir 1/4 pecho')+arr(160,92,268,92,3,'#e8ecf6','2: registrarPedido()')+arr(270,122,162,122,4,'#a7b0c8','3: pedido registrado',true)+arr(160,152,52,152,5,'#a7b0c8','4: «en preparación»',true)+`<rect class="s" style="--i:3" x="265" y="86" width="10" height="40" fill="#0d1324" stroke="#818cf8"/>`)},
+ {id:'col',n:'Colaboración (comunicación)',sec:'1.1.2.2',g:'int',c:'#a78bfa',png:'06_colaboracion_pedido_qr.png',
+  que:'qué objetos están conectados y por qué enlace viaja cada mensaje numerado',vista:'dinámica',nivel:'diseño',
+  def:'Representa la <b>misma interacción</b> que un diagrama de secuencia, pero organizada por los <b>enlaces entre objetos</b>. El orden se indica con números. En UML 2 se llama <b>diagrama de comunicación</b>.',
+  pregunta:'¿Qué objetos se comunican entre sí y por qué conexiones pasan los mensajes?',
+  notacion:['Rectángulo con nombre subrayado (:Objeto) = instancia','Línea = enlace entre objetos','Número + flecha = orden y dirección del mensaje (1, 2, 2.1…)'],
+  polleria:'El pedido por QR: :ApiServidorLocal es el centro, conectado a la carta, la base de datos, la tablet del mozo y la cola de impresión.',
+  trampa:'Tiene la misma información que la secuencia; lo que cambia es la forma: aquí no hay eje de tiempo.',
+  frase:'La colaboración responde a «quién habla con quién».',
+  svg:SV(box(20,80,80,28,'#5b9dff','<tspan text-decoration="underline">:CartaQR</tspan>',0)+box(130,80,90,28,'#818cf8','<tspan text-decoration="underline">:Api</tspan>',0)+box(240,20,70,28,'#5b9dff','<tspan text-decoration="underline">:Tablet</tspan>',1)+box(240,150,70,28,'#fbbf24','<tspan text-decoration="underline">:Ticketera</tspan>',1)+ln('M100 94H130',2,'#e8ecf6')+ln('M220 88L245 48',3,'#e8ecf6')+ln('M220 100L245 150',4,'#e8ecf6')+`<text class="s" style="--i:2" x="112" y="76" fill="#a78bfa" font-size="9" text-anchor="middle">1: pedir →</text><text class="s" style="--i:3" x="196" y="52" fill="#a78bfa" font-size="9">2: alertar ↗</text><text class="s" style="--i:4" x="168" y="150" fill="#a78bfa" font-size="9">3: imprimir ↘</text>`)},
+ {id:'paq',n:'Paquetes',sec:'1.1.3',g:'est',c:'#5b9dff',png:'07_diagrama_de_paquetes.png',
+  que:'cómo se agrupa el código en módulos y qué grupo depende de cuál',vista:'estática',nivel:'diseño',
+  def:'Agrupa elementos del modelo (clases, módulos) en <b>paquetes</b>, como carpetas, y muestra las <b>dependencias</b> entre ellos. Sirve para organizar un sistema grande.',
+  pregunta:'¿Cómo organizamos el código para que sea mantenible?',
+  notacion:['Carpeta con pestaña = paquete','Flecha punteada abierta = dependencia («use», «import»)','Paquetes dentro de paquetes = capas o subsistemas'],
+  polleria:'Tres capas: presentación (carta-qr, app-mozo…), lógica de negocio (pedidos, caja, facturación…) e infraestructura (persistencia, colas…).',
+  trampa:'Evitar dependencias circulares: si caja depende de pedidos, pedidos no debe depender de caja.',
+  frase:'Los paquetes responden a «cómo se organiza el código».',
+  svg:SV(`<g class="s" style="--i:0"><path d="M20 20h60v10h-60z" fill="#5b9dff33" stroke="#5b9dff"/><rect x="20" y="30" width="130" height="60" fill="#5b9dff22" stroke="#5b9dff" stroke-width="1.5"/>${T(85,64,'pedidos')}</g><g class="s" style="--i:1"><path d="M180 20h60v10h-60z" fill="#5b9dff33" stroke="#5b9dff"/><rect x="180" y="30" width="125" height="60" fill="#5b9dff22" stroke="#5b9dff" stroke-width="1.5"/>${T(242,64,'cocina')}</g><g class="s" style="--i:2"><path d="M20 120h60v10h-60z" fill="#5b9dff33" stroke="#5b9dff"/><rect x="20" y="130" width="130" height="55" fill="#5b9dff22" stroke="#5b9dff" stroke-width="1.5"/>${T(85,162,'caja')}</g>`+arr(150,60,178,60,3,'#a7b0c8','«use»',true)+arr(85,128,85,93,4,'#a7b0c8','',true)+`<text class="s" style="--i:4" x="92" y="114" fill="#a7b0c8" font-size="8.5">«use»</text>`)},
+ {id:'cla',n:'Clases',sec:'1.1.4',g:'est',c:'#5b9dff',png:'08_diagrama_de_clases.png',
+  que:'las clases con sus atributos, métodos y relaciones',vista:'estática',nivel:'diseño',
+  def:'Es el diagrama central del diseño orientado a objetos: muestra las <b>clases</b>, sus <b>atributos</b>, sus <b>operaciones</b> y las <b>relaciones</b> entre ellas, con cuántos objetos participan (multiplicidad).',
+  pregunta:'¿Qué objetos existen, qué datos guardan, qué saben hacer y cómo se relacionan?',
+  notacion:['Caja de 3 partes: nombre / atributos / métodos','- privado · + público','Multiplicidad: 1, 0..1, 0..*, 1..*','◆ composición (la parte no existe sin el todo) · ◇ agregación','Triángulo hueco = herencia'],
+  polleria:'17 clases (Mesa, Pedido, Cuenta, Turno…) y 5 enumeraciones. Un ItemPedido no existe sin su Pedido (composición).',
+  trampa:'No confundir con el modelo físico: aquí hay métodos y tipos lógicos (Decimal), allá tablas y tipos de PostgreSQL (numeric).',
+  frase:'Las clases responden a «con qué objetos se construye el sistema».',
+  svg:SV(`<g class="s" style="--i:0"><rect x="20" y="30" width="120" height="120" rx="4" fill="#5b9dff18" stroke="#5b9dff" stroke-width="1.5"/><text x="80" y="47" fill="#e8ecf6" font-size="11" text-anchor="middle" font-weight="bold">Pedido</text><line x1="20" y1="55" x2="140" y2="55" stroke="#5b9dff"/><text x="28" y="71" fill="#a7b0c8" font-size="9">- estado: Estado</text><text x="28" y="85" fill="#a7b0c8" font-size="9">- canal: Canal</text><line x1="20" y1="95" x2="140" y2="95" stroke="#5b9dff"/><text x="28" y="112" fill="#a7b0c8" font-size="9">+ confirmar()</text><text x="28" y="126" fill="#a7b0c8" font-size="9">+ anular(pin)</text></g><g class="s" style="--i:1"><rect x="200" y="55" width="105" height="70" rx="4" fill="#5b9dff18" stroke="#5b9dff" stroke-width="1.5"/><text x="252" y="72" fill="#e8ecf6" font-size="11" text-anchor="middle" font-weight="bold">ItemPedido</text><line x1="200" y1="80" x2="305" y2="80" stroke="#5b9dff"/><text x="208" y="96" fill="#a7b0c8" font-size="9">- cantidad: int</text></g><g class="s" style="--i:2"><line x1="152" y1="90" x2="200" y2="90" stroke="#e8ecf6" stroke-width="1.5"/><polygon points="140,90 146,85 152,90 146,95" fill="#e8ecf6"/><text x="160" y="84" fill="#ffb37a" font-size="9">1</text><text x="180" y="84" fill="#ffb37a" font-size="9">1..*</text></g><text class="s" style="--i:3" x="170" y="178" fill="#a7b0c8" font-size="9" text-anchor="middle">◆ composición: el ítem no existe sin su pedido</text>`)},
+ {id:'est',n:'Estados',sec:'1.1.5',g:'com',c:'#ff8a3d',png:'09_diagrama_de_estados_mesa.png',
+  que:'los estados por los que pasa un solo objeto y los eventos que lo hacen cambiar',vista:'dinámica',nivel:'diseño',
+  def:'Describe el <b>ciclo de vida de un solo objeto</b>: los estados en que puede estar y las <b>transiciones</b> entre ellos, disparadas por eventos.',
+  pregunta:'¿En qué situaciones puede estar este objeto y qué lo hace pasar de una a otra?',
+  notacion:['Rectángulo redondeado = estado','● inicial · ◉ final','Flecha = transición: evento [condición] / acción'],
+  polleria:'Mesa: libre → ocupada → cuenta solicitada → por limpiar → libre. Pedido: registrado → confirmado → en preparación → servido (o anulado con PIN).',
+  trampa:'Un diagrama de estados es de UN objeto; si muestras varios objetos intercambiando mensajes, eso es una secuencia.',
+  frase:'Los estados responden a «por qué situaciones pasa este objeto».',
+  svg:SV(`<circle class="s" style="--i:0" cx="22" cy="100" r="7" fill="#e8ecf6"/>`+arr(29,100,48,100,0)+box(50,84,70,32,'#34d399','Libre',1,16)+arr(120,100,148,100,2,'#e8ecf6')+box(150,84,72,32,'#f87171','Ocupada',2,16)+`<text class="s" style="--i:2" x="134" y="92" fill="#a7b0c8" font-size="8" text-anchor="middle">abrir</text>`+arr(222,100,246,100,3,'#e8ecf6')+box(248,84,64,32,'#5b9dff','Cuenta',3,16)+ln('M280 116V160H85V118',4,'#e8ecf6')+`<polygon class="s" style="--i:4" points="85,117 81,125 89,125" fill="#e8ecf6"/><text class="s" style="--i:4" x="182" y="176" fill="#a7b0c8" font-size="9" text-anchor="middle">pagar [saldo = 0] / emitir comprobante</text>`)},
+ {id:'comp',n:'Componentes',sec:'1.2.1',g:'est',c:'#5b9dff',png:'11_diagrama_de_componentes.png',
+  que:'las piezas de software reemplazables y las interfaces por las que se conectan',vista:'estática',nivel:'arquitectura',
+  def:'Muestra el sistema como <b>componentes de software</b> (aplicaciones, servicios, bases de datos) que se pueden reemplazar o desplegar por separado, y las <b>interfaces</b> que ofrecen y requieren.',
+  pregunta:'¿Qué piezas de software forman el sistema y a través de qué interfaces se comunican?',
+  notacion:['Caja con dos rectangulitos = componente','○ (piruleta) = interfaz ofrecida','◡ (enchufe) = interfaz requerida','Flecha punteada = dependencia'],
+  polleria:'Las 4 apps web usan la API REST y los eventos WebSocket de la API NestJS; los adaptadores conectan con Culqi, Nubefact, ApisPeru y WhatsApp.',
+  trampa:'Componentes es SOFTWARE; si dibujas el Mini PC o la ticketera física, eso es despliegue.',
+  frase:'Los componentes responden a «qué piezas de software hay y cómo se enchufan».',
+  svg:SV(`<g class="s" style="--i:0"><rect x="20" y="70" width="95" height="50" fill="#5b9dff22" stroke="#5b9dff" stroke-width="1.5"/><rect x="12" y="80" width="16" height="9" fill="#0d1324" stroke="#5b9dff"/><rect x="12" y="100" width="16" height="9" fill="#0d1324" stroke="#5b9dff"/>${T(70,99,'Carta QR')}</g><g class="s" style="--i:1"><rect x="205" y="70" width="100" height="50" fill="#818cf822" stroke="#818cf8" stroke-width="1.5"/><rect x="197" y="80" width="16" height="9" fill="#0d1324" stroke="#818cf8"/><rect x="197" y="100" width="16" height="9" fill="#0d1324" stroke="#818cf8"/>${T(258,99,'API NestJS')}</g>`+ln('M197 95H170',2,'#e8ecf6')+`<circle class="s" style="--i:2" cx="164" cy="95" r="7" fill="#0d1324" stroke="#e8ecf6" stroke-width="1.5"/><text class="s" style="--i:2" x="164" y="80" fill="#a7b0c8" font-size="8.5" text-anchor="middle">API REST</text>`+arr(115,95,155,95,3,'#a7b0c8','',true)+box(205,150,100,32,'#34d399','PostgreSQL',4,4)+arr(255,120,255,148,5,'#a7b0c8','',true))},
+ {id:'desp',n:'Despliegue',sec:'1.2.2',g:'est',c:'#5b9dff',png:'12_diagrama_de_despliegue.png',
+  que:'el hardware físico, qué software se instala en cada equipo y cómo se conectan',vista:'estática',nivel:'arquitectura',
+  def:'Muestra la <b>arquitectura física</b>: los <b>nodos</b> (equipos), los <b>artefactos</b> instalados en cada uno y los <b>medios de comunicación</b> entre nodos.',
+  pregunta:'¿En qué equipos corre el sistema y cómo se conectan físicamente?',
+  notacion:['Cubo 3D = nodo («device» o «execution environment»)','Hoja con esquina doblada = artefacto','Línea = ruta de comunicación con su protocolo'],
+  polleria:'Celular, tablet, caja, servidor local (Mini PC) con Docker, ticketeras, UPS, router y VPS en la nube, unidos por WiFi, Cat6, USB y HTTPS.',
+  trampa:'El mismo componente (API NestJS) puede aparecer en dos nodos: servidor local y nube.',
+  frase:'El despliegue responde a «dónde se instala cada cosa».',
+  svg:SV(`<g class="s" style="--i:0"><path d="M30 60l12-12h110l-12 12z" fill="#818cf844" stroke="#818cf8"/><path d="M140 60l12-12v95l-12 12z" fill="#818cf833" stroke="#818cf8"/><rect x="30" y="60" width="110" height="95" fill="#818cf822" stroke="#818cf8" stroke-width="1.5"/><text x="85" y="76" fill="#e8ecf6" font-size="9.5" text-anchor="middle" font-weight="bold">Servidor local</text></g><g class="s" style="--i:1"><path d="M45 92h70l8 8v24h-78z" fill="#0d1324" stroke="#e8ecf6"/><text x="84" y="112" fill="#e8ecf6" font-size="9" text-anchor="middle">api-nestjs</text></g><g class="s" style="--i:2"><path d="M210 80l10-10h80l-10 10z" fill="#fbbf2444" stroke="#fbbf24"/><path d="M290 80l10-10v50l-10 10z" fill="#fbbf2433" stroke="#fbbf24"/><rect x="210" y="80" width="80" height="50" fill="#fbbf2422" stroke="#fbbf24" stroke-width="1.5"/><text x="250" y="109" fill="#e8ecf6" font-size="9.5" text-anchor="middle">Ticketera</text></g>`+ln('M152 105H210',3,'#e8ecf6')+`<text class="s" style="--i:3" x="181" y="98" fill="#a7b0c8" font-size="8.5" text-anchor="middle">Cat6 · TCP 9100</text>`)},
+ {id:'fis',n:'Modelo físico',sec:'1.3.1',g:'dat',c:'#34d399',png:'13_modelo_fisico.png',
+  que:'las tablas reales de la base de datos con columnas, tipos y claves',vista:'estática',nivel:'implementación',
+  def:'Es el diseño <b>real</b> de la base de datos en un motor concreto (PostgreSQL): <b>tablas</b>, <b>columnas con tipo exacto</b>, claves primarias (PK), foráneas (FK) y únicas (UQ). No es UML: es modelado entidad-relación.',
+  pregunta:'¿Cómo quedan exactamente las tablas en la base de datos?',
+  notacion:['PK = clave primaria · FK = clave foránea · UQ = único','Pata de gallo = muchos · barra = uno · círculo = opcional','Tabla intermedia para relaciones muchos a muchos'],
+  polleria:'19 tablas. La relación muchos a muchos ItemPedido–OpcionModificador se convierte en la tabla item_opcion. Su traducción a código es modelo_fisico.sql.',
+  trampa:'No tiene métodos ni herencia: solo datos. La lógica vive en las clases.',
+  frase:'El modelo físico responde a «cómo se guardan los datos».',
+  svg:SV(`<g class="s" style="--i:0"><rect x="20" y="40" width="115" height="90" rx="3" fill="#0d1324" stroke="#34d399" stroke-width="1.5"/><rect x="20" y="40" width="115" height="20" fill="#34d39933"/><text x="77" y="54" fill="#e8ecf6" font-size="10" text-anchor="middle" font-weight="bold">pedido</text><text x="28" y="76" fill="#fbbf24" font-size="8.5">PK</text><text x="48" y="76" fill="#e8ecf6" font-size="8.5">id uuid</text><text x="28" y="92" fill="#5b9dff" font-size="8.5">FK</text><text x="48" y="92" fill="#e8ecf6" font-size="8.5">cuenta_id</text><text x="48" y="108" fill="#e8ecf6" font-size="8.5">estado varchar</text></g><g class="s" style="--i:1"><rect x="190" y="55" width="115" height="62" rx="3" fill="#0d1324" stroke="#34d399" stroke-width="1.5"/><rect x="190" y="55" width="115" height="20" fill="#34d39933"/><text x="247" y="69" fill="#e8ecf6" font-size="10" text-anchor="middle" font-weight="bold">item_pedido</text><text x="198" y="91" fill="#5b9dff" font-size="8.5">FK</text><text x="218" y="91" fill="#e8ecf6" font-size="8.5">pedido_id</text></g>`+ln('M135 86H190',2,'#e8ecf6')+`<g class="s" style="--i:3" stroke="#e8ecf6" stroke-width="1.5" fill="none"><path d="M143 80v12M148 80v12"/><path d="M180 86l10-7M180 86l10 7M180 86h10"/></g><text class="s" style="--i:3" x="162" y="150" fill="#a7b0c8" font-size="9" text-anchor="middle">un pedido ─┼┼── tiene muchos ──&lt; ítems</text>`)},
+ {id:'dic',n:'Diccionario de datos',sec:'1.3.2',g:'dat',c:'#34d399',png:'14_diccionario_de_datos.png',
+  que:'el significado, tipo y reglas de cada columna de la base de datos',vista:'estática',nivel:'implementación',
+  def:'Es un <b>documento en tablas</b> (no un dibujo) que describe cada columna: nombre, tipo, si admite vacío, clave y su <b>significado</b> en el negocio.',
+  pregunta:'¿Qué significa cada dato y qué valores acepta?',
+  notacion:['Columnas: Campo · Tipo · Nulo (S/N) · Clave · Descripción','Una tabla del diccionario por cada tabla de la base de datos'],
+  polleria:'fraccion_pollo solo acepta 0, 0.125, 0.25, 0.5 o 1; numero_operacion es único para que no se reuse una captura de Yape.',
+  trampa:'No repite el dibujo del modelo físico: lo explica en palabras para que cualquiera entienda los datos.',
+  frase:'El diccionario responde a «qué significa cada dato».',
+  svg:SV(`<g class="s" style="--i:0"><rect x="15" y="30" width="290" height="24" fill="#34d39933" stroke="#34d399"/><text x="22" y="46" fill="#e8ecf6" font-size="9" font-weight="bold">Campo</text><text x="105" y="46" fill="#e8ecf6" font-size="9" font-weight="bold">Tipo</text><text x="170" y="46" fill="#e8ecf6" font-size="9" font-weight="bold">Nulo</text><text x="205" y="46" fill="#e8ecf6" font-size="9" font-weight="bold">Descripción</text></g>`+[['precio','numeric','N','Precio con IGV (S/)'],['fraccion_pollo','numeric','N','0 · 0.125 · 0.25 · 0.5 · 1'],['foto_url','varchar','S','Foto del producto'],['agotado','boolean','N','Protocolo 86']].map((r,k)=>`<g class="s" style="--i:${k+1}"><rect x="15" y="${54+k*26}" width="290" height="26" fill="#0d1324" stroke="#2a3555"/><text x="22" y="${71+k*26}" fill="#e8ecf6" font-size="9">${r[0]}</text><text x="105" y="${71+k*26}" fill="#a7b0c8" font-size="9">${r[1]}</text><text x="178" y="${71+k*26}" fill="#a7b0c8" font-size="9">${r[2]}</text><text x="205" y="${71+k*26}" fill="#a7b0c8" font-size="9">${r[3]}</text></g>`).join(''))}
+];
+
+/* Relaciones directas entre diagramas (para la matriz, tarjetas y quiz) */
+const REL = {
+ 'act|cu':'Los actores son los participantes de cada caso de uso: cada óvalo está unido al actor que lo usa.',
+ 'act|desp':'Los actores usan los dispositivos del despliegue: el comensal su celular, el mozo la tablet y el cajero la terminal de caja.',
+ 'cu|seq':'Cada diagrama de secuencia detalla un caso de uso paso a paso (por ejemplo, «Registrar pedido por QR»).',
+ 'cu|col':'El diagrama de colaboración también realiza un caso de uso: muestra qué objetos cumplen «Registrar pedido por QR».',
+ 'seq|col':'Son dos vistas de la misma interacción: tienen los mismos mensajes y se puede convertir uno en el otro.',
+ 'seq|cla':'Los mensajes de la secuencia se convierten en métodos de las clases (registrarPedido(), confirmar()).',
+ 'col|cla':'Los objetos de la colaboración (:Pedido, :Api) son instancias de las clases del diagrama de clases.',
+ 'seq|est':'Los mensajes de la secuencia son los eventos que disparan las transiciones (confirmarPedido() pasa el pedido a «Confirmado»).',
+ 'cla|est':'Cada diagrama de estados describe una clase (Mesa, Pedido); sus estados aparecen como la enumeración EstadoMesa o EstadoPedido.',
+ 'paq|cla':'Las clases se agrupan dentro de los paquetes (Pedido e ItemPedido viven en el paquete pedidos).',
+ 'paq|comp':'Los paquetes de código se empaquetan en componentes ejecutables (los módulos de negocio forman el componente API NestJS).',
+ 'comp|desp':'Los componentes se instalan como artefactos en los nodos del despliegue (api-nestjs corre en el servidor local y en la nube).',
+ 'cla|fis':'Las clases que deben guardarse se convierten en tablas: Pedido → pedido; la multiplicidad 1..* se vuelve una clave foránea.',
+ 'fis|dic':'El diccionario describe en palabras cada columna del modelo físico; ambos salen de la misma definición.'
+};
+/* Contrastes clave escritos a mano (los demás se generan) */
+const DIF = {
+ 'cu|seq':'Casos de uso dice QUÉ se hace, visto desde afuera; secuencia dice CÓMO se hace por dentro, paso a paso en el tiempo.',
+ 'seq|col':'Tienen la misma información. Secuencia ordena los mensajes por TIEMPO (de arriba hacia abajo); colaboración los ordena por CONEXIONES y los numera.',
+ 'seq|est':'Secuencia muestra VARIOS objetos en UN escenario; estados muestra UN objeto en TODOS sus escenarios posibles.',
+ 'cla|fis':'Clases es el modelo LÓGICO de objetos, con métodos y tipos como Decimal; el modelo físico son TABLAS reales de PostgreSQL con columnas y claves, sin métodos.',
+ 'fis|dic':'El modelo físico es un DIBUJO de tablas y relaciones; el diccionario es un TEXTO que explica qué significa cada columna y qué valores acepta.',
+ 'paq|comp':'Paquetes organiza el CÓDIGO FUENTE en carpetas y módulos; componentes muestra PIEZAS EJECUTABLES con interfaces, incluidas las externas como PostgreSQL.',
+ 'comp|desp':'Componentes es SOFTWARE y sus interfaces; despliegue es HARDWARE y qué software se instala en cada equipo.',
+ 'act|cla':'Un actor está FUERA del sistema (quien lo usa); una clase está DENTRO (Usuario guarda los datos y el PIN del cajero).',
+ 'act|cu':'Actores responde a QUIÉN usa el sistema; casos de uso responde a QUÉ puede hacer cada uno.',
+ 'cla|est':'Clases muestra la estructura de TODAS las clases a la vez; estados muestra cómo CAMBIA en el tiempo UNA sola clase.',
+ 'cu|est':'Casos de uso describe funciones para los actores; estados describe el ciclo de vida interno de un objeto como la mesa.'
+};
+</script>
+<script>
+/* ===================== LÓGICA ===================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const byId=Object.fromEntries(D.map(d=>[d.id,d]));
+const idx=id=>D.findIndex(d=>d.id===id);
+const key=(a,b)=>idx(a)<idx(b)?a+'|'+b:b+'|'+a;
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.random()*a.length|0];
+
+/* progreso en el navegador */
+const STORE='guiaDiagramasPolleria';
+let ST={cards:{},wrong:[],best:0,rounds:0};
+try{const v=JSON.parse(localStorage.getItem(STORE));if(v)ST=Object.assign(ST,v)}catch(e){}
+const save=()=>{try{localStorage.setItem(STORE,JSON.stringify(ST))}catch(e){}};
+
+/* grafo de relaciones */
+const ADJ={};D.forEach(d=>ADJ[d.id]=[]);
+Object.keys(REL).forEach(k=>{const[a,b]=k.split('|');ADJ[a].push(b);ADJ[b].push(a)});
+function path(a,b){const prev={[a]:null},q=[a];while(q.length){const x=q.shift();if(x===b)break;for(const y of ADJ[x])if(!(y in prev)){prev[y]=x;q.push(y)}}const p=[];for(let x=b;x!=null;x=prev[x])p.unshift(x);return p}
+const relDirect=(a,b)=>REL[a+'|'+b]||REL[b+'|'+a];
+function relText(a,b){
+  const d=relDirect(a,b); if(d) return {tipo:'d',txt:d};
+  const p=path(a,b), mid=p.slice(1,-1).map(x=>byId[x].n);
+  return {tipo:'i',txt:`No se conectan directamente, sino a través de ${mid.join(' y ')}: ${p.map(x=>byId[x].n).join(' → ')}. ${relDirect(p[0],p[1])}`, mid:p.slice(1,-1)};
+}
+function difText(a,b){
+  const A=byId[a],B=byId[b],h=DIF[a+'|'+b]||DIF[b+'|'+a];
+  let s=`<b>${A.n}</b> muestra ${A.que}; <b>${B.n}</b> muestra ${B.que}.`;
+  if(A.g!==B.g) s+=` El primero es de ${GR[A.g].n} y el segundo de ${GR[B.g].n}.`;
+  else s+=` Ambos son de ${GR[A.g].n}, pero responden a preguntas distintas.`;
+  if(A.vista!==B.vista) s+=` Además, ${A.n} es una vista ${A.vista} y ${B.n} una vista ${B.vista}.`;
+  return h?`${h}<br><br><span style="color:var(--tx2)">${s}</span>`:s;
+}
+const PAIRS=[];D.forEach((a,i)=>D.forEach((b,j)=>{if(j>i)PAIRS.push([a.id,b.id])}));
+
+/* ---------- 1. mapa ---------- */
+$('#groups').innerHTML=Object.entries(GR).map(([g,v])=>`<div class="grp reveal" style="--c:${v.c}"><h3>${v.n}</h3><p class="q">${v.q}</p><div class="chips">${D.filter(d=>d.g===g).map(d=>`<a class="chip" style="--c:${v.c}" href="#d-${d.id}">${d.n}</a>`).join('')}</div></div>`).join('');
+
+/* ---------- 2. diagramas ---------- */
+$('#dgrid').innerHTML=D.map((d,i)=>`<article class="dcard reveal" id="d-${d.id}" style="--c:${d.c}">
+  <div><div class="stage" data-st>${d.svg}<div class="ctl"><span>Animación paso a paso</span><span><button class="btn sec sm" data-replay>↻ Repetir</button> <button class="btn sec sm" data-png="${d.png}">🖼 Ver diagrama real</button></span></div></div></div>
+  <div>
+    <h3><span class="num">${i+1}</span>${d.n}</h3>
+    <span class="tag">${d.sec}</span><span class="tag">${GR[d.g].n}</span><span class="tag">Vista ${d.vista}</span>
+    <p class="def">${d.def}</p>
+    <div class="kv">
+      <div class="box"><h4>Pregunta que responde</h4><p>${d.pregunta}</p></div>
+      <div class="box"><h4>Notación clave</h4><ul>${d.notacion.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div class="box"><h4>En nuestra pollería</h4><p>${d.polleria}</p></div>
+      <div class="box"><h4>Cuidado en la exposición</h4><p class="trap">⚠ ${d.trampa}</p></div>
+    </div>
+    <div class="one">🎤 ${d.frase}</div>
+  </div></article>`).join('');
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');const st=e.target.querySelector('[data-st]');if(st&&!st.classList.contains('play'))st.classList.add('play')}}),{threshold:.18});
+$$('.reveal').forEach(el=>io.observe(el));
+document.addEventListener('click',e=>{
+  const r=e.target.closest('[data-replay]');
+  if(r){const st=r.closest('[data-st]');st.classList.remove('play');void st.offsetWidth;st.classList.add('play')}
+  const p=e.target.closest('[data-png]');
+  if(p){$('#lb img').src='png/'+p.dataset.png;$('#lb').classList.add('on')}
+});
+$('#lb').onclick=()=>$('#lb').classList.remove('on');
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#lb').classList.remove('on')});
+
+/* ---------- 3. relaciones ---------- */
+const chain=['act','cu','seq','col','cla','est','paq','comp','desp','fis','dic'];
+$('#flow').innerHTML=[['act','cu','seq','cla','fis','dic'],['cla','est'],['cla','paq','comp','desp']].map(r=>`<div class="flow" style="width:100%">${r.map((id,k)=>`${k?'<span class="farrow">➜</span>':''}<span class="fnode" style="--c:${byId[id].c}">${byId[id].n}</span>`).join('')}</div>`).join('');
+$('#rels').innerHTML=Object.entries(REL).map(([k,t])=>{const[a,b]=k.split('|');return `<div class="rel reveal"><b>${byId[a].n} ↔ ${byId[b].n}</b><br>${t}</div>`}).join('');
+$$('#rels .reveal').forEach(el=>io.observe(el));
+
+/* ---------- 4a. matriz ---------- */
+(function(){
+  let h='<tr><th class="rowh"></th>'+D.map(d=>`<th title="${d.n}">${d.n.split(' ')[0]}</th>`).join('')+'</tr>';
+  D.forEach(a=>{h+=`<tr><th class="rowh">${a.n}</th>`+D.map(b=>{if(a.id===b.id)return `<td class="diag">—</td>`;const r=relText(a.id,b.id);return `<td><button class="${r.tipo}" data-a="${a.id}" data-b="${b.id}" title="${a.n} vs ${b.n}">${r.tipo==='d'?'●':'◐'}</button></td>`}).join('')+'</tr>'});
+  $('#mx').innerHTML=h;
+  $('#mx').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#mx button.sel').forEach(x=>x.classList.remove('sel'));
+    $$(`#mx button[data-a="${b.dataset.a}"][data-b="${b.dataset.b}"],#mx button[data-a="${b.dataset.b}"][data-b="${b.dataset.a}"]`).forEach(x=>x.classList.add('sel'));
+    const A=byId[b.dataset.a],B=byId[b.dataset.b],r=relText(A.id,B.id);
+    $('#mxout').innerHTML=`<h4><span style="color:${A.c}">${A.n}</span> vs <span style="color:${B.c}">${B.n}</span></h4>
+      <div class="lab">¿Qué diferencia hay?</div><div>${difText(A.id,B.id)}</div>
+      <div class="lab">¿Tienen relación? <span class="badge ${r.tipo}">${r.tipo==='d'?'Directa':'Indirecta'}</span></div><div>${r.txt}</div>`;
+    $('#mxout').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:300})};
+})();
+
+/* ---------- 4b. tarjetas ---------- */
+const CARDS=[];
+PAIRS.forEach(([a,b])=>{
+  CARDS.push({k:'dif:'+a+'|'+b,a,b,t:'dif',q:`¿Qué diferencia hay entre el diagrama de <span style="color:${byId[a].c}">${byId[a].n}</span> y el de <span style="color:${byId[b].c}">${byId[b].n}</span>?`,ans:()=>difText(a,b)});
+  CARDS.push({k:'rel:'+a+'|'+b,a,b,t:'rel',q:`¿El diagrama de <span style="color:${byId[a].c}">${byId[a].n}</span> tiene alguna relación con el de <span style="color:${byId[b].c}">${byId[b].n}</span>?`,ans:()=>{const r=relText(a,b);return `<span class="badge ${r.tipo}">${r.tipo==='d'?'Sí, relación directa':'Sí, pero indirecta'}</span><br><br>${r.txt}`}});
+});
+$('#fDiag').innerHTML='<option value="all">Todos los diagramas</option>'+D.map(d=>`<option value="${d.id}">Con: ${d.n}</option>`).join('');
+let deck=[],ci=0;
+function buildDeck(sh){
+  const fd=$('#fDiag').value,ft=$('#fType').value,fs=$('#fState').value;
+  deck=CARDS.filter(c=>(fd==='all'||c.a===fd||c.b===fd)&&(ft==='all'||c.t===ft)&&(fs==='all'||(fs==='todo'&&ST.cards[c.k]==='no')||(fs==='new'&&!ST.cards[c.k])));
+  if(sh)deck=shuffle(deck); ci=0; showCard();
+}
+function showCard(){
+  $('#flip').classList.remove('on');
+  if(!deck.length){$('#fk').textContent='Sin tarjetas';$('#fq').innerHTML='No hay tarjetas con este filtro. ¡Prueba otro!';$('#ba').innerHTML='';$('#counter').textContent='';return}
+  const c=deck[ci];
+  setTimeout(()=>{$('#fk').textContent=c.t==='dif'?'Diferencia':'Relación';$('#fq').innerHTML=c.q;$('#bk').textContent=c.t==='dif'?'Respuesta: diferencia':'Respuesta: relación';$('#ba').innerHTML=c.ans()},150);
+  const ok=CARDS.filter(x=>ST.cards[x.k]==='ok').length, no=CARDS.filter(x=>ST.cards[x.k]==='no').length;
+  $('#counter').innerHTML=`Tarjeta ${ci+1} de ${deck.length} · ✅ dominadas: ${ok} / ${CARDS.length} · 🔁 por repasar: ${no}${ST.cards[c.k]?` · esta: ${ST.cards[c.k]==='ok'?'✅':'🔁'}`:''}`;
+}
+$('#flip').onclick=()=>$('#flip').classList.toggle('on');
+$('#next').onclick=()=>{if(deck.length){ci=(ci+1)%deck.length;showCard()}};
+$('#prev').onclick=()=>{if(deck.length){ci=(ci-1+deck.length)%deck.length;showCard()}};
+const mark=v=>{if(!deck.length)return;ST.cards[deck[ci].k]=v;save();$('#next').onclick()};
+$('#mkOk').onclick=()=>mark('ok');$('#mkNo').onclick=()=>mark('no');
+$('#shuffle').onclick=()=>buildDeck(true);
+['#fDiag','#fType','#fState'].forEach(s=>$(s).onchange=()=>buildDeck(true));
+document.addEventListener('keydown',e=>{if(!$('#pt').classList.contains('on')||e.target.tagName==='SELECT')return;
+  if(e.code==='Space'){e.preventDefault();$('#flip').classList.toggle('on')} if(e.key==='ArrowRight')$('#next').onclick(); if(e.key==='ArrowLeft')$('#prev').onclick()});
+buildDeck(true);
+
+/* ---------- 4c. quiz ---------- */
+function makeQ(k){
+  const [type,rest]=k.split(':'); const ids=rest?rest.split('|'):[];
+  if(type==='dif'){const[a,b]=ids,A=byId[a],B=byId[b],others=shuffle(D.filter(d=>d.id!==a&&d.id!==b));
+    const ok=`${A.n} muestra ${A.que}; ${B.n} muestra ${B.que}.`;
+    const opts=[ok,`${A.n} muestra ${B.que}; ${B.n} muestra ${A.que}.`,`${A.n} muestra ${others[0].que}; ${B.n} muestra ${B.que}.`,`${A.n} muestra ${A.que}; ${B.n} muestra ${others[1].que}.`];
+    return {k,q:`¿Cuál es la diferencia correcta entre <b>${A.n}</b> y <b>${B.n}</b>?`,opts,ok,ex:difText(a,b)}}
+  if(type==='rel'){const[a,b]=ids,A=byId[a],B=byId[b],r=relText(a,b);
+    const ok=r.tipo==='d'?`Directa: ${relDirect(a,b)}`:`Indirecta, a través de ${r.mid.map(x=>byId[x].n).join(' y ')}.`;
+    const pool=shuffle(Object.entries(REL).filter(([kk])=>kk!==a+'|'+b&&kk!==b+'|'+a)).slice(0,2).map(([,t])=>'Directa: '+t);
+    const opts=[ok,...pool,'No tienen ninguna relación: son diagramas independientes.'];
+    return {k,q:`¿Qué relación tiene <b>${A.n}</b> con <b>${B.n}</b>?`,opts,ok,ex:r.txt}}
+  if(type==='preg'){const A=byId[ids[0]];const opts=[A.n,...shuffle(D.filter(d=>d.id!==A.id)).slice(0,3).map(d=>d.n)];
+    return {k,q:`¿Qué diagrama responde a la pregunta: <i>«${A.pregunta}»</i>?`,opts,ok:A.n,ex:`${A.frase} ${A.def}`}}
+  if(type==='grp'){const A=byId[ids[0]];const opts=Object.values(GR).map(g=>g.n);
+    return {k,q:`¿A qué grupo pertenece el diagrama de <b>${A.n}</b>?`,opts,ok:GR[A.g].n,ex:`${A.n} es de ${GR[A.g].n}: ${GR[A.g].q}`}}
+  if(type==='tf'){const[a,b]=ids,r=relText(a,b);const ok=r.tipo==='d'?'Verdadero':'Falso';
+    return {k,q:`¿Verdadero o falso? <b>${byId[a].n}</b> y <b>${byId[b].n}</b> tienen una relación <u>directa</u>.`,opts:['Verdadero','Falso'],ok,ex:r.txt,fixed:true}}
+}
+function randomKey(){const t=pick(['dif','dif','rel','rel','tf','preg','grp']);
+  if(t==='preg'||t==='grp')return t+':'+pick(D).id;
+  let p=pick(PAIRS); if(t==='tf'&&Math.random()<.5){const ks=Object.keys(REL);p=pick(ks).split('|')} return t+':'+p.join('|')}
+let QZ={list:[],i:0,ok:0,mode:'normal'};
+function startQuiz(mode){
+  const n=10;let keys=[];
+  if(mode==='review'){keys=shuffle(ST.wrong).slice(0,n)} else {const s=new Set();while(s.size<n)s.add(randomKey());keys=[...s]}
+  QZ={list:keys.map(makeQ),i:0,ok:0,mode,fails:[]}; renderQ();
+}
+function quizHome(){
+  $('#quiz').innerHTML=`<div class="qcard score"><div style="font-size:48px">🎯</div><h3 style="margin:6px 0">Quiz de diagramas</h3>
+  <p style="color:var(--tx2)">10 preguntas al azar sobre diferencias, relaciones, qué pregunta responde cada diagrama y a qué grupo pertenece.</p>
+  <div class="stats"><div class="stat">🏆 Mejor puntaje: <b>${ST.best}/10</b></div><div class="stat">🔁 Rondas: <b>${ST.rounds}</b></div><div class="stat">❌ Para repasar: <b>${ST.wrong.length}</b></div></div>
+  <div class="btns" style="justify-content:center"><button class="btn pri" id="qStart">▶ Empezar ronda</button>${ST.wrong.length?'<button class="btn sec" id="qRev">🔁 Repasar mis falladas</button>':''}</div></div>`;
+  $('#qStart').onclick=()=>startQuiz('normal'); if($('#qRev'))$('#qRev').onclick=()=>startQuiz('review');
+}
+function renderQ(){
+  const z=QZ; if(z.i>=z.list.length)return endQuiz(); const q=z.list[z.i];
+  const opts=q.fixed?q.opts:shuffle(q.opts);
+  $('#quiz').innerHTML=`<div class="qhead"><span>Pregunta ${z.i+1} de ${z.list.length}${z.mode==='review'?' · modo repaso':''}</span><span>✅ ${z.ok} correctas</span></div>
+   <div class="qbar"><i style="width:${z.i/z.list.length*100}%"></i></div>
+   <div class="qcard"><p class="qq">${q.q}</p>${opts.map(o=>`<button class="opt">${o}</button>`).join('')}<div class="expl" id="ex"></div></div>`;
+  $$('#quiz .opt').forEach(b=>b.onclick=()=>{
+    const good=b.textContent===q.ok; $$('#quiz .opt').forEach(x=>{x.disabled=true;if(x.textContent===q.ok)x.classList.add('good')});
+    if(good){z.ok++;ST.wrong=ST.wrong.filter(x=>x!==q.k)}else{b.classList.add('bad');if(!ST.wrong.includes(q.k))ST.wrong.push(q.k)}
+    save();
+    $('#ex').innerHTML=`${good?'✅ <b>¡Correcto!</b>':'❌ <b>No era esa.</b>'}<br>${q.ex}<div style="margin-top:12px"><button class="btn pri sm" id="qNext">${z.i+1<z.list.length?'Siguiente ▶':'Ver resultado'}</button></div>`;
+    $('#ex').classList.add('on'); $('#qNext').onclick=()=>{z.i++;renderQ()};
+  });
+}
+function endQuiz(){
+  ST.rounds++; if(QZ.mode==='normal'&&QZ.ok>ST.best)ST.best=QZ.ok; save();
+  const msg=QZ.ok>=9?'¡Listo para exponer! 🔥':QZ.ok>=7?'¡Muy bien! Repasa las falladas y estás listo.':QZ.ok>=5?'Vas bien. Revisa la matriz y las tarjetas.':'Repasa los 11 diagramas y vuelve a intentarlo.';
+  $('#quiz').innerHTML=`<div class="qcard score"><div class="big">${QZ.ok}/${QZ.list.length}</div><p style="font-size:18px">${msg}</p>
+   <div class="stats"><div class="stat">🏆 Mejor: <b>${ST.best}/10</b></div><div class="stat">❌ Para repasar: <b>${ST.wrong.length}</b></div></div>
+   <div class="btns" style="justify-content:center"><button class="btn pri" id="qAgain">🔁 Otra ronda</button>${ST.wrong.length?'<button class="btn sec" id="qRev2">Repasar falladas</button>':''}<button class="btn sec" id="qReset">Borrar progreso</button></div></div>`;
+  $('#qAgain').onclick=()=>startQuiz('normal'); if($('#qRev2'))$('#qRev2').onclick=()=>startQuiz('review');
+  $('#qReset').onclick=()=>{if(confirm('¿Borrar todo tu progreso (quiz y tarjetas)?')){ST={cards:{},wrong:[],best:0,rounds:0};save();quizHome();buildDeck(true)}};
+}
+quizHome();
+
+/* ---------- pestañas, navegación y barra de progreso ---------- */
+$$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.toggle('on',x===t));$$('.panel').forEach(p=>p.classList.toggle('on',p.id===t.dataset.p))});
+addEventListener('scroll',()=>{const h=document.documentElement;$('#prog').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  let cur='';['mapa','diagramas','relaciones','practica'].forEach(id=>{const el=document.getElementById(id);if(el.getBoundingClientRect().top<120)cur=id});
+  $$('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))},{passive:true});
+</script>
+</body>
+</html>
