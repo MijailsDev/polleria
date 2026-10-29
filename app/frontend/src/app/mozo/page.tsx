@@ -2,13 +2,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useSesion } from '@/lib/sesion';
-import { Comanda, ESTADO_MESA, Mesa } from '@/lib/tipos';
+import { Comanda, CuentaDetalle, ESTADO_MESA, Mesa } from '@/lib/tipos';
 import { hora, minutosDesde, pitido, soles, useEventos } from '@/lib/util';
 import { Aviso, Encabezado } from '@/components/Encabezado';
 import { TomaPedido } from '@/components/TomaPedido';
+import { DetalleCuenta, PrecuentaImpresa } from '@/components/DetalleCuenta';
+import { PedirPin } from '@/components/PedirPin';
 
-interface Alerta { id: string; tipo: string; mesa: string; mesaId: string; mensaje: string; hora: string }
-interface Cuenta { cuentaId: string; mesa: string; total: number; saldo: number; pedidos: Comanda[] }
+interface Alerta { id: string; tipo: string; mesa?: string; mesaId?: string; mensaje: string; hora: string }
+
+const COLOR_ALERTA: Record<string, string> = {
+  CUENTA: 'border-l-blue-600',
+  LLAMADO: 'border-l-brasa-600',
+  PAGO_EN_LINEA: 'border-l-green-600',
+  PAGO_EN_CURSO: 'border-l-green-400',
+  STOCK: 'border-l-red-600',
+};
 
 export default function PaginaMozo() {
   const sesion = useSesion(['MOZO', 'CAJERO']);
@@ -16,9 +25,11 @@ export default function PaginaMozo() {
   const [porConfirmar, setPorConfirmar] = useState<Comanda[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [sel, setSel] = useState<Mesa | null>(null);
-  const [cuenta, setCuenta] = useState<Cuenta | null>(null);
+  const [cuenta, setCuenta] = useState<CuentaDetalle | null>(null);
   const [tomando, setTomando] = useState(false);
-  const [transfiriendo, setTransfiriendo] = useState(false);
+  const [modo, setModo] = useState<'transferir' | 'unir' | null>(null);
+  const [precuenta, setPrecuenta] = useState(false);
+  const [fuga, setFuga] = useState(false);
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'error' | 'ok' } | null>(null);
   const [, setTic] = useState(0);
 
@@ -34,9 +45,9 @@ export default function PaginaMozo() {
   }, []);
 
   const cargarCuenta = useCallback(async (mesa: Mesa | null) => {
-    if (!mesa || mesa.estado === 'LIBRE' || mesa.estado === 'POR_LIMPIAR') return setCuenta(null);
+    if (!mesa || mesa.estado === 'LIBRE') return setCuenta(null);
     try {
-      setCuenta(await api<Cuenta>('GET', `/cuentas/mesa/${mesa.id}`));
+      setCuenta(await api<CuentaDetalle>('GET', `/cuentas/mesa/${mesa.id}`));
     } catch {
       setCuenta(null);
     }
@@ -47,7 +58,8 @@ export default function PaginaMozo() {
   }, [sesion, cargar]);
   useEffect(() => {
     cargarCuenta(sel);
-  }, [sel?.id, sel?.estado, sel?.total, cargarCuenta]);
+    setModo(null);
+  }, [sel?.id, sel?.estado, sel?.total, sel?.unidaA, cargarCuenta]);
   useEffect(() => {
     const t = setInterval(() => setTic((x) => x + 1), 30000);
     return () => clearInterval(t);
@@ -58,6 +70,7 @@ export default function PaginaMozo() {
       'mesas:cambio': cargar,
       'cocina:actualizar': () => cargarCuenta(sel),
       alerta: (a) => {
+        if (a.tipo === 'DELIVERY') return; // las entregas fallidas las atiende la caja
         pitido(2, 1200);
         setAlertas((l) => [{ ...a, id: `${Date.now()}-${Math.random()}` }, ...l].slice(0, 20));
         cargar();
@@ -79,8 +92,10 @@ export default function PaginaMozo() {
 
   if (!sesion) return null;
   const libres = mesas.filter((m) => m.estado === 'LIBRE' && m.id !== sel?.id);
+  const ocupadas = mesas.filter((m) => m.id !== sel?.id && !m.unidaA && !m.unidas.length && ['OCUPADA', 'POR_CONFIRMAR', 'CUENTA_SOLICITADA'].includes(m.estado));
   const llamados = alertas.filter((a) => a.tipo !== 'PEDIDO_QR');
   const pendientes = porConfirmar.length + llamados.length;
+  const enUso = sel && sel.estado !== 'LIBRE' && sel.estado !== 'POR_LIMPIAR';
 
   return (
     <div className="min-h-screen">
@@ -115,7 +130,9 @@ export default function PaginaMozo() {
                     {e.icono} {e.texto}
                   </div>
                   <div className="text-xs text-slate-600">{m.apertura && m.estado !== 'LIBRE' ? `${minutosDesde(m.apertura)} en mesa` : `${m.capacidad} sillas`}</div>
-                  {m.total > 0 && <div className="mt-3 text-lg font-bold text-slate-900">{soles(m.total)}</div>}
+                  {m.unidaA && <div className="mt-1 text-xs font-bold text-slate-700">🔗 Unida a {m.unidaA}</div>}
+                  {m.unidas.length > 0 && <div className="mt-1 text-xs font-bold text-slate-700">🔗 + {m.unidas.join(', ')}</div>}
+                  {m.total > 0 && !m.unidaA && <div className="mt-2 text-lg font-bold text-slate-900">{soles(m.total)}</div>}
                 </button>
               );
             })}
@@ -124,34 +141,15 @@ export default function PaginaMozo() {
           {sel && (
             <div className="tarjeta mt-4 p-5 animar-entrada">
               <div className="flex flex-wrap items-center gap-3">
-                <h3 className="text-2xl font-extrabold">Mesa {sel.numero}</h3>
+                <h3 className="text-2xl font-extrabold">Mesa {cuenta?.mesa ?? sel.numero}</h3>
                 <span className={`rounded-full border px-3 py-1 text-sm font-bold ${ESTADO_MESA[sel.estado].caja}`}>{ESTADO_MESA[sel.estado].texto}</span>
+                {cuenta?.pagoEnLinea && <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-800">💳 Pagando en línea…</span>}
                 <div className="flex-1" />
                 {cuenta && <span className="text-xl font-bold">Total {soles(cuenta.total)}</span>}
               </div>
               {cuenta && (
-                <div className="mt-3 space-y-2">
-                  {cuenta.pedidos.map((p, i) => (
-                    <div key={p.id} className="rounded-xl bg-slate-50 p-3 text-sm">
-                      <div className="mb-1 flex items-center gap-2 font-bold">
-                        Ronda {i + 1} · {hora(p.creadoEn)} · {p.mozo}
-                        <span className="rounded bg-white px-2 py-0.5 text-xs font-semibold text-slate-600">{p.estado.replace('_', ' ').toLowerCase()}</span>
-                        <div className="flex-1" />
-                        {p.estado === 'EN_PREPARACION' && (
-                          <button className="btn-secundario min-h-9 px-3 text-xs" onClick={() => accion(() => api('POST', `/pedidos/${p.id}/servido`), 'Marcado como servido')}>
-                            Servido
-                          </button>
-                        )}
-                      </div>
-                      {p.items.map((it, k) => (
-                        <div key={k}>
-                          {it.cantidad}× {it.producto}
-                          {it.opciones.length > 0 && <span className="text-slate-500"> · {it.opciones.map((o) => o.nombre).join(', ')}</span>}
-                          {it.nota && <span className="italic text-slate-500"> · {it.nota}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+                <div className="mt-3">
+                  <DetalleCuenta cuenta={cuenta} alCambio={() => (cargar(), cargarCuenta(sel))} alAviso={setAviso} />
                 </div>
               )}
               <div className="mt-4 flex flex-wrap gap-2">
@@ -160,33 +158,56 @@ export default function PaginaMozo() {
                     + {sel.estado === 'LIBRE' ? 'Abrir mesa y tomar pedido' : 'Agregar pedido'}
                   </button>
                 )}
-                {sel.estado !== 'LIBRE' && sel.estado !== 'POR_LIMPIAR' && (
-                  <button className="btn-secundario" onClick={() => setTransfiriendo((v) => !v)}>
-                    Transferir mesa
+                {cuenta && cuenta.total > 0 && (
+                  <button className="btn-secundario" onClick={() => setPrecuenta(true)}>
+                    🧾 Precuenta
                   </button>
                 )}
-                {(sel.estado === 'POR_LIMPIAR' || (sel.estado !== 'LIBRE' && (cuenta?.total ?? 0) === 0)) && (
+                {enUso && !sel.unidaA && sel.unidas.length === 0 && (
+                  <button className="btn-secundario" onClick={() => setModo((v) => (v === 'transferir' ? null : 'transferir'))}>
+                    Transferir
+                  </button>
+                )}
+                {enUso && !sel.unidaA && (
+                  <button className="btn-secundario" onClick={() => setModo((v) => (v === 'unir' ? null : 'unir'))}>
+                    🔗 Unir otra mesa
+                  </button>
+                )}
+                {sel.unidaA && sel.estado !== 'POR_LIMPIAR' && (
+                  <button className="btn-secundario" onClick={() => accion(() => api('POST', `/mesas/${sel.id}/separar`), `Mesa ${sel.numero} separada`)}>
+                    Separar de {sel.unidaA}
+                  </button>
+                )}
+                {(sel.estado === 'POR_LIMPIAR' || (enUso && !sel.unidaA && (cuenta?.total ?? 0) === 0 && sel.unidas.length === 0)) && (
                   <button className="btn-verde" onClick={() => accion(() => api('POST', `/mesas/${sel.id}/liberar`), `Mesa ${sel.numero} libre`)}>
                     Marcar libre
                   </button>
                 )}
+                {enUso && cuenta && cuenta.estado === 'ABIERTA' && cuenta.total > 0 && cuenta.pagos.length === 0 && !sel.unidaA && (
+                  <button className="btn-secundario ml-auto border-red-300 text-red-700" onClick={() => setFuga(true)}>
+                    Fuga de comensal
+                  </button>
+                )}
               </div>
-              {transfiriendo && (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold">Mover a:</span>
-                  {libres.map((m) => (
+              {modo && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-slate-50 p-3">
+                  <span className="text-sm font-semibold">{modo === 'transferir' ? 'Mover la cuenta a:' : `Unir a ${sel.numero} la mesa:`}</span>
+                  {(modo === 'transferir' ? libres : ocupadas).map((m) => (
                     <button
                       key={m.id}
                       className="chip-off"
                       onClick={() => {
-                        setTransfiriendo(false);
-                        accion(() => api('POST', `/mesas/${sel.id}/transferir`, { destinoId: m.id }), `Cuenta movida a ${m.numero}`).then(() => setSel(m));
+                        setModo(null);
+                        if (modo === 'transferir') accion(() => api('POST', `/mesas/${sel.id}/transferir`, { destinoId: m.id }), `Cuenta movida a ${m.numero}`).then(() => setSel(m));
+                        else accion(() => api('POST', `/mesas/${sel.id}/unir`, { otraId: m.id }), `${m.numero} unida a ${sel.numero}`);
                       }}
                     >
                       {m.numero}
                     </button>
                   ))}
-                  {libres.length === 0 && <span className="text-sm text-slate-500">No hay mesas libres.</span>}
+                  {(modo === 'transferir' ? libres : ocupadas).length === 0 && (
+                    <span className="text-sm text-slate-500">{modo === 'transferir' ? 'No hay mesas libres.' : 'No hay otras mesas ocupadas.'}</span>
+                  )}
                 </div>
               )}
             </div>
@@ -200,8 +221,8 @@ export default function PaginaMozo() {
           {porConfirmar.map((p) => (
             <div key={p.id} className="tarjeta border-l-4 border-l-amber-500 p-4 animar-entrada">
               <div className="font-bold">{p.origen} · Pedido QR por confirmar</div>
-              {p.items.map((it, k) => (
-                <div key={k} className="text-sm">
+              {p.items.map((it) => (
+                <div key={it.id} className="text-sm">
                   {it.cantidad}× {it.producto}
                   {it.opciones.length > 0 && <span className="text-slate-500"> · {it.opciones.map((o) => o.nombre).join(', ')}</span>}
                 </div>
@@ -217,18 +238,16 @@ export default function PaginaMozo() {
               </div>
             </div>
           ))}
-          {alertas
-            .filter((a) => a.tipo !== 'PEDIDO_QR')
-            .map((a) => (
-              <div key={a.id} className={`tarjeta border-l-4 p-4 animar-entrada ${a.tipo === 'CUENTA' ? 'border-l-blue-600' : 'border-l-brasa-600'}`}>
-                <div className="font-bold">{a.mensaje}</div>
-                <div className="text-xs text-slate-500">{hora(a.hora)}</div>
-                <button className="btn-secundario mt-2 min-h-10" onClick={() => setAlertas((l) => l.filter((x) => x.id !== a.id))}>
-                  Atendido
-                </button>
-              </div>
-            ))}
-          {porConfirmar.length + alertas.filter((a) => a.tipo !== 'PEDIDO_QR').length === 0 && <p className="text-slate-500">Sin alertas por ahora.</p>}
+          {llamados.map((a) => (
+            <div key={a.id} className={`tarjeta border-l-4 p-4 animar-entrada ${COLOR_ALERTA[a.tipo] ?? 'border-l-slate-400'}`}>
+              <div className="font-bold">{a.mensaje}</div>
+              <div className="text-xs text-slate-500">{hora(a.hora)}</div>
+              <button className="btn-secundario mt-2 min-h-10" onClick={() => setAlertas((l) => l.filter((x) => x.id !== a.id))}>
+                Atendido
+              </button>
+            </div>
+          ))}
+          {pendientes === 0 && <p className="text-slate-500">Sin alertas por ahora.</p>}
         </aside>
       </div>
 
@@ -240,6 +259,22 @@ export default function PaginaMozo() {
           alTerminar={(msg) => {
             setTomando(false);
             setAviso({ texto: msg, tipo: 'ok' });
+            cargar();
+          }}
+        />
+      )}
+      {precuenta && cuenta && <PrecuentaImpresa cuenta={cuenta} alCerrar={() => setPrecuenta(false)} />}
+      {fuga && cuenta && sel && (
+        <PedirPin
+          titulo={`Fuga de comensal · ${sel.numero}`}
+          descripcion={`La cuenta de ${soles(cuenta.total)} se anula como pérdida y la mesa pasa a «Por limpiar».`}
+          motivos={['Se retiraron sin pagar']}
+          peligro
+          textoBoton="Registrar fuga"
+          alCerrar={() => setFuga(false)}
+          alConfirmar={async (pinAdmin, motivo) => {
+            await api('POST', `/cuentas/${cuenta.cuentaId}/fuga`, { pinAdmin, motivo });
+            setAviso({ texto: 'Fuga registrada', tipo: 'ok' });
             cargar();
           }}
         />

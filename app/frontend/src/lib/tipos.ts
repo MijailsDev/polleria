@@ -30,19 +30,67 @@ export interface Mesa {
   total: number;
   saldo: number;
   porConfirmar: number;
+  unidaA: string | null;
+  unidas: string[];
+}
+
+export interface Delivery {
+  cliente: string;
+  celular: string;
+  direccion: string;
+  referencia: string | null;
+  pagaCon: number | null;
+  estado: 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO' | 'FALLIDO';
+  repartidorId: string | null;
+  repartidor: string | null;
+  liquidado: boolean;
+  destinoFallido: string | null;
+}
+
+export interface ItemComanda {
+  id: string;
+  cantidad: number;
+  producto: string;
+  destino: string;
+  precio: number;
+  nota: string | null;
+  opciones: { grupo: string; nombre: string }[];
 }
 
 export interface Comanda {
   id: string;
+  cuentaId: string;
   numero: number;
-  canal: string;
+  canal: 'SALON' | 'LLEVAR' | 'DELIVERY' | 'APP_EXTERNA';
   estado: string;
   origen: string;
   mozo: string;
+  nombreCliente: string | null;
+  codigoPlataforma: string | null;
+  horaProgramada: string | null;
+  reposicion: boolean;
   creadoEn: string;
   impresoEn: string | null;
   servidoEn: string | null;
-  items: { cantidad: number; producto: string; destino: string; precio: number; nota: string | null; opciones: { grupo: string; nombre: string }[] }[];
+  delivery: Delivery | null;
+  items: ItemComanda[];
+}
+
+/** Detalle consolidado de una cuenta (mesa, llevar, delivery o app). */
+export interface CuentaDetalle {
+  cuentaId: string;
+  mesaId: string | null;
+  mesa: string;
+  canal: Comanda['canal'];
+  estado: 'ABIERTA' | 'PAGADA' | 'ANULADA';
+  total: number;
+  saldo: number;
+  descuento: number;
+  motivoDescuento: string | null;
+  pagoEnLinea: boolean;
+  pedidos: Comanda[];
+  pagos: { medio: string; monto: number; numeroOperacion: string | null; fecha: string }[];
+  comprobantes: { id: string; tipo: string; numero: string; total: number; estadoSunat: string; anulado: boolean }[];
 }
 
 export const precioItem = (i: ItemCarrito) => (i.producto.precio + i.opciones.reduce((s, o) => s + o.recargo, 0)) * i.cantidad;
@@ -53,4 +101,19 @@ export const ESTADO_MESA: Record<Mesa['estado'], { texto: string; icono: string;
   OCUPADA: { texto: 'Ocupada', icono: '●', caja: 'border-red-600 bg-red-50 text-red-800', punto: 'bg-red-600' },
   CUENTA_SOLICITADA: { texto: 'Pidió la cuenta', icono: '🧾', caja: 'border-blue-600 bg-blue-50 text-blue-800', punto: 'bg-blue-600' },
   POR_LIMPIAR: { texto: 'Por limpiar', icono: '🧹', caja: 'border-slate-500 bg-slate-100 text-slate-700', punto: 'bg-slate-500' },
+};
+
+export const CANAL: Record<Comanda['canal'], { texto: string; icono: string; color: string }> = {
+  SALON: { texto: 'Salón', icono: '🍽', color: 'bg-red-100 text-red-800' },
+  LLEVAR: { texto: 'Para llevar', icono: '🛍', color: 'bg-amber-100 text-amber-800' },
+  DELIVERY: { texto: 'Delivery', icono: '🛵', color: 'bg-blue-100 text-blue-800' },
+  APP_EXTERNA: { texto: 'App externa', icono: '📲', color: 'bg-purple-100 text-purple-800' },
+};
+
+export const MEDIO: Record<string, string> = {
+  EFECTIVO: 'Efectivo',
+  YAPE: 'Yape',
+  PLIN: 'Plin',
+  TARJETA: 'Tarjeta',
+  PLATAFORMA_EXTERNA: 'Plataforma',
 };

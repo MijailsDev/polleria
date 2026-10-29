@@ -5,8 +5,31 @@ import { Categoria, ItemCarrito, precioItem, Producto } from '@/lib/tipos';
 import { soles, useEventos, uuid } from '@/lib/util';
 import { SelectorProducto } from './SelectorProducto';
 
-/** Toma de pedido en la tablet del mozo (F-05). Solo se imprime en cocina lo nuevo de cada ronda. */
-export function TomaPedido({ mesaId, mesa, alTerminar, alCerrar }: { mesaId: string; mesa: string; alTerminar: (msg: string) => void; alCerrar: () => void }) {
+export interface ItemEnvio { productoId: string; cantidad: number; nota: string; opciones: string[] }
+
+/**
+ * Toma de pedido táctil (F-05). La usa el mozo para su mesa y la caja para llevar y delivery.
+ * Solo se imprime en cocina lo nuevo de cada ronda; la clave evita duplicados al reintentar.
+ */
+export function TomaPedido({
+  titulo,
+  alEnviar,
+  alCerrar,
+  textoBoton = 'Comandar',
+  panelExtra,
+  mesaId,
+  mesa,
+  alTerminar,
+}: {
+  titulo?: string;
+  alEnviar?: (items: ItemEnvio[], clave: string) => Promise<string>;
+  alCerrar: () => void;
+  textoBoton?: string;
+  panelExtra?: React.ReactNode;
+  mesaId?: string;
+  mesa?: string;
+  alTerminar: (msg: string) => void;
+}) {
   const [carta, setCarta] = useState<Categoria[]>([]);
   const [cat, setCat] = useState(0);
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
@@ -26,18 +49,17 @@ export function TomaPedido({ mesaId, mesa, alTerminar, alCerrar }: { mesaId: str
   async function comandar() {
     setEnviando(true);
     setError('');
+    const items = carrito.map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad, nota: i.nota, opciones: i.opciones.map((o) => o.id) }));
     try {
-      await api('POST', '/pedidos', {
-        mesaId,
-        clave,
-        items: carrito.map((i) => ({ productoId: i.producto.id, cantidad: i.cantidad, nota: i.nota, opciones: i.opciones.map((o) => o.id) })),
-      });
+      const msg = alEnviar
+        ? await alEnviar(items, clave)
+        : await api('POST', '/pedidos', { mesaId, clave, items }).then(() => `Comanda de ${mesa} enviada a cocina`);
       setCarrito([]);
       setClave(uuid());
-      alTerminar(`Comanda de ${mesa} enviada a cocina`);
+      alTerminar(msg);
     } catch (e) {
       const err = e as ErrorApi;
-      setError(err.status === 0 ? 'Sin conexión: el pedido sigue guardado aquí. Pulsa «Comandar» otra vez cuando vuelva la señal.' : err.message);
+      setError(err.status === 0 ? 'Sin conexión: el pedido sigue guardado aquí. Pulsa el botón otra vez cuando vuelva la señal.' : err.message);
     } finally {
       setEnviando(false);
     }
@@ -50,7 +72,7 @@ export function TomaPedido({ mesaId, mesa, alTerminar, alCerrar }: { mesaId: str
           <button className="rounded-lg border border-slate-600 px-3 py-2" onClick={alCerrar}>
             ← Volver
           </button>
-          <h2 className="text-lg font-bold">Pedido · Mesa {mesa}</h2>
+          <h2 className="text-lg font-bold">{titulo ?? `Pedido · Mesa ${mesa}`}</h2>
         </div>
         <div className="flex gap-2 overflow-x-auto border-b border-slate-200 bg-white p-3">
           {carta.map((c, i) => (
@@ -76,8 +98,9 @@ export function TomaPedido({ mesaId, mesa, alTerminar, alCerrar }: { mesaId: str
         </div>
       </section>
 
-      <aside className="flex max-h-[45vh] w-full flex-col border-t border-slate-200 bg-white lg:max-h-none lg:w-96 lg:border-l lg:border-t-0">
-        <h3 className="border-b border-slate-100 p-4 text-lg font-bold">Nueva ronda</h3>
+      <aside className="flex max-h-[55vh] w-full flex-col border-t border-slate-200 bg-white lg:max-h-none lg:w-[400px] lg:border-l lg:border-t-0">
+        {panelExtra && <div className="max-h-[45%] overflow-y-auto border-b border-slate-100 p-4">{panelExtra}</div>}
+        <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-bold">{panelExtra ? 'Productos' : 'Nueva ronda'}</h3>
         <div className="flex-1 space-y-2 overflow-y-auto p-4">
           {carrito.length === 0 && <p className="text-slate-500">Toca los productos para agregarlos.</p>}
           {carrito.map((i) => (
@@ -99,7 +122,7 @@ export function TomaPedido({ mesaId, mesa, alTerminar, alCerrar }: { mesaId: str
         {error && <p className="px-4 pb-2 text-sm font-semibold text-red-600">{error}</p>}
         <div className="border-t border-slate-100 p-4">
           <button className="btn-primario w-full text-lg" disabled={!carrito.length || enviando} onClick={comandar}>
-            {enviando ? 'Enviando…' : `Comandar · ${soles(total)}`}
+            {enviando ? 'Enviando…' : `${textoBoton} · ${soles(total)}`}
           </button>
         </div>
       </aside>

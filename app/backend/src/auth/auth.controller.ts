@@ -12,7 +12,7 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() body: { usuarioId: string; pin: string }) {
-    return this.auth.login(body.usuarioId, body.pin);
+  login(@Body() body: { usuarioId: string; pin: string; password?: string }) {
+    return this.auth.login(body.usuarioId, body.pin, body.password);
   }
 }

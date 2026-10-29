@@ -1,6 +1,6 @@
 # Sistema para Pollerías · aplicación web (versión local)
 
-Primera versión con las **5 funcionalidades clave**: carta QR con presa obligatoria, comandas a cocina, cobro en caja, comprobantes y turnos con arqueo ciego. Incluye además el inicio de sesión con PIN, el plano de mesas en tiempo real y los productos agotados.
+Versión completa con las 15 funcionalidades del documento de requerimientos (F-01 a F-15). Los servicios externos (SUNAT, pasarela de pagos, consulta DNI/RUC, ticketera) están simulados para poder probar todo en una sola laptop.
 
 | Parte | Tecnología | Carpeta | Puerto |
 | :--- | :--- | :--- | :--- |
@@ -12,6 +12,18 @@ Primera versión con las **5 funcionalidades clave**: carta QR con presa obligat
 
 - Node.js 20 o superior
 - PostgreSQL con la base `polleria` creada (ver `../base_de_datos/README.md`)
+
+## Actualizar una base creada antes
+
+Si tu base se creó con la primera versión, aplica la ampliación una sola vez (se puede repetir sin problema):
+
+```bash
+cd ../base_de_datos
+```
+
+```bash
+psql -h localhost -U polleria_app -d polleria -f 05_ampliacion.sql
+```
 
 ## Arrancar el sistema
 
@@ -54,20 +66,35 @@ Luego abre **http://localhost:3000**.
 | Dirección | Para quién | Qué hace |
 | :--- | :--- | :--- |
 | `/` | Todos | Menú de pantallas |
-| `/login` | Personal | Ingreso con usuario y PIN |
-| `/mozo` | Tablet del mozo | Plano de mesas, toma de pedidos, confirmar pedidos QR, alertas, transferir y liberar mesas |
-| `/cocina` | Estación del pollero | Comandas con alarma sonora (simula la ticketera) |
-| `/caja` | Terminal de caja | Abrir turno, cobro mixto o dividido, boleta o factura, agotados, egresos y cierre con arqueo ciego y Reporte Z |
-| `/qr` | Impresión | Los 10 códigos QR de las mesas |
-| `/m/M-04` | Celular del comensal | Carta digital, pedido, llamar al mozo y pedir la cuenta |
+| `/login` | Personal | Ingreso con usuario y PIN (el administrador además con contraseña) |
+| `/mozo` | Tablet del mozo | Plano de mesas, pedidos, confirmar pedidos QR, unir y separar mesas, transferir, precuenta, anular ítem y reposición con PIN, fuga de comensal |
+| `/caja` | Terminal de caja | Cobro mixto o dividido, descuentos, boleta, factura y nota de crédito; llevar, delivery, apps y programados; liquidación de repartidores; inventario; agotados; turno con arqueo por denominación y Reporte Z |
+| `/cocina` | Estación del pollero | Comandas con alarma, tickets ANULACIÓN, REIMPRESIÓN y REPOSICIÓN, botón «Listo» |
+| `/reparto` | Celular del repartidor | Pedidos en ruta, cuánto cobrar y vuelto, entregado o fallido |
+| `/admin` | Dueño | Usuarios y PIN, carta y precios con modificadores, mesas, configuración, turnos (Reporte X, reabrir) y bitácora |
+| `/reportes` | Dueño | Ventas por día, medio, canal, cajero y mozo; ranking de productos; pecho vs. pierna; horas punta; tiempos de atención; anulaciones, mermas, notas de crédito y arqueos; exportar a Excel (CSV) o PDF |
+| `/qr` | Impresión | Los códigos QR de las mesas activas |
+| `/m/M-04` | Celular del comensal | Carta, pedido, llamar al mozo, pedir la cuenta y **pagar desde el celular** |
+| `/pasarela/…` | Comensal | Pasarela de pagos simulada (Yape, Plin, tarjeta) |
+| `/c/…` | Comensal | Su comprobante para ver o guardar en PDF |
 
 ## Usuarios de prueba
 
-| Usuario | PIN |
-| :--- | :--- |
-| Mozo de prueba | 1111 |
-| Cajera de prueba | 2222 |
-| Administrador (prueba) | 1234 |
+| Usuario | PIN | Contraseña |
+| :--- | :--- | :--- |
+| Mozo de prueba | 1111 | |
+| Cajera de prueba | 2222 | |
+| Repartidor de prueba | 3333 | |
+| Administrador (prueba) | 1234 | Admin2026! |
+
+El PIN del administrador también autoriza las acciones protegidas: anulaciones, reposiciones, descuentos, notas de crédito, mermas, fugas, egresos grandes y reapertura de turnos.
+
+## Datos de prueba para la pasarela simulada
+
+| Medio | Aprobado | Rechazado |
+| :--- | :--- | :--- |
+| Yape / Plin | cualquier código de 6 dígitos | 000000 |
+| Tarjeta | 4111 1111 1111 1111 | 4000 0000 0000 0002 |
 
 ## Probar con el celular
 
@@ -80,15 +107,18 @@ Luego abre **http://localhost:3000**.
 
 | Servicio real | En esta versión |
 | :--- | :--- |
-| Emisión de boletas y facturas ante SUNAT (Nubefact) | Se generan con serie y correlativo, IGV + IPM de 10.5 % y QR; el estado SUNAT queda «ACEPTADO (simulado)». |
-| Pago con Yape o Plin por pasarela (Culqi / Izipay) | Se registra con el número de operación, que no puede repetirse. |
+| Emisión de boletas, facturas y notas de crédito ante SUNAT (Nubefact) | Se generan con serie y correlativo, IGV + IPM de 10.5 % y QR; el estado queda «ACEPTADO (simulado)». |
+| Pasarela de pagos (Culqi / Izipay) | Página `/pasarela` de prueba que notifica al sistema con un webhook firmado con HMAC-SHA256. |
 | Consulta de DNI y RUC (ApisPeru) | Devuelve un nombre de prueba si el número tiene formato válido. |
-| Ticketera del pollero con buzzer | Pantalla `/cocina` con pitido y formato de ticket. |
-| Gaveta de dinero | Aviso «Gaveta abierta» en la caja al cobrar en efectivo. |
+| Ticketera del pollero con buzzer | Pantalla `/cocina` con pitidos (triple para comandas, doble para tickets especiales). |
+| Gaveta de dinero | Aviso «Gaveta abierta» en la caja. |
+| Envío por WhatsApp | Abre WhatsApp con el enlace al comprobante; además se muestra un QR de descarga. |
+| Caída de internet | En Administración → Configuración, «Simular caída de internet»: los comprobantes quedan en cola y se envían al reconectar. |
 
-## Pendiente para las siguientes versiones
+## Pendiente o simplificado
 
-Pago en mesa desde el celular, delivery y pedidos programados, inventario y mermas con PIN, reportes del dueño, anulaciones con PIN y operación sin internet con el servidor local.
+- La exportación de reportes es CSV (se abre en Excel) e impresión a PDF desde el navegador, no XLSX nativo.
+- No se implementó: bloqueo de edición simultánea de una mesa (REQ-SAL-05), productos compuestos con descuento de cada componente (REQ-CAT-03), precios por canal (REQ-CAT-06), ICBPER por bolsa, boleta resumen diaria (REQ-FAC-09) ni la sincronización real con un servidor en la nube.
 
 ## Limitación de la demo
 

@@ -2,24 +2,28 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import QRCode from 'qrcode';
+import { api } from '@/lib/api';
 
-const MESAS = Array.from({ length: 10 }, (_, i) => `M-${String(i + 1).padStart(2, '0')}`);
 
 /**
- * Códigos QR de las 10 mesas, listos para imprimir y pegar en los parantes acrílicos.
+ * Códigos QR de las mesas activas, listos para imprimir y pegar en los parantes acrílicos.
  * Usan la dirección con la que se abrió esta página: ábrela con la IP de la laptop
  * (por ejemplo http://192.168.1.20:3000/qr) para que los celulares de la red puedan entrar.
  */
 export default function PaginaQR() {
   const [base, setBase] = useState('');
   const [imagenes, setImagenes] = useState<Record<string, string>>({});
+  const [MESAS, setMesas] = useState<string[]>([]);
 
   useEffect(() => {
     const b = window.location.origin;
     setBase(b);
-    Promise.all(MESAS.map(async (m) => [m, await QRCode.toDataURL(`${b}/m/${m}`, { margin: 1, width: 280 })] as const)).then((l) =>
+    api<string[]>('GET', '/qr-mesas').then((mesas) => {
+      setMesas(mesas);
+      return Promise.all(mesas.map(async (m) => [m, await QRCode.toDataURL(`${b}/m/${m}`, { margin: 1, width: 280 })] as const)).then((l) =>
       setImagenes(Object.fromEntries(l)),
     );
+    });
   }, []);
 
   const esLocalhost = base.includes('localhost') || base.includes('127.0.0.1');

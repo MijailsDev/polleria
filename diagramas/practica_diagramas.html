@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practica los Diagramas</title>
+<style>
+:root{
+  --bg:#f6f4f1;--panel:#ffffff;--panel2:#f1eee9;--line:#e3ded6;
+  --tx:#1d1a16;--tx2:#5c554c;--tx3:#8d857a;
+  --acento:#c2410c;--acento2:#ea580c;--acento-suave:#fff1e8;
+  --ok:#15803d;--ok-suave:#e8f6ec;--mal:#b91c1c;--mal-suave:#fdecec;
+  --g-est:#2563eb;--g-com:#16a34a;--g-int:#7c3aed;--g-dat:#b45309;--g-gen:#475569;
+  --sombra:0 1px 2px rgba(0,0,0,.05),0 6px 24px rgba(60,40,20,.08);
+  --r:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14120f;--panel:#1d1a17;--panel2:#26221e;--line:#36302a;
+    --tx:#f3efe9;--tx2:#bdb4a8;--tx3:#8a8176;
+    --acento:#fb923c;--acento2:#fdba74;--acento-suave:#3a2416;
+    --ok:#4ade80;--ok-suave:#163222;--mal:#f87171;--mal-suave:#3b1a1a;
+    --g-est:#60a5fa;--g-com:#4ade80;--g-int:#a78bfa;--g-dat:#fbbf24;--g-gen:#94a3b8;
+    --sombra:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14120f;--panel:#1d1a17;--panel2:#26221e;--line:#36302a;
+  --tx:#f3efe9;--tx2:#bdb4a8;--tx3:#8a8176;
+  --acento:#fb923c;--acento2:#fdba74;--acento-suave:#3a2416;
+  --ok:#4ade80;--ok-suave:#163222;--mal:#f87171;--mal-suave:#3b1a1a;
+  --g-est:#60a5fa;--g-com:#4ade80;--g-int:#a78bfa;--g-dat:#fbbf24;--g-gen:#94a3b8;
+  --sombra:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+
+/* encabezado */
+header{padding:28px 0 8px}
+.titulo{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:48px;height:48px;border-radius:14px;background:var(--acento);color:#fff;display:grid;place-items:center;font-size:26px;flex-shrink:0}
+h1{font-size:clamp(24px,4vw,34px);margin:0;letter-spacing:-.5px;line-height:1.15}
+.sub{color:var(--tx2);margin:6px 0 0}
+.tema-btn{margin-left:auto;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 14px;font-size:14px;color:var(--tx2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--tx2)}
+.barra{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:8px}
+.barra i{display:block;height:100%;width:0;background:var(--acento);border-radius:99px;transition:width .4s}
+
+/* pestañas */
+nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);margin-top:18px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:8px 0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:none;padding:10px 14px;border-radius:12px;white-space:nowrap;color:var(--tx2);font-weight:600;font-size:15px}
+.tab:hover{background:var(--panel2)}
+.tab.on{background:var(--panel);color:var(--acento);box-shadow:var(--sombra)}
+.tab .n{display:inline-block;min-width:20px;padding:0 6px;border-radius:99px;background:var(--mal);color:#fff;font-size:12px;margin-left:4px}
+section{display:none;padding:22px 0 60px}
+section.on{display:block;animation:entrar .3s ease}
+@keyframes entrar{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:20px;margin:0 0 4px}
+.ayuda{color:var(--tx2);font-size:14px;margin:0 0 16px}
+
+/* chips de tema */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--tx2);display:inline-flex;align-items:center;gap:6px}
+.chip .pt{width:8px;height:8px;border-radius:50%}
+.chip.on{border-color:var(--acento);background:var(--acento-suave);color:var(--acento)}
+.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--tx2);cursor:pointer;user-select:none}
+.sw input{accent-color:var(--acento);width:16px;height:16px}
+
+/* botones */
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:11px 18px;font-weight:700;display:inline-flex;align-items:center;gap:8px;justify-content:center;min-height:44px;transition:transform .1s,background .2s}
+.btn:active{transform:scale(.97)}
+.btn:hover{background:var(--panel2)}
+.btn.pri{background:var(--acento);border-color:var(--acento);color:#fff}
+.btn.pri:hover{filter:brightness(1.07);background:var(--acento)}
+.btn.ok{background:var(--ok-suave);border-color:var(--ok);color:var(--ok)}
+.btn.mal{background:var(--mal-suave);border-color:var(--mal);color:var(--mal)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* etiquetas de diagrama */
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--c,var(--tx2))}
+.tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c,var(--tx3))}
+
+/* tarjetas que se voltean */
+.escena{perspective:1400px;margin:6px 0 16px}
+.tarjeta{display:grid;transition:transform .55s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d;cursor:pointer;outline:none}
+.tarjeta.girada{transform:rotateY(180deg)}
+.cara{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:22px;box-shadow:var(--sombra);padding:26px 28px;min-height:300px;display:flex;flex-direction:column}
+.cara.atras{transform:rotateY(180deg)}
+.cara .termino{font-size:clamp(24px,4.4vw,36px);font-weight:800;letter-spacing:-.5px;margin:auto 0;text-align:center;line-height:1.2}
+.cara .simbolo{font-size:34px;text-align:center;margin-bottom:6px;opacity:.85}
+.cara .pista{text-align:center;color:var(--tx3);font-size:13px}
+.cara .def{font-size:18px;margin:14px 0 0}
+.cara .ej{margin-top:auto;padding-top:16px}
+.cara .ej div{background:var(--panel2);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--tx2)}
+.cara .ej b{color:var(--tx)}
+.tarjeta:focus-visible .cara{outline:3px solid var(--acento);outline-offset:3px}
+.sabida{position:absolute;top:18px;right:20px;font-size:12px;font-weight:700;color:var(--ok);background:var(--ok-suave);padding:3px 10px;border-radius:99px}
+.cara{position:relative}
+.controles{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:8px}
+.contador{text-align:center;color:var(--tx2);font-size:14px;margin-top:12px;font-variant-numeric:tabular-nums}
+.teclas{color:var(--tx3);font-size:12px;text-align:center;margin-top:6px}
+kbd{font-family:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel);font-size:11px}
+.vacio{background:var(--panel);border:1px dashed var(--line);border-radius:22px;padding:40px 20px;text-align:center;color:var(--tx2)}
+.vacio .big{font-size:40px}
+
+/* cuestionario */
+.caja{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sombra);padding:24px}
+.opciones-config{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 18px}
+.lbl{font-weight:700;font-size:14px;margin:14px 0 6px;display:block}
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.pregunta{font-size:clamp(18px,2.8vw,22px);font-weight:700;margin:14px 0 18px;line-height:1.35}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;border:2px solid var(--line);background:var(--panel);border-radius:14px;padding:13px 15px;font-size:16px;transition:border-color .15s,background .15s,transform .1s}
+.opt:hover:not(:disabled){border-color:var(--acento)}
+.opt:disabled{cursor:default}
+.opt .letra{flex-shrink:0;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--panel2);font-weight:800;font-size:14px}
+.opt.bien{border-color:var(--ok);background:var(--ok-suave)}
+.opt.bien .letra{background:var(--ok);color:#fff}
+.opt.malo{border-color:var(--mal);background:var(--mal-suave)}
+.opt.malo .letra{background:var(--mal);color:#fff}
+.opt.tenue{opacity:.55}
+.feedback{margin-top:16px;padding:14px 16px;border-radius:14px;font-size:15px;display:none}
+.feedback.ver{display:block;animation:entrar .25s}
+.feedback.si{background:var(--ok-suave);border-left:4px solid var(--ok)}
+.feedback.no{background:var(--mal-suave);border-left:4px solid var(--mal)}
+.feedback b{display:block;margin-bottom:2px}
+.pie{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.anillo{width:150px;height:150px;margin:0 auto 10px;position:relative}
+.anillo svg{transform:rotate(-90deg)}
+.anillo .num{position:absolute;inset:0;display:grid;place-items:center;font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+.res-msg{text-align:center;font-size:18px;font-weight:700;margin:0}
+.res-sub{text-align:center;color:var(--tx2);margin:4px 0 18px}
+.desglose{display:grid;gap:8px;margin:18px 0}
+.dfila{display:grid;grid-template-columns:150px 1fr 54px;gap:10px;align-items:center;font-size:14px}
+.dfila .barra{margin:0;height:10px}
+.dfila .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.repaso{border-top:1px solid var(--line);padding:12px 0;font-size:14px}
+.repaso p{margin:2px 0}
+.repaso .tu{color:var(--mal)}
+.repaso .bueno{color:var(--ok)}
+
+/* identificar */
+.escenario{font-size:clamp(17px,2.6vw,21px);font-weight:600;margin:12px 0 18px;line-height:1.4;padding:18px;background:var(--panel2);border-radius:14px;border-left:4px solid var(--acento)}
+.gridd{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.dbtn{border:2px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 12px;text-align:left;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;min-height:48px}
+.dbtn::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c);flex-shrink:0}
+.dbtn:hover:not(:disabled){border-color:var(--c)}
+.dbtn.bien{border-color:var(--ok);background:var(--ok-suave)}
+.dbtn.malo{border-color:var(--mal);background:var(--mal-suave)}
+.dbtn:disabled{cursor:default}
+.racha{font-weight:800;color:var(--acento)}
+
+/* relacionar */
+.columnas{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:10px}
+.mcol{display:grid;gap:8px;align-content:start}
+.mi{border:2px solid var(--line);background:var(--panel);border-radius:12px;padding:12px;text-align:left;font-size:15px;min-height:56px;transition:border-color .15s,background .15s,opacity .3s}
+.mi.izq{font-weight:800;border-left:6px solid var(--c)}
+.mi.sel{border-color:var(--acento);background:var(--acento-suave)}
+.mi.listo{border-color:var(--ok);background:var(--ok-suave);opacity:.7;cursor:default}
+.mi.temblor{animation:temblar .35s;border-color:var(--mal);background:var(--mal-suave)}
+@keyframes temblar{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* mis errores */
+.lista-err{display:grid;gap:8px;margin-top:14px}
+.err{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px}
+.err p{margin:4px 0 0;color:var(--tx2)}
+.err .bueno{color:var(--ok);font-weight:600}
+
+.confeti{position:fixed;top:-10px;width:9px;height:14px;z-index:99;pointer-events:none;animation:caer linear forwards}
+@keyframes caer{to{transform:translateY(105vh) rotate(720deg)}}
+
+@media (max-width:640px){
+  .stats{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .stat{padding:10px}
+  .stat b{font-size:18px}
+  .stat span{font-size:11px}
+  .cara{padding:20px 18px;min-height:340px}
+  .cara .def{font-size:16px}
+  .controles{grid-template-columns:1fr 1fr}
+  .controles .nav-izq{order:3}.controles .nav-der{order:4}
+  .caja{padding:18px 16px}
+  .dfila{grid-template-columns:100px 1fr 44px}
+  .columnas{grid-template-columns:1fr 1fr}
+  .mi{font-size:13px;padding:10px}
+  .gridd{grid-template-columns:1fr 1fr}
+  .tema-btn{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titulo">
+      <div class="logo" aria-hidden="true">🍗</div>
+      <div>
+        <h1>Practica los diagramas</h1>
+        <p class="sub">Sistema para Pollerías · Capítulo I · los 11 diagramas y sus conceptos</p>
+      </div>
+      <button class="tema-btn" id="btnTema" title="Cambiar tema">◐ Tema</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stSabidas">0/0</b><span>tarjetas dominadas</span><div class="barra"><i id="stBarra"></i></div></div>
+      <div class="stat"><b id="stMejor">—</b><span>mejor puntaje</span></div>
+      <div class="stat"><b id="stResp">0</b><span>respuestas dadas</span></div>
+    </div>
+  </header>
+</div>
+
+<nav>
+  <div class="wrap tabs" role="tablist">
+    <button class="tab on" data-tab="tarjetas">🃏 Tarjetas</button>
+    <button class="tab" data-tab="cuestionario">📝 Cuestionario</button>
+    <button class="tab" data-tab="identificar">🔎 ¿Qué diagrama es?</button>
+    <button class="tab" data-tab="relacionar">🔗 Relacionar</button>
+    <button class="tab" data-tab="errores">🎯 Mis errores <span class="n" id="nErr" hidden>0</span></button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <!-- TARJETAS -->
+  <section id="tarjetas" class="on">
+    <h2>Tarjetas de conceptos</h2>
+    <p class="ayuda">Lee el concepto, intenta explicarlo en voz alta y luego voltea la tarjeta para comprobar.</p>
+    <div class="chips" id="fcChips"></div>
+    <div class="fila" style="margin-bottom:6px">
+      <label class="sw"><input type="checkbox" id="fcOcultar"> Ocultar las que ya sé</label>
+      <label class="sw"><input type="checkbox" id="fcBarajar"> Barajar</label>
+      <label class="sw"><input type="checkbox" id="fcInvertir"> Ver la definición primero</label>
+    </div>
+    <div id="fcZona"></div>
+  </section>
+
+  <!-- CUESTIONARIO -->
+  <section id="cuestionario">
+    <div id="qzZona"></div>
+  </section>
+
+  <!-- IDENTIFICAR -->
+  <section id="identificar">
+    <h2>¿Qué diagrama es?</h2>
+    <p class="ayuda">Lee la situación y elige el diagrama que corresponde. Son 10 por ronda.</p>
+    <div id="idZona"></div>
+  </section>
+
+  <!-- RELACIONAR -->
+  <section id="relacionar">
+    <h2>Relaciona cada diagrama</h2>
+    <p class="ayuda">Toca un diagrama a la izquierda y luego su pareja a la derecha.</p>
+    <div class="chips" id="mtModo"></div>
+    <div id="mtZona"></div>
+  </section>
+
+  <!-- ERRORES -->
+  <section id="errores">
+    <h2>Mis errores</h2>
+    <p class="ayuda">Aquí quedan las preguntas que fallaste. Cuando las respondas bien, desaparecen de la lista.</p>
+    <div id="errZona"></div>
+  </section>
+</main>
+
+<script>
+/* ===================== DATOS ===================== */
+const GRUPOS = {
+  est:{n:'Estructura', c:'var(--g-est)'},
+  com:{n:'Comportamiento', c:'var(--g-com)'},
+  int:{n:'Interacción', c:'var(--g-int)'},
+  dat:{n:'Modelado de datos', c:'var(--g-dat)'},
+  gen:{n:'General', c:'var(--g-gen)'}
+};
+const DIAGS = [
+  {id:'gen', n:'Clasificación', g:'gen'},
+  {id:'act', n:'Actores', g:'com', s:'1.1.1.1', frase:'Quién usa el sistema.', preg:'¿Quién usa el sistema y con qué sistemas externos se comunica?'},
+  {id:'cu',  n:'Casos de uso', g:'com', s:'1.1.1.2', frase:'Qué puede hacer cada uno.', preg:'¿Qué funciones ofrece el sistema y quién usa cada una?'},
+  {id:'sec', n:'Secuencia', g:'int', s:'1.1.2.1', frase:'Cómo se hace, paso a paso en el tiempo.', preg:'¿Qué mensajes se envían, en qué orden y quién responde?'},
+  {id:'col', n:'Colaboración', g:'int', s:'1.1.2.2', frase:'Cómo se hace, visto por las conexiones entre objetos.', preg:'¿Qué objetos se comunican entre sí y por qué enlaces pasan los mensajes?'},
+  {id:'paq', n:'Paquetes', g:'est', s:'1.1.3', frase:'Cómo se organiza el código.', preg:'¿Cómo organizamos el proyecto para que sea mantenible?'},
+  {id:'cla', n:'Clases', g:'est', s:'1.1.4', frase:'Qué objetos existen, qué guardan y qué hacen.', preg:'¿Qué objetos existen, qué datos guardan y cómo se relacionan?'},
+  {id:'est', n:'Estados', g:'com', s:'1.1.5', frase:'Por qué situaciones pasa un objeto.', preg:'¿En qué situaciones puede estar un objeto y qué lo hace cambiar?'},
+  {id:'cmp', n:'Componentes', g:'est', s:'1.2.1', frase:'Qué piezas de software hay y cómo se conectan.', preg:'¿Qué piezas de software forman el sistema y por qué interfaces se comunican?'},
+  {id:'des', n:'Despliegue', g:'est', s:'1.2.2', frase:'En qué equipos se instala cada pieza.', preg:'¿En qué equipos corre el sistema y cómo se conectan?'},
+  {id:'mf',  n:'Modelo físico', g:'dat', s:'1.3.1', frase:'Cómo quedan las tablas en la base de datos.', preg:'¿Cómo quedan exactamente las tablas en la base de datos?'},
+  {id:'dd',  n:'Diccionario de datos', g:'dat', s:'1.3.2', frase:'Qué significa cada dato.', preg:'¿Qué significa cada dato y qué valores acepta?'}
+];
+const D = Object.fromEntries(DIAGS.map(d => [d.id, d]));
+const color = t => GRUPOS[D[t].g].c;
+
+/* Tarjetas: t = diagrama, f = concepto, s = símbolo, b = definición, e = ejemplo del proyecto */
+const CARDS = [
+  {t:'gen', f:'UML', s:'📐', b:'Lenguaje Unificado de Modelado: una notación estándar para dibujar sistemas de software. UML 2 agrupa sus diagramas en <b>estructura</b> y <b>comportamiento</b>.', e:'Usamos 9 diagramas UML; el modelo físico y el diccionario no son UML.'},
+  {t:'gen', f:'Diagramas de estructura', s:'🧱', b:'Muestran <b>qué partes tiene</b> el sistema y cómo se relacionan, sin importar el tiempo (son estáticos).', e:'Clases, paquetes, componentes y despliegue.'},
+  {t:'gen', f:'Diagramas de comportamiento', s:'🎬', b:'Muestran <b>qué hace</b> el sistema y cómo cambia con el tiempo (son dinámicos).', e:'Casos de uso y estados.'},
+  {t:'gen', f:'Diagramas de interacción', s:'💬', b:'Subtipo de comportamiento: muestran <b>cómo colaboran</b> los objetos enviándose mensajes.', e:'Secuencia y colaboración (comunicación).'},
+  {t:'gen', f:'Modelado de datos', s:'🗄️', b:'No es UML. Describe <b>cómo se guarda</b> la información en la base de datos.', e:'Modelo físico y diccionario de datos.'},
+
+  {t:'act', f:'Actor', s:'🧍', b:'Un <b>rol</b> externo que interactúa con el sistema. Es un papel, no una persona concreta.', e:'El mismo trabajador puede ser cajero un día y mozo otro.'},
+  {t:'act', f:'Actor principal', s:'⭐', b:'El que <b>inicia</b> un caso de uso para lograr un objetivo propio.', e:'Comensal, mozo, maestro pollero, cajero(a), repartidor y administrador.'},
+  {t:'act', f:'Actor secundario', s:'🔌', b:'Un <b>sistema externo</b> que el sistema necesita para cumplir un caso de uso.', e:'SUNAT (OSE), pasarela de pagos, consulta DNI/RUC, mensajería y el temporizador.'},
+  {t:'act', f:'Generalización de actores', s:'△', b:'El actor hijo <b>hereda</b> todos los casos de uso del padre. Se dibuja con flecha de triángulo hueco hacia el padre.', e:'Los 5 roles heredan de <i>Personal del local</i> (actor abstracto, en cursiva): todos inician sesión con usuario y PIN.'},
+
+  {t:'cu', f:'Caso de uso', s:'⬭', b:'Una función que da un <b>resultado de valor</b> a un actor. Se dibuja como óvalo y se nombra con un verbo en infinitivo.', e:'"Registrar pedido por QR" (comensal), "Abrir y cerrar turno" (cajero). Son 25 casos en 5 módulos.'},
+  {t:'cu', f:'Límite del sistema', s:'▭', b:'El rectángulo que separa lo que está <b>dentro</b> del sistema (casos de uso) de lo que está <b>fuera</b> (actores).', e:'Los actores siempre quedan fuera del rectángulo "Sistema para Pollerías".'},
+  {t:'cu', f:'«include»', s:'⤏', b:'El caso base <b>siempre</b> ejecuta al caso incluido. Flecha punteada desde el caso base hacia el incluido.', e:'"Cobrar cuenta" «include» "Emitir comprobante".'},
+  {t:'cu', f:'«extend»', s:'⤎', b:'Comportamiento <b>opcional</b> que se agrega solo si se cumple una condición. Flecha punteada desde el caso que extiende hacia el caso base.', e:'"Dividir cuenta" «extend» "Cobrar cuenta", solo cuando los clientes lo piden.'},
+  {t:'cu', f:'Asociación actor–caso de uso', s:'—', b:'Línea simple que indica que el actor <b>participa</b> en ese caso de uso.', e:'Cajero(a) — "Cobrar cuenta".'},
+
+  {t:'sec', f:'Línea de vida', s:'┆', b:'La línea punteada vertical debajo de cada participante. Representa su existencia a lo largo del tiempo, que corre <b>de arriba hacia abajo</b>.', e:'Comensal, Carta QR, API, Base de datos, Ticketera…'},
+  {t:'sec', f:'Activación', s:'▮', b:'El rectángulo delgado sobre la línea de vida: indica que el participante <b>está trabajando</b> en ese momento.', e:'La API permanece activa mientras valida el pedido y lo guarda.'},
+  {t:'sec', f:'Mensaje y retorno', s:'→ ⇠', b:'Flecha llena: un <b>mensaje</b> (una llamada). Flecha punteada: el <b>retorno</b> o respuesta.', e:'registrarVenta() → API; "CDR aceptado + PDF + QR" ⇠ OSE.'},
+  {t:'sec', f:'Automensaje', s:'↻', b:'Un mensaje que un participante se envía <b>a sí mismo</b>, para un cálculo o paso interno.', e:'La API: "confirmar automáticamente" o "encolar comprobante (contingencia)".'},
+  {t:'sec', f:'Fragmento alt', s:'⎇', b:'Marco con <b>alternativas</b> separadas por una línea punteada; cada una tiene su condición. Funciona como si / si no.', e:'[OSE disponible] → enviar la boleta / [sin conexión a internet] → encolarla.'},
+  {t:'sec', f:'Fragmentos opt y loop', s:'⟳', b:'<b>opt</b>: se ejecuta solo si se cumple la condición (si sin "si no"). <b>loop</b>: se repite mientras se cumpla.', e:'opt [hay propina] / loop [por cada ítem del pedido].'},
+  {t:'sec', f:'Secuencias del proyecto', s:'🧾', b:'Hicimos <b>tres</b> flujos paso a paso.', e:'1) Pedido por QR hasta la cocina. 2) Cobro con efectivo + Yape y boleta. 3) Cierre de turno con arqueo ciego.'},
+
+  {t:'col', f:'Diagrama de colaboración', s:'🕸️', b:'Muestra la <b>misma interacción</b> que la secuencia, pero organizada por quién está conectado con quién. En UML 2 se llama <b>diagrama de comunicación</b>.', e:'El pedido por QR: los mismos mensajes que su diagrama de secuencia.'},
+  {t:'col', f:'Enlace', s:'⟷', b:'La línea entre dos objetos por donde <b>viajan los mensajes</b>.', e:'Enlace entre ApiServidorLocal y ColaImpresion.'},
+  {t:'col', f:'Número de secuencia', s:'1·2·2.1', b:'Como no hay eje de tiempo, el <b>orden</b> se indica con números. 2.1 es un mensaje que ocurre <b>dentro</b> del mensaje 2.', e:'1: escanear QR · 2: enviar pedido · 2.1: validar presa…'},
+  {t:'col', f:'Acoplamiento', s:'🎯', b:'Cuántos objetos dependen de uno. En este diagrama se ve como un objeto con <b>muchos enlaces</b>.', e:'ApiServidorLocal es el centro: habla con la carta, la base de datos, la tablet y la cola de impresión.'},
+
+  {t:'paq', f:'Paquete', s:'📁', b:'Agrupa elementos del código como una <b>carpeta o módulo</b>. Se dibuja como una carpeta con pestaña.', e:'Módulos pedidos, caja y facturacion.'},
+  {t:'paq', f:'Dependencia «use»', s:'⇢', b:'Flecha punteada: un paquete <b>usa</b> lo que ofrece otro.', e:'Presentación «use» (REST + WebSocket) → Lógica de negocio.'},
+  {t:'paq', f:'Arquitectura en capas', s:'☰', b:'El código se divide en capas y cada una solo depende de la de abajo.', e:'Presentación (Next.js) → Lógica de negocio (módulos NestJS) → Infraestructura.'},
+  {t:'paq', f:'Dependencia circular', s:'⟲', b:'Cuando A depende de B y B depende de A. Hace el código difícil de mantener y hay que <b>evitarla</b>.', e:'Que caja dependa de pedidos y pedidos dependa de caja.'},
+
+  {t:'cla', f:'Clase', s:'▤', b:'Rectángulo con 3 partes: <b>nombre</b>, <b>atributos</b> y <b>métodos</b>. Visibilidad: + público, − privado, # protegido.', e:'Pedido: − estado, − total, + confirmar(). Son 17 clases y 5 enumeraciones.'},
+  {t:'cla', f:'Multiplicidad', s:'1..*', b:'Cuántos objetos participan en la relación: <b>1</b>, <b>0..1</b>, <b>0..*</b> (cero o muchos), <b>1..*</b> (uno o muchos).', e:'Un Pedido tiene 1..* ItemPedido; una Mesa tiene 0..* Cuentas.'},
+  {t:'cla', f:'Composición', s:'◆', b:'Rombo <b>negro</b>: la parte <b>no existe sin el todo</b>. Si se borra el todo, se borran sus partes.', e:'Un ItemPedido no existe sin su Pedido.'},
+  {t:'cla', f:'Agregación', s:'◇', b:'Rombo <b>hueco</b>: el todo agrupa partes que <b>sí pueden existir solas</b>.', e:'Una Categoría agrupa Productos; el producto sigue existiendo si cambia de categoría.'},
+  {t:'cla', f:'Asociación', s:'—', b:'Línea simple: dos clases <b>se conocen</b>, pero cada una existe por sí sola.', e:'Pedido — Usuario (el mozo que lo tomó).'},
+  {t:'cla', f:'Herencia (generalización)', s:'△', b:'Flecha con triángulo hueco: la subclase <b>"es un"</b> tipo de la superclase y hereda sus atributos y métodos.', e:'Un comprobante puede ser boleta o factura.'},
+  {t:'cla', f:'Enumeración', s:'≡', b:'Clase con estereotipo «enumeration»: una <b>lista cerrada</b> de valores posibles.', e:'EstadoMesa, EstadoPedido, MedioPago…'},
+
+  {t:'est', f:'Estado', s:'▢', b:'Una <b>situación</b> en la que está un objeto mientras espera o hace algo. Rectángulo con esquinas redondeadas.', e:'Mesa "Ocupada", Pedido "En preparación".'},
+  {t:'est', f:'Transición', s:'➜', b:'Flecha entre estados. Se escribe <b>evento [condición] / acción</b>.', e:'anular [PIN del administrador] / ticket ANULACIÓN.'},
+  {t:'est', f:'Estado inicial y final', s:'● ◉', b:'Círculo negro relleno = <b>inicio</b>. Círculo con anillo = <b>fin</b> del ciclo de vida.', e:'Mesa: inicio → Libre … desactivar mesa [administrador] → fin.'},
+  {t:'est', f:'Condición de guarda', s:'[ ]', b:'Expresión entre corchetes que debe ser <b>verdadera</b> para que la transición ocurra.', e:'pago completo <b>[saldo = S/ 0.00]</b> / emitir comprobante.'},
+  {t:'est', f:'Estados de la Mesa', s:'🟢🔴', b:'Libre, Pedido QR por confirmar, Ocupada, Cuenta solicitada y Por limpiar.', e:'Son los mismos colores del plano de mesas: verde, amarillo, rojo, azul y gris.'},
+  {t:'est', f:'Estados del Pedido', s:'🍗', b:'Registrado, Programado, Por confirmar, Confirmado, En preparación, Servido y Anulado.', e:'Programado: cuando el cliente pacta una hora de recojo futura; el temporizador lo activa 15 min antes.'},
+
+  {t:'cmp', f:'Componente', s:'🧩', b:'Una pieza de software que se puede <b>reemplazar o desplegar por separado</b> y que se comunica por interfaces.', e:'Las 4 aplicaciones web, la API NestJS, PostgreSQL.'},
+  {t:'cmp', f:'Interfaz ofrecida y requerida', s:'○ ◐', b:'Círculo (○, "chupetín"): lo que el componente <b>ofrece</b>. Semicírculo (◐, "enchufe"): lo que <b>necesita</b> de otro.', e:'La API ofrece "API REST" y "Eventos en tiempo real"; las apps web los requieren.'},
+  {t:'cmp', f:'Adaptador', s:'🔁', b:'Componente que <b>aísla</b> un servicio externo para que el resto del sistema no dependa de él directamente.', e:'Cambiar Nubefact por otro OSE tocando solo el adaptador de integración.'},
+
+  {t:'des', f:'Nodo', s:'🖥️', b:'Un <b>equipo físico</b> («device») o un <b>entorno de ejecución</b> donde corre software. Se dibuja como un cubo.', e:'Celular, tablet, terminal de caja, servidor local (Mini PC), ticketeras, router y VPS.'},
+  {t:'des', f:'Artefacto', s:'📦', b:'Un archivo o programa <b>concreto</b> que se instala en un nodo.', e:'api-nestjs, postgresql-16, agente-escpos.'},
+  {t:'des', f:'Ruta de comunicación', s:'🔗', b:'La línea entre nodos, etiquetada con el <b>medio o protocolo</b>.', e:'Cat6, USB, WiFi, HTTPS, TCP 9100 hacia la ticketera.'},
+  {t:'des', f:'Servidor local + nube', s:'☁️', b:'El local sigue funcionando <b>sin internet</b> porque la API y la base de datos corren en el servidor del propio local.', e:'El VPS en la nube solo sincroniza cuando vuelve la conexión.'},
+
+  {t:'mf', f:'Clave primaria (PK)', s:'🔑', b:'Columna que <b>identifica de forma única</b> cada fila de la tabla.', e:'pedido.id de tipo uuid.'},
+  {t:'mf', f:'Clave foránea (FK)', s:'🔗', b:'Columna que <b>apunta a la PK</b> de otra tabla y garantiza que la relación sea válida (integridad referencial).', e:'item_pedido.pedido_id → pedido.id.'},
+  {t:'mf', f:'Restricción única (UQ)', s:'1️⃣', b:'Impide que un valor se <b>repita</b> en esa columna, aunque no sea la clave primaria.', e:'pago.numero_operacion (no reusar una captura de Yape) y pedido.clave_idempotencia.'},
+  {t:'mf', f:'Notación pata de gallo', s:'⋲', b:'Cómo se dibujan las relaciones: la <b>pata</b> = muchos, la <b>barra</b> = uno, el <b>círculo</b> = opcional (cero).', e:'Una cuenta tiene cero o muchos pagos: ○⋲ del lado de pago.'},
+  {t:'mf', f:'Tabla intermedia', s:'⇄', b:'Tabla que resuelve una relación de <b>muchos a muchos</b> entre otras dos.', e:'item_opcion une item_pedido con opcion_modificador (presa, cremas…).'},
+  {t:'mf', f:'Restricción CHECK', s:'✔', b:'Regla que la base de datos <b>valida</b> antes de guardar un valor.', e:'Una factura exige RUC; una boleta mayor a S/ 700 exige DNI.'},
+
+  {t:'dd', f:'Diccionario de datos', s:'📖', b:'Documento en tablas que describe <b>cada columna</b>: nombre, tipo, si puede quedar vacía, clave y significado.', e:'Es la referencia para validar formularios y escribir reportes.'},
+  {t:'dd', f:'Nulabilidad', s:'∅', b:'Indica si una columna <b>puede quedar vacía</b> (NULL) o es obligatoria (NOT NULL).', e:'El RUC del cliente puede quedar vacío en una boleta, pero no en una factura.'},
+  {t:'dd', f:'Dominio de valores', s:'🎚️', b:'El conjunto de <b>valores permitidos</b> para una columna.', e:'fraccion_pollo solo acepta 0, 0.125, 0.25, 0.5 o 1.'}
+];
+
+/* Preguntas: o[0] es siempre la correcta; se barajan al mostrarlas */
+const PREG = [
+  {t:'gen', q:'¿A qué grupo de UML pertenecen los diagramas de clases, paquetes, componentes y despliegue?', o:['Estructura (estáticos)','Comportamiento','Interacción','Modelado de datos'], x:'Describen qué partes tiene el sistema, sin importar el tiempo.'},
+  {t:'gen', q:'El modelo físico y el diccionario de datos…', o:['No son UML: pertenecen al modelado de datos','Son diagramas de estructura UML','Son diagramas de interacción','Son diagramas de comportamiento'], x:'Describen cómo se guarda la información en la base de datos, fuera de UML.'},
+  {t:'gen', q:'Los diagramas de secuencia y de colaboración son diagramas de…', o:['Interacción (un subtipo de comportamiento)','Estructura','Despliegue','Modelado de datos'], x:'Muestran cómo colaboran los objetos enviándose mensajes.'},
+  {t:'gen', q:'¿Cuál es el orden en que se construyen los diagramas?', o:['Actores → Casos de uso → Secuencia → Clases → Modelo físico','Clases → Actores → Despliegue → Casos de uso','Modelo físico → Secuencia → Actores → Clases','Despliegue → Componentes → Casos de uso → Actores'], x:'Primero quién y qué; luego cómo; luego con qué objetos; al final cómo se guardan.'},
+  {t:'gen', q:'¿Qué diagrama responde "¿dónde se instala?"', o:['Despliegue','Componentes','Paquetes','Clases'], x:'El despliegue muestra el hardware y qué software se instala en cada equipo.'},
+
+  {t:'act', q:'Un actor representa…', o:['Un rol externo que interactúa con el sistema','Una persona específica con nombre y DNI','Una clase interna del backend','Una tabla de usuarios'], x:'Es un papel: el mismo trabajador puede ser mozo o cajero.'},
+  {t:'act', q:'¿Cuál de estos es un actor secundario en el proyecto?', o:['SUNAT (OSE)','Mozo','Comensal','Cajero(a)'], x:'Los actores secundarios son sistemas externos que el sistema necesita.'},
+  {t:'act', q:'"Personal del local", escrito en cursiva, es…', o:['Un actor abstracto del que heredan los roles del personal','Un caso de uso','Un paquete del código','Un actor secundario externo'], x:'La cursiva indica abstracto: nadie es "solo personal", pero todos heredan el inicio de sesión con PIN.'},
+  {t:'act', q:'¿Qué punta tiene la flecha de generalización entre actores?', o:['Triángulo hueco','Rombo negro','Flecha abierta punteada','Círculo'], x:'Es la misma notación de herencia que en el diagrama de clases.'},
+  {t:'act', q:'¿Por qué el temporizador se considera un actor?', o:['Porque dispara acciones por sí mismo, como avisar 15 min antes de un pedido programado','Porque es una persona del local','Porque es una clase del backend','Porque guarda datos en la base'], x:'Un actor es cualquier cosa externa que inicia o participa en un caso de uso, incluido el tiempo.'},
+
+  {t:'cu', q:'"Cobrar cuenta" siempre emite un comprobante. ¿Qué relación los une?', o:['«include»','«extend»','Generalización','Composición'], x:'«include»: el caso base siempre ejecuta al incluido.'},
+  {t:'cu', q:'"Dividir cuenta" ocurre solo cuando los clientes lo piden. ¿Qué relación tiene con "Cobrar cuenta"?', o:['«extend»','«include»','Composición','Dependencia «use»'], x:'«extend»: agrega comportamiento opcional bajo una condición.'},
+  {t:'cu', q:'En una relación «extend», la flecha va…', o:['Desde el caso que extiende hacia el caso base','Desde el caso base hacia el que extiende','Desde el actor hacia el caso de uso','No lleva flecha'], x:'"Dividir cuenta" ⇢ "Cobrar cuenta". En «include» es al revés: del base al incluido.'},
+  {t:'cu', q:'¿Cuántos casos de uso tiene el proyecto?', o:['25, en 5 módulos','14, en 3 módulos','11, uno por diagrama','17, uno por clase'], x:'25 casos de uso agrupados en 5 módulos.'},
+  {t:'cu', q:'Un caso de uso describe…', o:['Qué hace el sistema, visto desde afuera','Cómo se programa cada método','Las columnas de una tabla','El hardware del local'], x:'No explica cómo se programa; eso lo muestran la secuencia y las clases.'},
+  {t:'cu', q:'¿Qué representa el rectángulo grande que rodea los óvalos?', o:['El límite del sistema','Un paquete','Un nodo','Una clase'], x:'Lo de adentro es el sistema; los actores quedan afuera.'},
+
+  {t:'sec', q:'En un diagrama de secuencia, el tiempo corre…', o:['De arriba hacia abajo','De izquierda a derecha','Según los números de los mensajes','No se representa'], x:'Los participantes van arriba y los mensajes bajan conforme pasa el tiempo.'},
+  {t:'sec', q:'¿Qué significa una flecha punteada que regresa?', o:['Un mensaje de retorno (la respuesta)','Un mensaje asíncrono','Una dependencia','La creación de un objeto'], x:'La flecha llena es el mensaje; la punteada, su respuesta.'},
+  {t:'sec', q:'¿Qué es el rectángulo delgado sobre una línea de vida?', o:['La activación: el participante está trabajando','Un fragmento alt','Un nodo','Un estado'], x:'Indica el tiempo durante el cual el participante ejecuta algo.'},
+  {t:'sec', q:'[OSE disponible] / [sin conexión a internet]: ¿qué fragmento se usa?', o:['alt','opt','loop','ref'], x:'alt muestra alternativas excluyentes, como un si / si no.'},
+  {t:'sec', q:'¿Qué fragmento se ejecuta solo si se cumple la condición, sin alternativa?', o:['opt','alt','loop','par'], x:'opt es un "si" sin "si no".'},
+  {t:'sec', q:'¿Cuál NO es uno de los 3 diagramas de secuencia del proyecto?', o:['Registrar un nuevo administrador','Pedido por QR hasta la cocina','Cobro mixto y emisión de boleta','Cierre de turno con arqueo ciego'], x:'Los tres son: pedido QR, cobro con boleta y cierre de turno.'},
+  {t:'sec', q:'¿Para qué sirve principalmente un diagrama de secuencia?', o:['Descubrir qué métodos necesita cada clase y qué puede fallar en cada paso','Definir el hardware que hay que comprar','Describir cada columna de la base','Agrupar el código en carpetas'], x:'Por ejemplo, reveló qué hacer cuando el OSE no responde.'},
+
+  {t:'col', q:'En UML 2, el diagrama de colaboración se llama…', o:['Diagrama de comunicación','Diagrama de objetos','Diagrama de actividad','Diagrama de tiempos'], x:'Es el mismo diagrama con otro nombre.'},
+  {t:'col', q:'En el diagrama de colaboración, el orden de los mensajes se indica con…', o:['Números de secuencia (1, 2, 2.1…)','La posición vertical','Colores','No se indica'], x:'No hay eje de tiempo, por eso se numeran.'},
+  {t:'col', q:'¿En qué se diferencia de un diagrama de secuencia?', o:['Tiene la misma información, pero organizada por conexiones y no por tiempo','Muestra el hardware','Muestra un solo objeto','Muestra tablas'], x:'Secuencia ordena por tiempo; colaboración, por enlaces entre objetos.'},
+  {t:'col', q:'En la colaboración del pedido QR, ¿qué objeto es el centro?', o:['ApiServidorLocal','Comensal','Ticketera','OSE'], x:'Habla con la carta, la base de datos, la tablet del mozo y la cola de impresión.'},
+  {t:'col', q:'¿Qué significa el mensaje 2.1?', o:['Un mensaje que ocurre dentro del mensaje 2','El mensaje número 21','La respuesta del mensaje 2','El segundo mensaje del objeto 1'], x:'La numeración decimal muestra el anidamiento.'},
+
+  {t:'paq', q:'Un paquete sirve para…', o:['Agrupar elementos del código como carpetas o módulos','Representar un equipo físico','Mostrar el estado de un objeto','Representar un archivo ejecutable'], x:'Organiza el código fuente para que sea mantenible.'},
+  {t:'paq', q:'¿Cuáles son las capas del diagrama de paquetes del proyecto?', o:['Presentación, lógica de negocio e infraestructura','Cliente, mozo y caja','Modelo, tabla y columna','Nodo, artefacto y medio'], x:'Presentación (Next.js), negocio (módulos NestJS) e infraestructura.'},
+  {t:'paq', q:'¿Qué problema ayuda a evitar el diagrama de paquetes?', o:['Las dependencias circulares entre módulos','Tener más de 3 paquetes','Usar nombres en español','Usar flechas punteadas'], x:'Por ejemplo, que caja dependa de pedidos y pedidos de caja.'},
+  {t:'paq', q:'¿Qué diferencia hay entre paquete y componente?', o:['El paquete organiza el código fuente; el componente es una pieza ejecutable con interfaces','Son lo mismo','El paquete es hardware y el componente software','El componente es una tabla'], x:'facturacion es un paquete; el adaptador que habla con Nubefact es un componente.'},
+
+  {t:'cla', q:'¿Qué significa el rombo negro relleno?', o:['Composición: la parte no existe sin el todo','Agregación','Herencia','Dependencia'], x:'Si se elimina el todo, se eliminan sus partes.'},
+  {t:'cla', q:'¿Qué relación hay entre Pedido e ItemPedido?', o:['Composición','Agregación','Herencia','Ninguna'], x:'Un ItemPedido no existe sin su Pedido.'},
+  {t:'cla', q:'La multiplicidad 0..* significa…', o:['Cero o muchos','Exactamente uno','Uno o muchos','Cero o uno'], x:'1..* sería "uno o muchos"; 0..1, "cero o uno".'},
+  {t:'cla', q:'Un signo − antes de un atributo indica que es…', o:['Privado','Público','Protegido','Estático'], x:'+ público, − privado, # protegido.'},
+  {t:'cla', q:'¿Qué es una enumeración como EstadoMesa?', o:['Una lista cerrada de valores posibles','Una clase abstracta','Una tabla intermedia','Una interfaz'], x:'Se marca con el estereotipo «enumeration».'},
+  {t:'cla', q:'¿Cuántas clases tiene el diagrama de clases del proyecto?', o:['17 clases y 5 enumeraciones','19 clases','25 clases','11 clases'], x:'19 es el número de tablas del modelo físico, no de clases.'},
+  {t:'cla', q:'La clase Pedido tiene el método confirmar(), pero la tabla pedido no. ¿Por qué?', o:['Las tablas guardan datos, no comportamiento','Es un error del modelo físico','El método está en el diccionario','Las tablas no tienen columnas'], x:'El modelo físico no tiene métodos; el comportamiento vive en el código.'},
+
+  {t:'est', q:'¿Cómo se escribe una transición?', o:['evento [condición] / acción','acción / evento [condición]','[acción] evento / condición','condición → evento'], x:'Ejemplo: anular [PIN del administrador] / ticket ANULACIÓN.'},
+  {t:'est', q:'¿Cómo se dibuja el estado inicial?', o:['Círculo negro relleno','Círculo con anillo','Rombo','Rectángulo'], x:'El círculo con anillo es el estado final.'},
+  {t:'est', q:'¿Qué muestra un diagrama de estados?', o:['Los estados de un solo objeto en todos sus escenarios','Varios objetos en un solo escenario','El hardware','Las tablas'], x:'La secuencia es lo contrario: varios objetos en un escenario.'},
+  {t:'est', q:'¿Cuándo pasa una mesa de Libre a "Pedido QR por confirmar"?', o:['Cuando llega un pedido QR de un celular nuevo','Cuando el mozo la marca libre','Cuando se paga la cuenta','Cuando se transfiere la cuenta'], x:'El mozo debe validar el primer pedido de cada celular.'},
+  {t:'est', q:'¿Qué transición lleva de "Cuenta solicitada" a "Por limpiar"?', o:['pago completo [saldo = S/ 0.00] / emitir comprobante','mozo confirma / imprimir comanda','agregar ronda / imprimir solo lo nuevo','desactivar mesa [administrador]'], x:'Solo con saldo cero la mesa queda por limpiar.'},
+  {t:'est', q:'¿En qué estado queda un pedido con hora de recojo futura?', o:['Programado','Por confirmar','En preparación','Anulado'], x:'El temporizador lo pasa a cocina 15 minutos antes de la hora pactada.'},
+  {t:'est', q:'En "corrección [≤ 2 min] / ticket CORRECCIÓN", ¿qué es [≤ 2 min]?', o:['La condición de guarda','El evento','La acción','Un estado'], x:'La corrección solo es posible dentro de los 2 primeros minutos.'},
+
+  {t:'cmp', q:'En el diagrama de componentes, el círculo (○) representa…', o:['Una interfaz ofrecida','Un nodo','El estado final','Un actor'], x:'El semicírculo (◐) es la interfaz requerida.'},
+  {t:'cmp', q:'¿Qué ventaja dan los adaptadores de integración?', o:['Cambiar Nubefact por otro OSE tocando solo el adaptador','Hacen la base de datos más rápida','Eliminan la necesidad de internet','Reemplazan a la API'], x:'El resto del sistema no depende del proveedor externo.'},
+  {t:'cmp', q:'¿En qué se diferencian componentes y despliegue?', o:['Componentes = software e interfaces; despliegue = hardware y qué se instala en cada equipo','Son lo mismo','Componentes muestra tablas','Despliegue muestra casos de uso'], x:'La API NestJS es un componente; el despliegue dice que corre en el Mini PC y en el VPS.'},
+  {t:'cmp', q:'¿Qué consumen las 4 aplicaciones web?', o:['La API REST y los eventos en tiempo real de la API NestJS','PostgreSQL directamente','Los archivos del VPS','La ticketera'], x:'Nunca hablan directo con la base de datos.'},
+
+  {t:'des', q:'Un nodo es…', o:['Un equipo físico o entorno de ejecución donde corre software','Una clase','Un caso de uso','Una columna'], x:'Se dibuja como un cubo.'},
+  {t:'des', q:'¿Qué es api-nestjs en el diagrama de despliegue?', o:['Un artefacto instalado en un nodo','Un nodo','Un actor','Un paquete'], x:'Los artefactos son los programas o archivos concretos.'},
+  {t:'des', q:'La etiqueta "USB" sobre una línea entre nodos indica…', o:['El medio de comunicación entre los nodos','El nombre del artefacto','Una interfaz ofrecida','Un estado'], x:'También aparecen Cat6, WiFi, HTTPS y TCP 9100.'},
+  {t:'des', q:'¿Por qué el local sigue funcionando sin internet?', o:['La API y la base corren en el servidor local; la nube solo sincroniza','Porque todo se anota en papel','Porque el VPS no necesita internet','Porque las tablets guardan todo'], x:'El servidor local atiende al salón aunque se caiga internet.'},
+  {t:'des', q:'¿En qué fase del proyecto es clave el diagrama de despliegue?', o:['En la compra de equipos e instalación (fase 6)','En la entrevista con el dueño','En el diseño de la carta','En la redacción del diccionario'], x:'Sirve para planificar qué hardware comprar e instalar.'},
+
+  {t:'mf', q:'¿Qué hace una clave primaria (PK)?', o:['Identifica de forma única cada fila','Apunta a otra tabla','Permite valores vacíos','Ordena la tabla'], x:'Ejemplo: pedido.id de tipo uuid.'},
+  {t:'mf', q:'¿Qué es una clave foránea (FK)?', o:['Una columna que apunta a la PK de otra tabla','Una columna que no se repite','Una columna opcional','Una restricción de formato'], x:'Garantiza la integridad referencial.'},
+  {t:'mf', q:'¿Por qué pago.numero_operacion es UQ?', o:['Para impedir que se reuse la misma captura de Yape','Para ordenar los pagos','Porque es la clave primaria','Para que pueda quedar vacío'], x:'UQ impide valores repetidos.'},
+  {t:'mf', q:'En la notación pata de gallo, la "pata" significa…', o:['Muchos','Uno','Opcional','Clave primaria'], x:'La barra es "uno" y el círculo es "opcional".'},
+  {t:'mf', q:'La relación muchos a muchos entre ítem de pedido y opción modificador se convierte en…', o:['La tabla intermedia item_opcion','Una columna de texto','Una enumeración','Nada; se elimina'], x:'Así se modela en tablas una relación muchos a muchos.'},
+  {t:'mf', q:'¿Cuántas tablas tiene el modelo físico?', o:['19','17','25','14'], x:'17 son las clases del diagrama de clases.'},
+  {t:'mf', q:'¿Qué diferencia hay entre el diagrama de clases y el modelo físico?', o:['Clases es el modelo lógico con métodos; el modelo físico son tablas reales con tipos y claves','Son lo mismo','El modelo físico tiene métodos','Las clases tienen tipos de PostgreSQL'], x:'Clases = lógico; modelo físico = implementación en PostgreSQL.'},
+
+  {t:'dd', q:'El diccionario de datos es…', o:['Un documento en tablas que explica cada columna: tipo, nulo, clave y significado','Un dibujo de tablas y relaciones','Una lista de casos de uso','El código SQL'], x:'El dibujo es el modelo físico.'},
+  {t:'dd', q:'¿Qué valores acepta fraccion_pollo?', o:['0, 0.125, 0.25, 0.5 o 1','Cualquier decimal','Solo enteros del 1 al 4','Texto libre'], x:'Ese es su dominio de valores.'},
+  {t:'dd', q:'¿En qué se diferencian el modelo físico y el diccionario de datos?', o:['El modelo es un dibujo de tablas y relaciones; el diccionario es un texto que explica cada columna','Son lo mismo','El diccionario tiene métodos','El modelo físico no tiene claves'], x:'El modelo dice que numero_operacion es UQ; el diccionario explica que es el número de Yape, Plin o POS.'},
+  {t:'dd', q:'¿Para qué sirve el diccionario de datos?', o:['Para que cualquiera entienda los datos sin preguntar, validar formularios y escribir reportes','Para dibujar el hardware','Para decidir los actores','Para numerar mensajes'], x:'Es la referencia del significado de cada dato.'}
+];
+
+/* Situaciones para "¿Qué diagrama es?" */
+const ESC = [
+  {s:'Muestra que la tabla pago tiene la columna numero_operacion varchar UQ y una FK hacia cuenta.', d:'mf'},
+  {s:'Explica en una fila que "fraccion_pollo" indica qué parte del pollo lleva el plato y qué valores acepta.', d:'dd'},
+  {s:'Una mesa pasa de Ocupada a Cuenta solicitada cuando el comensal pide la cuenta.', d:'est'},
+  {s:'El Mini PC del local tiene instalados api-nestjs y postgresql, y se une al router con cable Cat6.', d:'des'},
+  {s:'La caja envía registrarVenta() a la API, que llama a enviarBoleta() al OSE y espera el CDR, de arriba hacia abajo.', d:'sec'},
+  {s:'Los mismos mensajes del pedido QR, numerados 1, 2, 3…, dibujados sobre los enlaces entre los objetos.', d:'col'},
+  {s:'Lista al comensal, al mozo, al cajero y a SUNAT como sistema externo.', d:'act'},
+  {s:'El cajero se une con una línea a "Abrir y cerrar turno", y "Cobrar cuenta" «include» "Emitir comprobante".', d:'cu'},
+  {s:'Pedido tiene los atributos total y estado, el método confirmar() y un rombo negro hacia ItemPedido.', d:'cla'},
+  {s:'Las carpetas presentación, negocio (pedidos, caja, facturacion) e infraestructura, unidas con flechas «use».', d:'paq'},
+  {s:'La API NestJS ofrece la interfaz "API REST" (un círculo) que consumen las 4 aplicaciones web.', d:'cmp'},
+  {s:'Quieres saber todo lo que le puede pasar a un pedido, desde que se registra hasta que se sirve o se anula.', d:'est'},
+  {s:'Necesitas decidir cuántas tablets, ticketeras y qué UPS comprar.', d:'des'},
+  {s:'Quieres acordar con el dueño qué funciones tendrá el sistema y quién usará cada una.', d:'cu'},
+  {s:'Tienes que crear las tablas en PostgreSQL con sus tipos exactos y sus claves.', d:'mf'},
+  {s:'Quieres ver de un vistazo qué objeto tiene demasiados enlaces (acoplamiento).', d:'col'},
+  {s:'Quieres repartir el código entre Mijail y Nilton sin dependencias circulares.', d:'paq'},
+  {s:'Quieres saber, paso a paso, qué pasa si el OSE no responde durante el cobro.', d:'sec'},
+  {s:'Un programador nuevo pregunta si la columna RUC puede quedar vacía y qué significa.', d:'dd'},
+  {s:'Quieres saber qué roles inician sesión con PIN y qué sistemas externos se conectan.', d:'act'},
+  {s:'Quieres reemplazar Nubefact por otro OSE sin tocar el resto del sistema.', d:'cmp'},
+  {s:'Defines que Mesa tiene número y capacidad, y que una Cuenta pertenece a una Mesa (1 a 0..*).', d:'cla'},
+  {s:'Un círculo negro, luego "Libre", y una flecha "mozo abre la mesa / generar token QR".', d:'est'},
+  {s:'Un marco "alt" con [primer pedido de este celular] y [celular ya confirmado en la sesión].', d:'sec'}
+];
+
+/* ===================== UTILIDADES ===================== */
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('practicaDiagramas.' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem('practicaDiagramas.' + k, JSON.stringify(v)); } catch {} }
+};
+function barajar(a){ for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const sabidas = new Set(store.get('sabidas', []));
+const errores = new Set(store.get('errores', []));
+let mejor = store.get('mejor', null);
+let respuestas = store.get('respuestas', 0);
+function guardar(){
+  store.set('sabidas', [...sabidas]); store.set('errores', [...errores]);
+  store.set('mejor', mejor); store.set('respuestas', respuestas);
+  pintarStats();
+}
+function pintarStats(){
+  $('#stSabidas').textContent = `${sabidas.size}/${CARDS.length}`;
+  $('#stBarra').style.width = (100 * sabidas.size / CARDS.length) + '%';
+  $('#stMejor').textContent = mejor == null ? '—' : mejor + '%';
+  $('#stResp').textContent = respuestas;
+  const n = $('#nErr'); n.textContent = errores.size; n.hidden = errores.size === 0;
+}
+function chipsTemas(cont, actual, alElegir, conTodos = true){
+  const lista = conTodos ? [{id:'all', n:'Todos'}, ...DIAGS] : DIAGS;
+  cont.innerHTML = lista.map(d => `<button class="chip ${d.id === actual ? 'on' : ''}" data-id="${d.id}">${d.id !== 'all' ? `<span class="pt" style="background:${color(d.id)}"></span>` : ''}${d.n}</button>`).join('');
+  cont.onclick = e => { const b = e.target.closest('.chip'); if (b) alElegir(b.dataset.id); };
+}
+function confeti(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cols = ['#ea580c','#2563eb','#16a34a','#7c3aed','#f59e0b'];
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('i'); c.className = 'confeti';
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
+    c.style.animationDuration = (1.6 + Math.random() * 1.6) + 's'; c.style.animationDelay = Math.random() * .4 + 's';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 3800);
+  }
+}
+
+/* ===================== PESTAÑAS ===================== */
+let pestana = 'tarjetas';
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => irA(b.dataset.tab));
+function irA(id){
+  pestana = id;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === id));
+  if (id === 'errores') pintarErrores();
+  if (id === 'relacionar' && !mt.pares.length) mtNueva();
+  if (id === 'identificar' && !idj.lista.length) idNueva();
+}
+$('#btnTema').onclick = () => {
+  const r = document.documentElement;
+  const oscuro = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = oscuro ? 'light' : 'dark'; store.set('tema', r.dataset.theme);
+};
+{ const t = store.get('tema', null); if (t) document.documentElement.dataset.theme = t; }
+
+/* ===================== TARJETAS ===================== */
+const fc = {tema:'all', orden:[], pos:0, girada:false};
+function fcConstruir(){
+  let ids = CARDS.map((_, i) => i).filter(i => fc.tema === 'all' || CARDS[i].t === fc.tema);
+  if ($('#fcOcultar').checked) ids = ids.filter(i => !sabidas.has(i));
+  if ($('#fcBarajar').checked) barajar(ids);
+  fc.orden = ids; fc.pos = 0; fc.girada = false; fcPintar();
+}
+function fcPintar(){
+  chipsTemas($('#fcChips'), fc.tema, id => { fc.tema = id; fcConstruir(); });
+  const z = $('#fcZona');
+  if (!fc.orden.length) {
+    z.innerHTML = `<div class="vacio"><div class="big">🏆</div><p><b>¡Dominaste todas las tarjetas de este tema!</b></p><button class="btn" id="fcVerTodas">Mostrar todas otra vez</button></div>`;
+    $('#fcVerTodas').onclick = () => { $('#fcOcultar').checked = false; fcConstruir(); };
+    return;
+  }
+  const i = fc.orden[fc.pos], c = CARDS[i], inv = $('#fcInvertir').checked;
+  const frente = `<div class="tag" style="--c:${color(c.t)}">${D[c.t].n}</div>
+      <div class="simbolo" aria-hidden="true" style="margin-top:auto">${c.s}</div>
+      <div class="termino" style="margin-top:0">${c.f}</div>
+      <div class="pista">Toca o pulsa <kbd>Espacio</kbd> para voltear</div>`;
+  const reverso = `<div class="tag" style="--c:${color(c.t)}">${D[c.t].n} · ${c.f}</div>
+      <p class="def">${c.b}</p>
+      <div class="ej"><div><b>En el proyecto:</b> ${c.e}</div></div>`;
+  z.innerHTML = `
+    <div class="escena">
+      <div class="tarjeta ${fc.girada ? 'girada' : ''}" id="fcCarta" tabindex="0" role="button" aria-label="Voltear tarjeta">
+        <div class="cara" style="--c:${color(c.t)}">${sabidas.has(i) ? '<span class="sabida">✓ La sé</span>' : ''}${inv ? reverso : frente}</div>
+        <div class="cara atras" style="--c:${color(c.t)}">${inv ? frente.replace('Toca o pulsa <kbd>Espacio</kbd> para voltear', '') : reverso}</div>
+      </div>
+    </div>
+    <div class="controles">
+      <button class="btn nav-izq" id="fcAnt" ${fc.pos === 0 ? 'disabled' : ''} aria-label="Anterior">←</button>
+      <button class="btn mal" id="fcRepasar">↺ Repasar</button>
+      <button class="btn ok" id="fcSe">✓ Ya la sé</button>
+      <button class="btn nav-der" id="fcSig" ${fc.pos >= fc.orden.length - 1 ? 'disabled' : ''} aria-label="Siguiente">→</button>
+    </div>
+    <div class="contador">${fc.pos + 1} de ${fc.orden.length}</div>
+    <div class="teclas"><kbd>Espacio</kbd> voltear · <kbd>←</kbd> <kbd>→</kbd> moverse · <kbd>1</kbd> repasar · <kbd>2</kbd> ya la sé</div>`;
+  $('#fcCarta').onclick = fcGirar;
+  $('#fcAnt').onclick = () => fcMover(-1);
+  $('#fcSig').onclick = () => fcMover(1);
+  $('#fcSe').onclick = () => fcMarcar(true);
+  $('#fcRepasar').onclick = () => fcMarcar(false);
+}
+function fcGirar(){ fc.girada = !fc.girada; $('#fcCarta')?.classList.toggle('girada', fc.girada); }
+function fcMover(d){ const p = fc.pos + d; if (p < 0 || p >= fc.orden.length) return; fc.pos = p; fc.girada = false; fcPintar(); }
+function fcMarcar(la){
+  const i = fc.orden[fc.pos];
+  la ? sabidas.add(i) : sabidas.delete(i); guardar();
+  if (la && $('#fcOcultar').checked) { fc.orden.splice(fc.pos, 1); if (fc.pos >= fc.orden.length) fc.pos = Math.max(0, fc.orden.length - 1); }
+  else if (fc.pos < fc.orden.length - 1) fc.pos++;
+  else if (sabidas.size === CARDS.length) confeti();
+  fc.girada = false; fcPintar();
+}
+['#fcOcultar', '#fcBarajar'].forEach(s => $(s).onchange = fcConstruir);
+$('#fcInvertir').onchange = () => { fc.girada = false; fcPintar(); };
+
+/* ===================== CUESTIONARIO ===================== */
+const qz = {tema:'all', cant:10, lista:[], pos:0, ok:0, malas:[], porTema:{}, respondida:false, opts:[]};
+function qzConfig(){
+  const cuenta = id => PREG.filter(p => id === 'all' || p.t === id).length;
+  $('#qzZona').innerHTML = `
+    <h2>Cuestionario</h2>
+    <p class="ayuda">${PREG.length} preguntas de opción múltiple. Cada respuesta trae su explicación.</p>
+    <div class="caja">
+      <span class="lbl">Tema</span><div class="chips" id="qzChips"></div>
+      <span class="lbl">Cantidad de preguntas</span>
+      <div class="opciones-config" id="qzCant">
+        ${[10, 20, 'all'].map(n => `<button class="chip ${qz.cant === n ? 'on' : ''}" data-n="${n}">${n === 'all' ? 'Todas (' + cuenta(qz.tema) + ')' : n}</button>`).join('')}
+      </div>
+      <div class="fila"><button class="btn pri" id="qzIniciar">Comenzar →</button>
+      ${errores.size ? `<button class="btn" id="qzErr">🎯 Practicar mis ${errores.size} errores</button>` : ''}</div>
+    </div>`;
+  chipsTemas($('#qzChips'), qz.tema, id => { qz.tema = id; qzConfig(); });
+  $('#qzCant').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; qz.cant = b.dataset.n === 'all' ? 'all' : +b.dataset.n; qzConfig(); };
+  $('#qzIniciar').onclick = () => qzIniciar();
+  if ($('#qzErr')) $('#qzErr').onclick = () => qzIniciar([...errores]);
+}
+function qzIniciar(ids){
+  let pool = ids || PREG.map((_, i) => i).filter(i => qz.tema === 'all' || PREG[i].t === qz.tema);
+  barajar(pool);
+  if (!ids && qz.cant !== 'all') pool = pool.slice(0, qz.cant);
+  Object.assign(qz, {lista:pool, pos:0, ok:0, malas:[], porTema:{}});
+  irA('cuestionario'); qzPregunta();
+}
+function qzPregunta(){
+  const id = qz.lista[qz.pos], p = PREG[id];
+  qz.respondida = false;
+  qz.opts = barajar(p.o.map((t, k) => ({t, ok:k === 0})));
+  const L = 'ABCD';
+  $('#qzZona').innerHTML = `
+    <div class="caja">
+      <div class="qtop"><span>Pregunta ${qz.pos + 1} de ${qz.lista.length}</span><span>✓ ${qz.ok}</span></div>
+      <div class="barra"><i style="width:${100 * qz.pos / qz.lista.length}%"></i></div>
+      <div style="margin-top:16px"><span class="tag" style="--c:${color(p.t)}">${D[p.t].n}</span></div>
+      <div class="pregunta">${p.q}</div>
+      <div class="opts">${qz.opts.map((o, k) => `<button class="opt" data-k="${k}"><span class="letra">${L[k]}</span><span>${o.t}</span></button>`).join('')}</div>
+      <div class="feedback" id="qzFb"></div>
+      <div class="pie">
+        <button class="btn" id="qzSalir">✕ Salir</button>
+        <button class="btn pri" id="qzSig" hidden>${qz.pos === qz.lista.length - 1 ? 'Ver resultado' : 'Siguiente →'}</button>
+      </div>
+      <div class="teclas">Teclas <kbd>A</kbd>–<kbd>D</kbd> o <kbd>1</kbd>–<kbd>4</kbd> para responder · <kbd>Enter</kbd> para seguir</div>
+    </div>`;
+  document.querySelectorAll('.opt').forEach(b => b.onclick = () => qzResponder(+b.dataset.k));
+  $('#qzSig').onclick = qzSiguiente;
+  $('#qzSalir').onclick = qzConfig;
+}
+function qzResponder(k){
+  if (qz.respondida) return;
+  qz.respondida = true;
+  const id = qz.lista[qz.pos], p = PREG[id], bien = qz.opts[k].ok;
+  const pt = qz.porTema[p.t] || (qz.porTema[p.t] = {ok:0, n:0}); pt.n++;
+  document.querySelectorAll('.opt').forEach((b, j) => {
+    b.disabled = true;
+    if (qz.opts[j].ok) b.classList.add('bien');
+    else if (j === k) b.classList.add('malo');
+    else b.classList.add('tenue');
+  });
+  if (bien) { qz.ok++; pt.ok++; errores.delete(id); }
+  else { errores.add(id); qz.malas.push({id, tu:qz.opts[k].t}); }
+  respuestas++; guardar();
+  const fb = $('#qzFb');
+  fb.className = 'feedback ver ' + (bien ? 'si' : 'no');
+  fb.innerHTML = `<b>${bien ? '¡Correcto!' : 'No es así. La respuesta es: ' + p.o[0]}</b>${p.x}`;
+  const s = $('#qzSig'); s.hidden = false; s.focus();
+}
+function qzSiguiente(){ if (qz.pos < qz.lista.length - 1) { qz.pos++; qzPregunta(); } else qzResultado(); }
+function qzResultado(){
+  const n = qz.lista.length, pct = Math.round(100 * qz.ok / n);
+  if (n >= 10 && (mejor == null || pct > mejor)) mejor = pct;
+  guardar();
+  const msg = pct >= 90 ? '¡Excelente! Estás listo para la exposición 🎉' : pct >= 70 ? 'Muy bien. Repasa los temas con barra corta.' : pct >= 50 ? 'Vas bien; refuerza con las tarjetas.' : 'Empieza por las tarjetas y vuelve a intentarlo.';
+  const R = 64, C = 2 * Math.PI * R;
+  const col = pct >= 70 ? 'var(--ok)' : pct >= 50 ? 'var(--acento)' : 'var(--mal)';
+  $('#qzZona').innerHTML = `
+    <div class="caja">
+      <div class="anillo"><svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--panel2)" stroke-width="14"/>
+        <circle id="arco" cx="75" cy="75" r="${R}" fill="none" stroke="${col}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" style="transition:stroke-dashoffset 1s ease"/></svg>
+        <div class="num">${pct}%</div></div>
+      <p class="res-msg">${msg}</p>
+      <p class="res-sub">${qz.ok} de ${n} correctas${n < 10 ? ' · el mejor puntaje cuenta desde 10 preguntas' : ''}</p>
+      <div class="desglose">${Object.entries(qz.porTema).map(([t, v]) => `
+        <div class="dfila"><span class="tag" style="--c:${color(t)}">${D[t].n}</span>
+        <div class="barra"><i style="width:${100 * v.ok / v.n}%;background:${v.ok / v.n >= .7 ? 'var(--ok)' : v.ok / v.n >= .5 ? 'var(--acento)' : 'var(--mal)'}"></i></div>
+        <span class="v">${v.ok}/${v.n}</span></div>`).join('')}</div>
+      ${qz.malas.length ? `<h3 style="margin:18px 0 4px;font-size:16px">Para repasar</h3>` + qz.malas.map(m => `
+        <div class="repaso"><p><b>${PREG[m.id].q}</b></p><p class="tu">✗ Tu respuesta: ${m.tu}</p><p class="bueno">✓ Correcta: ${PREG[m.id].o[0]}</p></div>`).join('') : ''}
+      <div class="pie"><button class="btn" id="qzOtra">Configurar otro</button>
+      <div class="fila">${qz.malas.length ? `<button class="btn" id="qzRepFall">🎯 Repetir las falladas</button>` : ''}<button class="btn pri" id="qzRep">↻ Otra vez</button></div></div>
+    </div>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => { $('#arco').style.strokeDashoffset = C * (1 - pct / 100); }));
+  if (pct >= 90) confeti();
+  $('#qzOtra').onclick = qzConfig;
+  $('#qzRep').onclick = () => qzIniciar();
+  if ($('#qzRepFall')) $('#qzRepFall').onclick = () => qzIniciar(qz.malas.map(m => m.id));
+}
+
+/* ===================== ¿QUÉ DIAGRAMA ES? ===================== */
+const idj = {lista:[], pos:0, ok:0, racha:0, respondida:false};
+const OPC_ID = DIAGS.filter(d => d.id !== 'gen');
+function idNueva(){ Object.assign(idj, {lista:barajar(ESC.map((_, i) => i)).slice(0, 10), pos:0, ok:0, racha:0}); idPintar(); }
+function idPintar(){
+  if (idj.pos >= idj.lista.length) {
+    const r = idj.ok;
+    $('#idZona').innerHTML = `<div class="caja" style="text-align:center"><div style="font-size:44px">${r >= 9 ? '🏆' : r >= 7 ? '👏' : '💪'}</div>
+      <p class="res-msg">${r} de 10 aciertos</p><p class="res-sub">${r >= 9 ? 'Reconoces cada diagrama sin dudar.' : r >= 7 ? 'Muy bien; revisa los que fallaste.' : 'Repasa la frase de cada diagrama en "Relacionar".'}</p>
+      <button class="btn pri" id="idOtra">↻ Otra ronda</button></div>`;
+    if (r >= 9) confeti();
+    $('#idOtra').onclick = idNueva; return;
+  }
+  idj.respondida = false;
+  const e = ESC[idj.lista[idj.pos]];
+  $('#idZona').innerHTML = `
+    <div class="caja">
+      <div class="qtop"><span>Situación ${idj.pos + 1} de ${idj.lista.length}</span><span>✓ ${idj.ok} · racha <span class="racha">${idj.racha}🔥</span></span></div>
+      <div class="barra"><i style="width:${100 * idj.pos / idj.lista.length}%"></i></div>
+      <div class="escenario">${e.s}</div>
+      <div class="gridd">${OPC_ID.map(d => `<button class="dbtn" data-id="${d.id}" style="--c:${color(d.id)}">${d.n}</button>`).join('')}</div>
+      <div class="feedback" id="idFb"></div>
+      <div class="pie"><span></span><button class="btn pri" id="idSig" hidden>Siguiente →</button></div>
+    </div>`;
+  document.querySelectorAll('.dbtn').forEach(b => b.onclick = () => idResponder(b.dataset.id));
+  $('#idSig').onclick = () => { idj.pos++; idPintar(); };
+}
+function idResponder(elegido){
+  if (idj.respondida) return; idj.respondida = true;
+  const e = ESC[idj.lista[idj.pos]], bien = elegido === e.d;
+  document.querySelectorAll('.dbtn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.id === e.d) b.classList.add('bien'); else if (b.dataset.id === elegido) b.classList.add('malo');
+  });
+  if (bien) { idj.ok++; idj.racha++; } else idj.racha = 0;
+  respuestas++; guardar();
+  const fb = $('#idFb');
+  fb.className = 'feedback ver ' + (bien ? 'si' : 'no');
+  fb.innerHTML = `<b>${bien ? '¡Correcto!' : 'Era el diagrama de ' + D[e.d].n.toLowerCase()}</b>${D[e.d].n} (${D[e.d].s}): ${D[e.d].frase}`;
+  const s = $('#idSig'); s.hidden = false; s.focus();
+}
+
+/* ===================== RELACIONAR ===================== */
+const mt = {modo:'preg', pares:[], der:[], sel:null, hechos:0, movs:0, t0:0, reloj:null};
+function mtModo(){
+  $('#mtModo').innerHTML = [['preg', 'Con la pregunta que responde'], ['frase', 'Con la frase de exposición']]
+    .map(([k, n]) => `<button class="chip ${mt.modo === k ? 'on' : ''}" data-k="${k}">${n}</button>`).join('');
+  $('#mtModo').onclick = e => { const b = e.target.closest('.chip'); if (b) { mt.modo = b.dataset.k; mtModo(); mtNueva(); } };
+}
+function mtNueva(){
+  clearInterval(mt.reloj);
+  mt.pares = barajar(OPC_ID.slice()).slice(0, 5);
+  mt.der = barajar(mt.pares.slice());
+  Object.assign(mt, {sel:null, hechos:0, movs:0, t0:Date.now()});
+  $('#mtZona').innerHTML = `
+    <div class="qtop" style="margin-bottom:10px"><span>Parejas: <b id="mtHechos">0</b>/5 · Intentos: <b id="mtMovs">0</b></span><span>⏱ <b id="mtT">0:00</b></span></div>
+    <div class="columnas">
+      <div class="mcol">${mt.pares.map(d => `<button class="mi izq" data-id="${d.id}" style="--c:${color(d.id)}">${d.n}</button>`).join('')}</div>
+      <div class="mcol">${mt.der.map(d => `<button class="mi der" data-id="${d.id}">${mt.modo === 'preg' ? d.preg : d.frase}</button>`).join('')}</div>
+    </div>
+    <div id="mtFin"></div>
+    <div class="pie"><span></span><button class="btn" id="mtOtra">↻ Nueva ronda</button></div>`;
+  document.querySelectorAll('.mi.izq').forEach(b => b.onclick = () => {
+    if (b.classList.contains('listo')) return;
+    document.querySelectorAll('.mi.izq').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); mt.sel = b;
+  });
+  document.querySelectorAll('.mi.der').forEach(b => b.onclick = () => mtUnir(b));
+  $('#mtOtra').onclick = mtNueva;
+  mt.reloj = setInterval(() => { const s = Math.floor((Date.now() - mt.t0) / 1000), t = $('#mtT'); if (t) t.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }, 1000);
+}
+function mtUnir(b){
+  if (b.classList.contains('listo')) return;
+  if (!mt.sel) { document.querySelectorAll('.mi.izq:not(.listo)').forEach(x => { x.classList.add('temblor'); setTimeout(() => x.classList.remove('temblor'), 350); }); return; }
+  mt.movs++; $('#mtMovs').textContent = mt.movs;
+  if (b.dataset.id === mt.sel.dataset.id) {
+    [b, mt.sel].forEach(x => { x.classList.remove('sel'); x.classList.add('listo'); });
+    mt.sel = null; mt.hechos++; $('#mtHechos').textContent = mt.hechos;
+    if (mt.hechos === 5) {
+      clearInterval(mt.reloj);
+      const perfecto = mt.movs === 5;
+      $('#mtFin').innerHTML = `<div class="feedback ver si" style="margin-top:14px"><b>${perfecto ? '¡Perfecto, sin errores! 🎉' : '¡Completado!'}</b>Lo hiciste en ${$('#mtT').textContent} con ${mt.movs} intentos.</div>`;
+      if (perfecto) confeti();
+    }
+  } else {
+    [b, mt.sel].forEach(x => { x.classList.add('temblor'); setTimeout(() => x.classList.remove('temblor'), 350); });
+  }
+}
+
+/* ===================== MIS ERRORES ===================== */
+function pintarErrores(){
+  const z = $('#errZona');
+  const repasar = CARDS.map((_, i) => i).filter(i => !sabidas.has(i)).length;
+  if (!errores.size) {
+    z.innerHTML = `<div class="vacio"><div class="big">✨</div><p><b>No tienes preguntas falladas.</b></p><p>Haz un cuestionario y aquí aparecerán las que necesites reforzar.</p><button class="btn pri" id="errIr">Ir al cuestionario</button></div>`;
+    $('#errIr').onclick = () => { irA('cuestionario'); qzConfig(); };
+  } else {
+    z.innerHTML = `<div class="fila"><button class="btn pri" id="errPract">🎯 Practicar estas ${errores.size} preguntas</button><button class="btn" id="errBorrar">Borrar lista</button></div>
+      <div class="lista-err">${[...errores].map(i => `<div class="err"><span class="tag" style="--c:${color(PREG[i].t)}">${D[PREG[i].t].n}</span><div style="font-weight:700;margin-top:4px">${PREG[i].q}</div><p class="bueno">✓ ${PREG[i].o[0]}</p><p>${PREG[i].x}</p></div>`).join('')}</div>`;
+    $('#errPract').onclick = () => qzIniciar([...errores]);
+    $('#errBorrar').onclick = () => { if (confirm('¿Borrar la lista de errores?')) { errores.clear(); guardar(); pintarErrores(); } };
+  }
+  z.insertAdjacentHTML('beforeend', `<p class="ayuda" style="margin-top:18px">Te quedan <b>${repasar}</b> tarjetas sin marcar como sabidas.
+    <button class="btn" id="errReset" style="margin-left:6px;min-height:36px;padding:6px 12px;font-size:13px">Reiniciar todo mi progreso</button></p>`);
+  $('#errReset').onclick = () => { if (confirm('¿Reiniciar tarjetas, errores y mejor puntaje?')) { sabidas.clear(); errores.clear(); mejor = null; respuestas = 0; guardar(); fcConstruir(); pintarErrores(); qzConfig(); } };
+}
+
+/* ===================== TECLADO ===================== */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  // Enter o Espacio sobre un botón ya lo activa el navegador; no repetir la acción
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'BUTTON') return;
+  if (pestana === 'tarjetas' && fc.orden.length) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); fcGirar(); }
+    else if (e.key === 'ArrowRight') fcMover(1);
+    else if (e.key === 'ArrowLeft') fcMover(-1);
+    else if (e.key === '1') fcMarcar(false);
+    else if (e.key === '2') fcMarcar(true);
+  } else if (pestana === 'cuestionario' && $('.opt')) {
+    const k = 'abcd'.indexOf(e.key.toLowerCase()), n = '1234'.indexOf(e.key);
+    const idx = k >= 0 ? k : n;
+    if (idx >= 0 && idx < qz.opts.length && !qz.respondida) qzResponder(idx);
+    else if (e.key === 'Enter' && qz.respondida) { e.preventDefault(); qzSiguiente(); }
+  } else if (pestana === 'identificar' && e.key === 'Enter' && idj.respondida && $('#idSig')) { e.preventDefault(); idj.pos++; idPintar(); }
+});
+
+/* ===================== INICIO ===================== */
+pintarStats(); fcConstruir(); qzConfig(); mtModo();
+</script>
+</body>
+</html>

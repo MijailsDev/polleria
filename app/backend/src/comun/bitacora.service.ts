@@ -25,4 +25,12 @@ export class BitacoraService {
       },
     });
   }
+
+  /** Cambio con valores anteriores y nuevos (precios, usuarios, configuración: REQ-REP-05). */
+  cambio(accion: string, entidad: string, entidadId: string | null, usuarioId: string | null, antes: unknown, despues: unknown, tx: Prisma.TransactionClient = this.prisma) {
+    const json = (v: unknown) => (v === undefined ? undefined : (JSON.parse(JSON.stringify(v)) as Prisma.InputJsonValue));
+    return tx.bitacora.create({
+      data: { accion, entidad, entidad_id: entidadId, usuario_id: usuarioId, valores_antes: json(antes), valores_despues: json(despues) },
+    });
+  }
 }

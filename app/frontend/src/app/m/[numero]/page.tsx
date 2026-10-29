@@ -1,15 +1,31 @@
 'use client';
 import { use, useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { api, ErrorApi } from '@/lib/api';
 import { Categoria, Comanda, ItemCarrito, precioItem, Producto } from '@/lib/tipos';
 import { hora, soles, useEventos, uuid } from '@/lib/util';
 import { SelectorProducto } from '@/components/SelectorProducto';
 
-interface CuentaQR { mesa: string; estadoMesa: string; total: number; pedidos: Comanda[] }
+interface CuentaQR {
+  mesa: string;
+  maestra: string | null;
+  estadoMesa: string;
+  estadoCuenta: string;
+  total: number;
+  saldo: number;
+  descuento: number;
+  porConfirmar: boolean;
+  pagoEnCurso: string | null;
+  comprobantes: { id: string; numero: string }[];
+  pedidos: Comanda[];
+}
 
 /** Carta digital del comensal (F-04): se abre al escanear el QR de la mesa, sin instalar nada. */
 export default function CartaQR({ params }: { params: Promise<{ numero: string }> }) {
   const { numero } = use(params);
+  const router = useRouter();
+  const [demora, setDemora] = useState(false);
+  const [pagando, setPagando] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [mesaId, setMesaId] = useState<string | null>(null);
   const [carta, setCarta] = useState<Categoria[]>([]);
@@ -42,6 +58,8 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
       })
       .catch((e) => setError(e.message));
     cargarCarta().catch(() => {});
+    if (window.location.hash === '#cuenta') setVista('cuenta'); // al volver de la pasarela
+    api<{ demora: boolean }>('GET', '/cocina/carga').then((c) => setDemora(c.demora)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numero]);
 
@@ -52,6 +70,8 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
         // Si algo del carrito se agotó, se avisará al enviar (el servidor vuelve a validar)
       },
       'cuenta:actualizada': (d) => d?.mesaId === mesaId && cargarCuenta(),
+      'mesas:cambio': () => cargarCuenta(),
+      'cocina:actualizar': () => api<{ demora: boolean }>('GET', '/cocina/carga').then((c) => setDemora(c.demora)).catch(() => {}),
     },
     [mesaId, token],
   );
@@ -84,6 +104,18 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
     }
   }
 
+  /** F-09: pagar el total de la mesa desde el celular con la pasarela. */
+  async function pagarEnLinea() {
+    setPagando(true);
+    try {
+      const r = await api<{ intentoId: string }>('POST', '/qr/pago/iniciar', { token });
+      router.push(`/pasarela/${r.intentoId}?volver=${encodeURIComponent('/m/' + numero + '#cuenta')}`);
+    } catch (e: any) {
+      avisar(e.message, 'error');
+      setPagando(false);
+    }
+  }
+
   async function llamar(motivo: 'MOZO' | 'CUENTA') {
     try {
       await api('POST', '/qr/llamar', { token, motivo });
@@ -112,7 +144,7 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
     <main className="mx-auto min-h-screen max-w-lg bg-white pb-40">
       <header className="bg-brasa-700 px-5 pb-5 pt-6 text-white">
         <h1 className="text-2xl font-extrabold">🍗 Pollería y Brasas</h1>
-        <span className="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">Mesa {numero} · Salón</span>
+        <span className="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">Mesa {numero}{cuenta?.maestra ? ` · unida a ${cuenta.maestra}` : ''} · Salón</span>
       </header>
 
       <nav className="sticky top-0 z-20 flex gap-2 border-b border-slate-100 bg-white px-4 py-3">
@@ -122,6 +154,10 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
           </button>
         ))}
       </nav>
+
+      {demora && (
+        <div className="mx-4 mt-3 rounded-xl bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-900">⏱ Tiempo estimado de preparación: 25 a 35 min</div>
+      )}
 
       {vista === 'carta' && (
         <>
@@ -207,12 +243,43 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
                 ))}
               </div>
             ))}
+            {cuenta.descuento > 0 && (
+              <div className="mt-2 flex justify-between text-sm text-green-700">
+                <span>Descuento</span>
+                <span>- {soles(cuenta.descuento)}</span>
+              </div>
+            )}
             <div className="mt-3 flex justify-between text-xl font-extrabold">
               <span>Total</span>
               <span>{soles(cuenta.total)}</span>
             </div>
+            {cuenta.saldo !== cuenta.total && cuenta.estadoCuenta !== 'PAGADA' && (
+              <div className="flex justify-between font-bold text-brasa-700">
+                <span>Por pagar</span>
+                <span>{soles(cuenta.saldo)}</span>
+              </div>
+            )}
           </div>
-          <p className="mt-3 text-center text-sm text-slate-500">El pago en línea desde el celular estará disponible en una próxima versión. Pide la cuenta y paga en caja.</p>
+          {cuenta.estadoCuenta === 'PAGADA' ? (
+            <div className="mt-4 rounded-2xl bg-green-50 p-4 text-center">
+              <div className="text-4xl">✅</div>
+              <p className="font-bold text-green-800">¡Cuenta pagada! Gracias por tu visita.</p>
+              {cuenta.comprobantes.map((c) => (
+                <a key={c.id} href={`/c/${c.id}`} className="btn-verde mt-3 w-full">
+                  🧾 Ver mi boleta {c.numero}
+                </a>
+              ))}
+            </div>
+          ) : cuenta.saldo > 0 ? (
+            <div className="mt-4">
+              <button className="btn-verde w-full rounded-full text-lg" disabled={pagando || cuenta.porConfirmar} onClick={pagarEnLinea}>
+                {cuenta.pagoEnCurso ? 'Continuar con el pago' : `💳 Pagar ahora ${soles(cuenta.saldo)}`}
+              </button>
+              <p className="mt-2 text-center text-xs text-slate-500">
+                {cuenta.porConfirmar ? 'Espera a que el mozo confirme tu último pedido para pagar.' : 'Yape, Plin o tarjeta. También puedes pedir la cuenta y pagar en caja.'}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
 

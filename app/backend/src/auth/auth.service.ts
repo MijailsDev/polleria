@@ -46,8 +46,16 @@ export class AuthService {
     return u;
   }
 
-  async login(usuarioId: string, pin: string) {
+  async login(usuarioId: string, pin: string, password?: string) {
     const u = await this.verificarPin(usuarioId, pin);
+    // REQ-USR-01: el administrador usa además una contraseña para entrar al panel
+    if (u.rol === 'ADMINISTRADOR') {
+      if (!password) throw new UnauthorizedException('El administrador ingresa con PIN y contraseña.');
+      if (!u.password_hash || !(await bcrypt.compare(password, u.password_hash))) {
+        await this.bitacora.registrar('LOGIN_FALLIDO', 'usuario', u.id, u.id, { motivo: 'contraseña' });
+        throw new UnauthorizedException('Contraseña incorrecta.');
+      }
+    }
     await this.bitacora.registrar('LOGIN', 'usuario', u.id, u.id);
     const usuario = { id: u.id, nombre: u.nombre, rol: u.rol as Rol };
     const token = this.jwt.sign({ sub: u.id, nombre: u.nombre, rol: u.rol });

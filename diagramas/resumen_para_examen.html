@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resumen para Examen</title>
+<style>
+:root{--bg:#faf8f5;--panel:#fff;--line:#e5e0d8;--tx:#1d1a16;--tx2:#5c554c;--ac:#c2410c;--suave:#fff1e8;--ok:#15803d;--okS:#e8f6ec;--b:#2563eb;--g:#16a34a;--p:#7c3aed;--a:#b45309}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14120f;--panel:#1d1a17;--line:#36302a;--tx:#f3efe9;--tx2:#bdb4a8;--ac:#fb923c;--suave:#3a2416;--ok:#4ade80;--okS:#163222;--b:#60a5fa;--g:#4ade80;--p:#a78bfa;--a:#fbbf24}}
+:root[data-theme="dark"]{--bg:#14120f;--panel:#1d1a17;--line:#36302a;--tx:#f3efe9;--tx2:#bdb4a8;--ac:#fb923c;--suave:#3a2416;--ok:#4ade80;--okS:#163222;--b:#60a5fa;--g:#4ade80;--p:#a78bfa;--a:#fbbf24}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 "Segoe UI",system-ui,Roboto,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:28px;margin:0;letter-spacing:-.5px}
+.sub{color:var(--tx2);margin:4px 0 16px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+nav a{font-size:13px;font-weight:600;text-decoration:none;color:var(--ac);background:var(--suave);padding:5px 11px;border-radius:99px}
+h2{font-size:21px;margin:34px 0 10px;padding-top:6px;border-top:2px solid var(--ac)}
+h3{font-size:17px;margin:20px 0 6px}
+.caja{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0}
+.clave{background:var(--suave);border-left:4px solid var(--ac);border-radius:10px;padding:12px 14px;margin:12px 0;font-weight:600}
+.frase{background:var(--okS);border-left:4px solid var(--ok);border-radius:10px;padding:12px 14px;margin:12px 0;font-style:italic}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:15px;background:var(--panel);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--suave);font-size:13px;text-transform:uppercase;letter-spacing:.3px}
+.tabla{overflow-x:auto}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace;font-size:14px}
+code{background:var(--suave);padding:1px 5px;border-radius:5px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;line-height:1.45;margin:10px 0}
+ul,ol{padding-left:22px;margin:6px 0}
+li{margin:3px 0}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;color:#fff;margin-right:4px}
+.e{background:var(--b)}.c{background:var(--g)}.i{background:var(--p)}.d{background:var(--a)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+summary{cursor:pointer;font-weight:700}
+details p{margin:8px 0 2px;color:var(--tx2)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--ac);color:#fff;text-decoration:none;font-weight:700;padding:10px 14px;border-radius:99px}
+@media print{nav,.top{display:none}details{break-inside:avoid}details[open] summary~*{display:block}}
+</style>
+</head>
+<body>
+<div class="wrap" id="inicio">
+<h1>📚 Resumen para el examen</h1>
+<p class="sub">Sistema para Pollerías · Capítulo I · todo lo que vimos, en orden de importancia. Lectura de 10 minutos.</p>
+<nav>
+  <a href="#mapa">1. Clasificación</a><a href="#once">2. Los 11 diagramas</a><a href="#notacion">3. Símbolos</a>
+  <a href="#difs">4. Diferencias</a><a href="#clases">5. Diagrama de clases</a><a href="#roles">6. Comensal, cajero, admin</a>
+  <a href="#numeros">7. Números</a><a href="#preg">8. Preguntas de examen</a>
+</nav>
+
+<!-- 1 -->
+<h2 id="mapa">1. Cómo se clasifican</h2>
+<div class="tabla"><table>
+<tr><th>Grupo</th><th>Qué describe</th><th>Diagramas</th></tr>
+<tr><td><span class="pill e">Estructura</span> (estático)</td><td><b>Qué partes</b> tiene el sistema</td><td>Clases, paquetes, componentes, despliegue</td></tr>
+<tr><td><span class="pill c">Comportamiento</span> (dinámico)</td><td><b>Qué hace</b> y cómo cambia</td><td>Casos de uso, estados</td></tr>
+<tr><td><span class="pill i">Interacción</span> (subtipo de comportamiento)</td><td><b>Cómo colaboran</b> con mensajes</td><td>Secuencia, colaboración</td></tr>
+<tr><td><span class="pill d">Modelado de datos</span> (NO es UML)</td><td><b>Cómo se guarda</b> la información</td><td>Modelo físico, diccionario de datos</td></tr>
+</table></div>
+<div class="clave">Orden de construcción: Actores → Casos de uso → Secuencia/Colaboración → Clases → Estados → Paquetes → Componentes → Despliegue → Modelo físico → Diccionario.</div>
+
+<!-- 2 -->
+<h2 id="once">2. Los 11 diagramas en una línea</h2>
+<div class="tabla"><table>
+<tr><th>Diagrama</th><th>Pregunta que responde</th><th>En nuestro proyecto</th></tr>
+<tr><td><b>Actores</b></td><td>¿Quién usa el sistema?</td><td>Comensal; personal (mozo, pollero, cajero, repartidor, admin); secundarios: SUNAT, pasarela, DNI/RUC, mensajería, temporizador</td></tr>
+<tr><td><b>Casos de uso</b></td><td>¿Qué puede hacer cada uno?</td><td>25 casos en 5 módulos</td></tr>
+<tr><td><b>Secuencia</b></td><td>¿Cómo se hace, paso a paso en el tiempo?</td><td>3: pedido QR, cobro + boleta, cierre de turno</td></tr>
+<tr><td><b>Colaboración</b></td><td>¿Quién se conecta con quién?</td><td>Pedido QR; centro = ApiServidorLocal</td></tr>
+<tr><td><b>Paquetes</b></td><td>¿Cómo se organiza el código?</td><td>3 capas: presentación, negocio, infraestructura</td></tr>
+<tr><td><b>Clases</b></td><td>¿Qué objetos hay, qué guardan, qué hacen?</td><td>17 clases + 5 enumeraciones</td></tr>
+<tr><td><b>Estados</b></td><td>¿Por qué situaciones pasa UN objeto?</td><td>Mesa y Pedido</td></tr>
+<tr><td><b>Componentes</b></td><td>¿Qué piezas de software y qué interfaces?</td><td>4 apps web → API NestJS → adaptadores</td></tr>
+<tr><td><b>Despliegue</b></td><td>¿En qué equipos se instala?</td><td>Tablets, caja, Mini PC, ticketeras, router, VPS</td></tr>
+<tr><td><b>Modelo físico</b></td><td>¿Cómo son las tablas reales?</td><td>19 tablas en PostgreSQL</td></tr>
+<tr><td><b>Diccionario</b></td><td>¿Qué significa cada columna?</td><td>Tipo, nulo, clave, descripción</td></tr>
+</table></div>
+
+<!-- 3 -->
+<h2 id="notacion">3. Símbolos que debes reconocer</h2>
+<h3>Casos de uso</h3>
+<ul>
+<li><b>«include»</b> = <u>siempre</u>. "Cobrar cuenta" «include» "Emitir comprobante". Flecha del base al incluido.</li>
+<li><b>«extend»</b> = <u>a veces</u>. "Dividir cuenta" «extend» "Cobrar cuenta". Flecha del que extiende al base.</li>
+<li><b>Rectángulo</b> = límite del sistema. Los actores van afuera.</li>
+<li><b>Triángulo hueco</b> = herencia. Los 5 roles heredan de "Personal del local" (actor abstracto, en cursiva).</li>
+</ul>
+<h3>Secuencia</h3>
+<ul>
+<li>El tiempo corre <b>de arriba hacia abajo</b>. Línea punteada vertical = <b>línea de vida</b>. Rectángulo delgado = <b>activación</b>.</li>
+<li>Flecha llena = mensaje; flecha punteada = <b>retorno</b>.</li>
+<li><b>alt</b> = si / si no ([OSE disponible] / [sin internet]). <b>opt</b> = solo si. <b>loop</b> = se repite.</li>
+</ul>
+<h3>Colaboración</h3>
+<ul><li>Mismos mensajes que la secuencia, pero <b>numerados</b> (1, 2, 2.1) sobre los enlaces. En UML 2 se llama <b>comunicación</b>.</li></ul>
+<h3>Clases</h3>
+<ul>
+<li>Caja de 3 partes: <b>nombre · atributos · métodos</b>. <code>-</code> privado, <code>+</code> público, <code>#</code> protegido.</li>
+<li><b>◆ rombo negro = composición</b>: la parte no existe sin el todo (ItemPedido sin Pedido).</li>
+<li>◇ rombo hueco = agregación (la parte sí existe sola). Línea simple = asociación.</li>
+<li>Multiplicidad: <code>1</code> uno · <code>0..1</code> opcional · <code>0..*</code> cero o muchos · <code>1..*</code> al menos uno.</li>
+<li><b>«enumeration»</b> = lista cerrada de valores (cajas grises).</li>
+</ul>
+<h3>Estados</h3>
+<ul>
+<li>Transición: <b>evento [condición] / acción</b>. Ej.: <code>anular [PIN del administrador] / ticket ANULACIÓN</code>.</li>
+<li>● círculo negro = inicio · ◉ círculo con anillo = fin.</li>
+<li><b>Mesa:</b> Libre → Pedido QR por confirmar → Ocupada → Cuenta solicitada → Por limpiar → Libre.</li>
+<li><b>Pedido:</b> Registrado, Programado, Por confirmar, Confirmado, En preparación, Servido, Anulado.</li>
+</ul>
+<h3>Componentes y despliegue</h3>
+<ul>
+<li>Componentes: ○ círculo = interfaz <b>ofrecida</b>; ◐ semicírculo = interfaz <b>requerida</b>. Los <b>adaptadores</b> permiten cambiar Nubefact por otro OSE sin tocar lo demás.</li>
+<li>Despliegue: <b>nodo</b> = equipo (cubo) · <b>artefacto</b> = programa instalado (api-nestjs, postgresql) · líneas con el medio (Cat6, USB, WiFi, HTTPS).</li>
+<li>Funciona <b>sin internet</b> porque la API y la base de datos corren en el servidor local; la nube solo sincroniza.</li>
+</ul>
+<h3>Modelo físico y diccionario</h3>
+<ul>
+<li><b>PK</b> identifica la fila · <b>FK</b> apunta a otra tabla · <b>UQ</b> no se repite (<code>numero_operacion</code> de Yape) · <b>CHECK</b> valida reglas (factura exige RUC).</li>
+<li>Pata de gallo: <b>pata = muchos</b>, barra = uno, círculo = opcional.</li>
+<li>Muchos a muchos → <b>tabla intermedia</b> (<code>item_opcion</code>).</li>
+</ul>
+
+<!-- 4 -->
+<h2 id="difs">4. Diferencias que siempre preguntan</h2>
+<div class="tabla"><table>
+<tr><th>Se confunden</th><th>Diferencia</th></tr>
+<tr><td>Casos de uso vs secuencia</td><td>Casos de uso = <b>QUÉ</b> (desde afuera). Secuencia = <b>CÓMO</b>, paso a paso.</td></tr>
+<tr><td>Secuencia vs colaboración</td><td>Misma información. Secuencia ordena por <b>tiempo</b>; colaboración por <b>conexiones</b> y números.</td></tr>
+<tr><td>Secuencia vs estados</td><td>Secuencia = <b>varios objetos, un escenario</b>. Estados = <b>un objeto, todos sus escenarios</b>.</td></tr>
+<tr><td>Clases vs modelo físico</td><td>Clases = lógico, <b>con métodos</b>. Modelo físico = tablas reales, tipos de PostgreSQL, <b>sin métodos</b>.</td></tr>
+<tr><td>Modelo físico vs diccionario</td><td>Modelo = <b>dibujo</b>. Diccionario = <b>texto</b> que explica cada columna.</td></tr>
+<tr><td>Paquetes vs componentes</td><td>Paquetes = <b>carpetas del código</b>. Componentes = <b>piezas ejecutables</b> con interfaces.</td></tr>
+<tr><td>Componentes vs despliegue</td><td>Componentes = <b>software</b>. Despliegue = <b>hardware</b> y qué se instala.</td></tr>
+<tr><td>Actor vs clase</td><td>Actor = <b>externo</b> (quien usa). Clase = <b>interna</b> (lo que el sistema guarda).</td></tr>
+</table></div>
+
+<!-- 5 -->
+<h2 id="clases">5. El diagrama de clases contado como historia</h2>
+<div class="clave">Regla de oro de la multiplicidad: el número junto a una caja dice cuántas de ESA caja hay por cada una de la otra.</div>
+<pre>
+Mesa 1 ─tiene─ 0..* SesionMesa 1 ─agrupa─ 1..* Pedido 1 ◆─ 1..* ItemPedido 0..* ─de─ 1 Producto
+                        │ 1                    │ 1..*                │ elige                │ pertenece
+                        │                      │ cobra               ▼ 0..*                 ▼ 1
+                        └── 0..1 Cuenta 1 ─────┘           OpcionModificador ◆─ GrupoModificador   Categoria
+                                  │ ◆ 0..* Pago ── registra ── Turno ◆─ MovimientoCaja
+                                  │ genera 1..*                  │ abre
+                                  ▼                              Usuario (rol)
+                             Comprobante
+</pre>
+<ol>
+<li><b>Salón (azul):</b> la <b>Mesa</b> M-04 se abre y crea una <b>SesionMesa</b> (esa visita, con su token QR). Se separan porque la mesa se usa muchas veces al día.</li>
+<li><b>Pedido (naranja):</b> la sesión agrupa <b>Pedidos</b> (rondas). Cada pedido se <b>compone</b> (◆) de <b>ItemPedido</b>. El ítem copia el <code>precioUnitario</code> para que la cuenta no cambie si sube el precio.</li>
+<li><b>Carta (amarillo):</b> cada ítem es de un <b>Producto</b>, que pertenece a una <b>Categoría</b>. <b>GrupoModificador</b> = la pregunta ("¿qué presa?", obligatoria); <b>OpcionModificador</b> = las respuestas (pierna, pecho). <code>validar()</code> impide enviar un 1/4 sin presa. <b>MovimientoInventario</b> descuenta el pollo.</li>
+<li><b>Cobro (verde):</b> la <b>Cuenta</b> cobra los pedidos (<code>total</code>, <code>saldo</code>), se compone de <b>Pagos</b> (pago mixto: efectivo + Yape) y genera el <b>Comprobante</b> (boleta o factura).</li>
+<li><b>Caja (verde):</b> el <b>Usuario</b> cajero <b>abre</b> su <b>Turno</b>; el turno registra los pagos y se compone de <b>MovimientoCaja</b> (egresos como "compré gas"). Se cierra con <b>arqueo ciego</b>.</li>
+<li><b>Delivery (naranja):</b> un pedido puede tener <b>0..1 DatosDelivery</b>, que es para 1 <b>Cliente</b>.</li>
+<li><b>Grises:</b> enumeraciones Rol, EstadoMesa, EstadoPedido, MedioPago, TipoComprobante.</li>
+</ol>
+<div class="frase">"La Mesa abre una SesionMesa; la sesión agrupa Pedidos compuestos de ItemPedido; cada ítem es de un Producto con sus opciones. La Cuenta cobra los pedidos, recibe Pagos registrados en el Turno de la cajera y genera el Comprobante."</div>
+
+<!-- 6 -->
+<h2 id="roles">6. Comensal, cajero y administrador</h2>
+<h3>¿Por qué el comensal no tiene clase?</h3>
+<div class="clave">Un actor se convierte en clase solo si el sistema necesita guardar datos sobre él.</div>
+<ul>
+<li>Casos de uso mira <b>desde afuera</b> (quién usa); clases mira <b>desde adentro</b> (qué se guarda).</li>
+<li>El comensal es <b>anónimo</b>: no se registra. Queda su rastro en <b>SesionMesa</b> (token), <b>Pedido</b> (canal QR) y <b>Pago</b>.</li>
+<li><b>Si da su DNI</b> al pagar: se guarda en el <b>Comprobante</b> (<code>documentoCliente</code> y nombre). Es parte del documento legal y no debe cambiar. El DNI solo es obligatorio en boletas de más de S/ 700; la factura exige RUC.</li>
+<li>En <b>delivery</b> sí existe la clase <b>Cliente</b>, porque hace falta su celular y dirección.</li>
+<li>SUNAT y la pasarela no son clases: solo se guarda su respuesta (<code>estadoSunat</code>, <code>numeroOperacion</code>).</li>
+</ul>
+<h3>Cajero y administrador = la misma clase Usuario</h3>
+<div class="tabla"><table>
+<tr><th></th><th>Cajero</th><th>Administrador</th></tr>
+<tr><td>Clase</td><td>Usuario, <code>rol = CAJERO</code></td><td>Usuario, <code>rol = ADMINISTRADOR</code></td></tr>
+<tr><td>Qué hace</td><td><b>Abre Turno</b> y cobra los Pagos</td><td><b>Autoriza</b> con su PIN</td></tr>
+<tr><td>Dónde aparece</td><td>Línea <i>abre</i> Usuario → Turno</td><td><code>autorizadoPor</code> en MovimientoCaja; <code>anular(motivo, pin)</code> en Pedido</td></tr>
+<tr><td>Analogía</td><td>Maneja la caja registradora</td><td>El dueño que pone su firma</td></tr>
+</table></div>
+<p>Una sola clase porque todos tienen lo mismo: nombre, PIN (<code>validarPin()</code>) y rol. Sería repetir 4 cajas iguales.</p>
+<div class="frase">"Cajero y administrador son la misma clase Usuario; los diferencia el atributo rol. El cajero abre un Turno donde quedan sus pagos; el administrador autoriza acciones delicadas con su PIN, que queda en autorizadoPor."</div>
+
+<!-- 7 -->
+<h2 id="numeros">7. Números que debes saber</h2>
+<div class="tabla"><table>
+<tr><th>Dato</th><th>Valor</th></tr>
+<tr><td>Diagramas del capítulo</td><td>14 archivos · 11 tipos de diagrama</td></tr>
+<tr><td>Casos de uso</td><td>25, en 5 módulos</td></tr>
+<tr><td>Diagramas de secuencia</td><td>3 (pedido QR, cobro y boleta, cierre de turno)</td></tr>
+<tr><td>Clases</td><td>17 clases + 5 enumeraciones</td></tr>
+<tr><td>Tablas en la base de datos</td><td>19 (PostgreSQL)</td></tr>
+<tr><td>Estados de la Mesa / del Pedido</td><td>5 / 7</td></tr>
+<tr><td>Capas del diagrama de paquetes</td><td>3</td></tr>
+<tr><td>DNI obligatorio en boleta</td><td>más de S/ 700</td></tr>
+<tr><td>fraccion_pollo</td><td>0, 0.125, 0.25, 0.5 o 1</td></tr>
+</table></div>
+
+<!-- 8 -->
+<h2 id="preg">8. Preguntas probables (toca para ver la respuesta)</h2>
+<details><summary>¿Qué diferencia hay entre «include» y «extend»?</summary><p>«include» se ejecuta siempre (Cobrar cuenta → Emitir comprobante); «extend» solo bajo una condición (Dividir cuenta extiende Cobrar cuenta).</p></details>
+<details><summary>¿Qué significa el rombo negro?</summary><p>Composición: la parte no existe sin el todo. Pedido ◆ ItemPedido, Cuenta ◆ Pago, Turno ◆ MovimientoCaja, GrupoModificador ◆ OpcionModificador.</p></details>
+<details><summary>¿Por qué separar Mesa y SesionMesa?</summary><p>La mesa es fija; la sesión es cada visita, con su propio token QR, pedidos y cuenta. Así no se mezclan los clientes del mediodía con los de la tarde.</p></details>
+<details><summary>¿Por qué ItemPedido guarda precioUnitario si Producto ya tiene precio?</summary><p>Para congelar el precio del momento de la venta; si mañana cambia el precio, las cuentas pasadas no cambian.</p></details>
+<details><summary>¿Cómo se representa la relación muchos a muchos ItemPedido – OpcionModificador en la base de datos?</summary><p>Con la tabla intermedia item_opcion.</p></details>
+<details><summary>¿Secuencia y colaboración muestran lo mismo?</summary><p>Sí, la misma información. Secuencia ordena por tiempo (de arriba abajo); colaboración por conexiones, con mensajes numerados.</p></details>
+<details><summary>¿Qué muestra un diagrama de estados y cómo se escribe una transición?</summary><p>Los estados de un solo objeto. Transición: evento [condición] / acción.</p></details>
+<details><summary>¿Clases y modelo físico son lo mismo?</summary><p>No. Clases es lógico, con métodos y relaciones de objetos. El modelo físico son tablas reales con tipos, PK, FK y UQ, sin métodos.</p></details>
+<details><summary>¿Por qué el sistema funciona sin internet?</summary><p>Según el despliegue, la API y PostgreSQL corren en el servidor local del restaurante; los comprobantes se encolan (contingencia) y la nube sincroniza al volver la conexión.</p></details>
+<details><summary>¿Para qué sirven los adaptadores en el diagrama de componentes?</summary><p>Aíslan los servicios externos (Nubefact, Culqi, ApisPeru, WhatsApp): se puede cambiar de proveedor tocando solo el adaptador.</p></details>
+<details><summary>¿Por qué pago.numero_operacion es UQ?</summary><p>Para que no se pueda reusar la misma captura de Yape en dos pagos.</p></details>
+<details><summary>¿Qué es el arqueo ciego?</summary><p>Al cerrar el turno, el cajero declara el efectivo contado sin ver cuánto debería haber; el sistema calcula la diferencia después.</p></details>
+
+<div class="clave" style="margin-top:28px">💪 Último consejo: si te preguntan "¿para qué sirve X?", responde con la pregunta que responde el diagrama + un ejemplo de la pollería. ¡Éxitos en el examen!</div>
+</div>
+<a class="top" href="#inicio">↑</a>
+</body>
+</html>

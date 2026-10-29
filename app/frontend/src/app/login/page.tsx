@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { guardarSesion, Rol, Sesion } from '@/lib/sesion';
 
 interface Usuario { id: string; nombre: string; rol: Rol }
-const DESTINO: Record<Rol, string> = { MOZO: '/mozo', CAJERO: '/caja', ADMINISTRADOR: '/caja', REPARTIDOR: '/' };
+const DESTINO: Record<Rol, string> = { MOZO: '/mozo', CAJERO: '/caja', ADMINISTRADOR: '/admin', REPARTIDOR: '/reparto' };
 
 function Ingreso() {
   const router = useRouter();
@@ -14,6 +14,7 @@ function Ingreso() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [elegido, setElegido] = useState<Usuario | null>(null);
   const [pin, setPin] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(params.get('permiso') === '0' ? 'Tu rol no tiene acceso a esa pantalla.' : '');
   const [cargando, setCargando] = useState(false);
 
@@ -26,7 +27,7 @@ function Ingreso() {
     setCargando(true);
     setError('');
     try {
-      const s = await api<Sesion>('POST', '/auth/login', { usuarioId: elegido.id, pin: valor });
+      const s = await api<Sesion>('POST', '/auth/login', { usuarioId: elegido.id, pin: valor, password: elegido.rol === 'ADMINISTRADOR' ? password : undefined });
       guardarSesion(s);
       router.replace(params.get('volver') || DESTINO[s.usuario.rol]);
     } catch (e: any) {
@@ -64,10 +65,13 @@ function Ingreso() {
         </div>
       ) : (
         <div className="tarjeta p-6 animar-entrada">
-          <button className="mb-2 text-sm text-slate-500" onClick={() => (setElegido(null), setPin(''), setError(''))}>
+          <button className="mb-2 text-sm text-slate-500" onClick={() => (setElegido(null), setPin(''), setPassword(''), setError(''))}>
             ← Cambiar usuario
           </button>
           <h1 className="text-xl font-bold">{elegido.nombre}</h1>
+          {elegido.rol === 'ADMINISTRADOR' && (
+            <input className="campo mb-3" type="password" placeholder="Contraseña del administrador" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+          )}
           <p className="mb-4 text-slate-500">Ingresa tu PIN</p>
           <div className="mb-4 flex justify-center gap-3">
             {Array.from({ length: Math.max(4, pin.length) }).map((_, i) => (

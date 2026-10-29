@@ -33,6 +33,7 @@ Luego ejecuta los scripts en orden y muestra un resumen. Si la base ya existe co
 | `02_comentarios.sql` | Agrega la descripción de cada tabla y columna (se ve en pgAdmin). |
 | `03_datos_iniciales.sql` | Carga la carta con precios, las 10 mesas, los modificadores y usuarios de prueba. |
 | `04_verificar.sql` | Muestra las tablas, la carta, las mesas, el stock y los usuarios. |
+| `05_ampliacion.sql` | Agrega la configuración del local, los pagos en línea, la fusión de mesas, descuentos, notas de crédito y delivery. Se puede ejecutar varias veces. |
 | `crear_base_de_datos.ps1` | Ejecuta todo en orden. |
 | `.env` | Se genera al final con la cadena de conexión. **No se sube a GitHub.** |
 

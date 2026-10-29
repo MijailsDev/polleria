@@ -41,10 +41,44 @@ export class PedidosController {
     return this.pedidos.servido(id);
   }
 
+  @Post('pedidos/:id/reimprimir')
+  @UseGuards(AuthGuard)
+  @Roles('MOZO', 'CAJERO')
+  reimprimir(@Param('id') id: string, @Req() req) {
+    return this.pedidos.reimprimir(id, req.usuario.sub);
+  }
+
+  /** Anulación de un ítem ya comandado: requiere PIN del administrador (RN-04). */
+  @Post('items/:id/anular')
+  @UseGuards(AuthGuard)
+  @Roles('MOZO', 'CAJERO')
+  anular(@Param('id') id: string, @Body() body: { motivo: string; pinAdmin: string }, @Req() req) {
+    return this.pedidos.anularItem(id, body.motivo, body.pinAdmin, req.usuario.sub);
+  }
+
+  /** Reposición por reclamo, sin costo para el cliente (REQ-INV-05). */
+  @Post('items/:id/reponer')
+  @UseGuards(AuthGuard)
+  @Roles('MOZO', 'CAJERO')
+  reponer(@Param('id') id: string, @Body() body: { motivo: string; pinAdmin: string }, @Req() req) {
+    return this.pedidos.reponer(id, body.motivo, body.pinAdmin, req.usuario.sub);
+  }
+
   /** Pantalla de cocina (simula la ticketera del pollero): solo lectura. */
   @Get('cocina')
   cocina() {
     return this.pedidos.cocina();
+  }
+
+  /** El pollero marca la comanda como lista (pantalla de cocina, sin sesión como la ticketera). */
+  @Post('cocina/:id/listo')
+  listo(@Param('id') id: string) {
+    return this.pedidos.servido(id);
+  }
+
+  @Get('cocina/carga')
+  carga() {
+    return this.pedidos.carga();
   }
 
   // Públicos: celular del comensal

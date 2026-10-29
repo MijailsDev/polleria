@@ -58,6 +58,48 @@ export function useConexion() {
   return conectado;
 }
 
+/** Estado del sistema: modo sin internet y comprobantes en cola (REQ-CON-02). */
+export function useEstadoSistema() {
+  const [estado, setEstado] = useState<{ sinInternet: boolean; pendientes: number }>({ sinInternet: false, pendientes: 0 });
+  useEffect(() => {
+    let vivo = true;
+    fetch(`${urlServidor()}/api/estado`)
+      .then((r) => r.json())
+      .then((e) => vivo && setEstado(e))
+      .catch(() => {});
+    const s = obtenerSocket();
+    const f = (e: { sinInternet: boolean; pendientes: number }) => setEstado(e);
+    s.on('estado:cambio', f);
+    return () => {
+      vivo = false;
+      s.off('estado:cambio', f);
+    };
+  }, []);
+  return estado;
+}
+
+/** Fecha y hora local para inputs datetime-local. */
+export function fechaLocal(d: Date) {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** Descarga filas como CSV (se abre en Excel). */
+export function descargarCsv(nombre: string, filas: Record<string, unknown>[]) {
+  if (!filas.length) return;
+  const cols = Object.keys(filas[0]);
+  const esc = (v: unknown) => {
+    const s = v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = '﻿' + [cols.join(';'), ...filas.map((f) => cols.map((c) => esc(f[c])).join(';'))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `${nombre}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 // ------------------------------------------------------------------ Sonido (simula el buzzer)
 
 let audio: AudioContext | null = null;
