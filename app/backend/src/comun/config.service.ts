@@ -12,6 +12,14 @@ const POR_DEFECTO: Record<string, unknown> = {
   umbral_cola_cocina: 12,
   minutos_correccion: 2,
   sin_internet: false,
+  tasa_icbper: 0.5,
+  ruc_emisor: '20000000001',
+  razon_social: 'POLLERÍA LA BRASA DORADA E.I.R.L.',
+  direccion_local: 'Av. León Velarde 100, Tambopata, Madre de Dios',
+  impresora_cocina: '',
+  impresora_caja: '',
+  celular_dueno: '',
+  exigir_equipo_vinculado: false,
 };
 
 /** Parámetros del local que el administrador cambia sin programar (tabla configuracion). */
@@ -34,6 +42,10 @@ export class ConfigService implements OnModuleInit {
     return this.valores.get(clave) === true;
   }
 
+  texto(clave: string) {
+    return String(this.valores.get(clave) ?? POR_DEFECTO[clave] ?? '');
+  }
+
   async todas() {
     const filas = await this.prisma.configuracion.findMany({ orderBy: { clave: 'asc' } });
     return filas.map((f) => ({ clave: f.clave, valor: f.valor, descripcion: f.descripcion }));
@@ -42,8 +54,11 @@ export class ConfigService implements OnModuleInit {
   async guardar(clave: string, valor: unknown) {
     const actual = this.valores.get(clave);
     if (actual === undefined) throw new Error(`Parámetro desconocido: ${clave}`);
-    const v = typeof actual === 'boolean' ? valor === true || valor === 'true' : Number(valor);
+    const v = typeof actual === 'boolean' ? valor === true || valor === 'true' : typeof actual === 'string' ? String(valor ?? '').trim().slice(0, 120) : Number(valor);
     if (typeof v === 'number' && !(v >= 0)) throw new Error('El valor debe ser un número mayor o igual a cero.');
+    if (clave.startsWith('impresora_') && v && !/^[0-9]{1,3}(\.[0-9]{1,3}){3}(:[0-9]{2,5})?$/.test(String(v))) throw new Error('Escribe la IP de la impresora, por ejemplo 192.168.1.50 o 192.168.1.50:9100.');
+    if (clave === 'celular_dueno' && v && !/^9[0-9]{8}$/.test(String(v))) throw new Error('El celular debe tener 9 dígitos y empezar con 9.');
+    if (clave === 'ruc_emisor' && !/^(10|20)[0-9]{9}$/.test(String(v))) throw new Error('RUC inválido.');
     await this.prisma.configuracion.upsert({
       where: { clave },
       update: { valor: v as Prisma.InputJsonValue, actualizado_en: new Date() },

@@ -60,6 +60,9 @@ try {
   }
   # Paso 5: ampliación (se puede repetir sin problema en una base ya creada)
   Ejecutar 'polleria_app' 'polleria' '05_ampliacion.sql'
+  Ejecutar 'polleria_app' 'polleria' '06_produccion.sql'
+  Ejecutar 'polleria_app' 'polleria' '07_comensal.sql'
+  Ejecutar 'polleria_app' 'polleria' '08_seguridad.sql'
   Ejecutar 'polleria_app' 'polleria' '04_verificar.sql'
 
   # Cadena de conexión para el backend (el archivo .env no se sube a GitHub)

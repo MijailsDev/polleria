@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagramas modo pro</title>
+<style>
+  :root {
+    --fondo: #fff8f0; --tarjeta: #ffffff; --texto: #2b1d12; --suave: #7a6656;
+    --borde: #f0dcc6; --naranja: #e8590c; --naranja-suave: #fff0e2;
+    --verde: #2b8a3e; --verde-suave: #e6f6ea; --azul: #1c64c4; --azul-suave: #e7f0fc;
+    --morado: #7048e8; --morado-suave: #efeafe; --rojo: #c92a2a; --rojo-suave: #fdeaea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fondo: #1a130d; --tarjeta: #251b13; --texto: #f6ebe0; --suave: #bba795;
+      --borde: #3b2c1f; --naranja: #ff8a3d; --naranja-suave: #3a2416;
+      --verde: #69db7c; --verde-suave: #18301e; --azul: #74a9ff; --azul-suave: #172a45;
+      --morado: #b197fc; --morado-suave: #2a2240; --rojo: #ff8787; --rojo-suave: #3d1d1d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto);
+    font: 17px/1.6 "Segoe UI", system-ui, sans-serif; }
+  .contenedor { max-width: 920px; margin: 0 auto; padding: 24px 16px 80px; }
+  #progreso { position: fixed; top: 0; left: 0; height: 5px; width: 0; background: var(--naranja); z-index: 10; transition: width .1s; }
+  h1 { font-size: 2.1rem; line-height: 1.15; margin: 12px 0 6px; }
+  h2 { font-size: 1.5rem; margin: 48px 0 12px; }
+  .chapita { display: inline-block; background: var(--naranja-suave); color: var(--naranja);
+    border-radius: 99px; padding: 3px 12px; font-weight: 600; font-size: .85rem; }
+  .intro { color: var(--suave); font-size: 1.05rem; }
+  .caja { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 16px; padding: 20px; margin: 16px 0; }
+  .historia { background: var(--naranja-suave); border-left: 5px solid var(--naranja); border-radius: 12px; padding: 16px 18px; margin: 16px 0; }
+
+  /* Mapa de grupos */
+  .grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .grupo { border-radius: 14px; padding: 14px 16px; }
+  .grupo b { display: block; font-size: 1.05rem; }
+  .grupo small { color: var(--suave); }
+  .g-quien { background: var(--naranja-suave); } .g-como { background: var(--azul-suave); }
+  .g-piezas { background: var(--verde-suave); } .g-datos { background: var(--morado-suave); }
+
+  /* Tabla de diferencias */
+  .tabla { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  .tabla th, .tabla td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  .tabla th { color: var(--suave); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+  .tabla td:first-child { font-weight: 700; white-space: nowrap; }
+  .envoltura { overflow-x: auto; }
+
+  /* Versus */
+  .versus { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: stretch; margin: 14px 0; }
+  .versus .lado { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 14px; }
+  .versus .vs { align-self: center; font-weight: 800; color: var(--naranja); font-size: 1.2rem; }
+  .versus b { display: block; }
+  .versus .ej { color: var(--suave); font-size: .9rem; margin-top: 6px; }
+  @media (max-width: 600px) { .versus { grid-template-columns: 1fr; } .versus .vs { justify-self: center; } }
+
+  /* Tarjetas de diagrama */
+  .diagrama { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 18px; padding: 22px; margin: 22px 0; scroll-margin-top: 20px; }
+  .cabeza { display: flex; gap: 14px; align-items: center; }
+  .emoji { font-size: 2.2rem; }
+  .cabeza h3 { margin: 0; font-size: 1.35rem; }
+  .cabeza .frase { color: var(--suave); }
+  .num { font-size: .8rem; color: var(--naranja); font-weight: 700; }
+  .dibujo { background: var(--fondo); border-radius: 12px; padding: 12px; margin: 14px 0; text-align: center; }
+  .dibujo svg { max-width: 100%; height: auto; color: var(--texto); }
+  .trampa { background: var(--rojo-suave); border-radius: 12px; padding: 12px 16px; margin-top: 12px; }
+  .trampa b { color: var(--rojo); }
+  .proyecto { background: var(--verde-suave); border-radius: 12px; padding: 12px 16px; margin-top: 12px; }
+  .proyecto b { color: var(--verde); }
+  .listo { display: flex; align-items: center; gap: 8px; margin-top: 14px; cursor: pointer; color: var(--suave); font-weight: 600; user-select: none; }
+  .listo input { width: 20px; height: 20px; accent-color: var(--verde); }
+  .diagrama.hecho { border-color: var(--verde); }
+
+  .indice { display: flex; flex-wrap: wrap; gap: 8px; }
+  .indice a { text-decoration: none; color: var(--texto); background: var(--tarjeta); border: 1px solid var(--borde);
+    border-radius: 99px; padding: 5px 12px; font-size: .9rem; }
+  .indice a.hecho { background: var(--verde-suave); border-color: var(--verde); }
+
+  /* Cadena */
+  .cadena { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 600; }
+  .cadena span.p { background: var(--naranja-suave); padding: 4px 10px; border-radius: 8px; }
+  .cadena span.f { color: var(--naranja); }
+
+  /* Despertador */
+  .pregunta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 16px; margin: 12px 0; }
+  .opciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .opciones button { font: inherit; font-size: .95rem; background: var(--fondo); color: var(--texto);
+    border: 1px solid var(--borde); border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+  .opciones button.bien { background: var(--verde-suave); border-color: var(--verde); }
+  .opciones button.mal { background: var(--rojo-suave); border-color: var(--rojo); }
+  .explica { margin-top: 8px; color: var(--suave); display: none; }
+  #marcador { font-size: 1.2rem; font-weight: 700; }
+  code { background: var(--naranja-suave); padding: 1px 6px; border-radius: 6px; font-size: .92em; }
+</style>
+</head>
+<body>
+<div id="progreso"></div>
+<div class="contenedor">
+
+  <span class="chapita">🍗 Modo pro · versión anti-sueño</span>
+  <h1>Los 11 diagramas de la pollería, contados como una historia</h1>
+  <p class="intro">Primero, las diferencias entre todos, en 3 minutos. Después, cada diagrama con su historia, su dibujo y la trampa típica de examen. Marca ✅ cada uno que entiendas y mira cómo se llena la barra de arriba.</p>
+
+  <div class="historia">
+    <b>La idea que lo explica todo:</b> imagina que vas a abrir una pollería desde cero. Primero piensas <b>quién</b> va a venir (actores) y <b>qué</b> va a pedir (casos de uso). Luego ensayas <b>cómo</b> se atiende paso a paso (secuencia y colaboración). Después decides <b>qué cosas</b> existen en el local y sus reglas (clases y estados). Más tarde ordenas el <b>código</b> (paquetes y componentes) y eliges los <b>aparatos</b> donde se instala (despliegue). Al final diseñas el <b>cuaderno</b> donde se anota todo (modelo físico y diccionario). Cada diagrama responde una sola de esas preguntas.
+  </div>
+
+  <h2>⚡ Parte 1 · Las diferencias de un vistazo</h2>
+
+  <div class="grupos">
+    <div class="grupo g-quien"><b>🙋 ¿Quién y qué?</b><small>Actores · Casos de uso<br>Se mira el sistema desde afuera.</small></div>
+    <div class="grupo g-como"><b>🎬 ¿Cómo pasa?</b><small>Secuencia · Colaboración · Estados<br>Muestran movimiento y cambios.</small></div>
+    <div class="grupo g-piezas"><b>🧱 ¿De qué está hecho?</b><small>Clases · Paquetes · Componentes · Despliegue<br>Muestran la estructura, que no cambia.</small></div>
+    <div class="grupo g-datos"><b>🗄️ ¿Dónde se guarda?</b><small>Modelo físico · Diccionario<br>No son UML: son de base de datos.</small></div>
+  </div>
+
+  <div class="caja envoltura">
+    <table class="tabla">
+      <thead><tr><th>Diagrama</th><th>Pregunta que responde</th><th>En la pollería sería…</th></tr></thead>
+      <tbody>
+        <tr><td>🙋 Actores</td><td>¿Quién usa el sistema?</td><td>La lista de invitados: comensal, mozo, cajero, pollero, repartidor, dueño, SUNAT, pasarela.</td></tr>
+        <tr><td>📋 Casos de uso</td><td>¿Qué puede hacer cada uno?</td><td>El menú de acciones: "pedir por QR", "cobrar", "cerrar turno".</td></tr>
+        <tr><td>🎬 Secuencia</td><td>¿Cómo pasa, en orden de tiempo?</td><td>El guion de una película: quién habla primero, quién responde después.</td></tr>
+        <tr><td>🕸️ Colaboración</td><td>¿Quién se conecta con quién?</td><td>El mismo guion, pero dibujado como mapa de contactos con números.</td></tr>
+        <tr><td>📦 Paquetes</td><td>¿Cómo se ordena el código?</td><td>Los cajones de la cocina: cada cosa en su cajón.</td></tr>
+        <tr><td>🧩 Clases</td><td>¿Qué cosas existen y qué saben hacer?</td><td>El plano de todo lo que hay: Mesa, Pedido, Cuenta, Turno…</td></tr>
+        <tr><td>🚦 Estados</td><td>¿Por qué etapas pasa UNA cosa?</td><td>La vida de una mesa: libre → ocupada → pide cuenta → por limpiar.</td></tr>
+        <tr><td>🔌 Componentes</td><td>¿Qué piezas de software hay?</td><td>Los electrodomésticos enchufables: si uno falla, lo cambias sin tocar los demás.</td></tr>
+        <tr><td>🖥️ Despliegue</td><td>¿En qué aparatos se instala?</td><td>El plano del local con la tablet, la caja, el servidor y las impresoras.</td></tr>
+        <tr><td>🗄️ Modelo físico</td><td>¿Cómo quedan las tablas?</td><td>El cuaderno de la cajera con sus columnas exactas.</td></tr>
+        <tr><td>📖 Diccionario</td><td>¿Qué significa cada dato?</td><td>La leyenda del cuaderno: qué va en cada columna y qué no se permite.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>🥊 Las peleas que más salen en el examen</h3>
+
+  <div class="versus">
+    <div class="lado"><b>📋 Casos de uso</b>Dice <b>QUÉ</b> se hace, visto desde afuera.<div class="ej">"Cobrar cuenta"</div></div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🎬 Secuencia</b>Dice <b>CÓMO</b> se hace, paso a paso por dentro.<div class="ej">Caja → API → Pasarela → SUNAT → boleta</div></div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>🎬 Secuencia</b>Ordena por <b>TIEMPO</b>: de arriba hacia abajo.</div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🕸️ Colaboración</b>Ordena por <b>CONEXIONES</b>, con números 1, 2, 3. La información es la misma.</div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>🎬 Secuencia</b><b>Varios</b> objetos en <b>un</b> solo escenario.</div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🚦 Estados</b><b>Un</b> solo objeto en <b>todos</b> sus escenarios posibles.</div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>🧩 Clases</b>Objetos con <b>métodos</b> y herencia. Es lógico.<div class="ej">Pedido.confirmar()</div></div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🗄️ Modelo físico</b><b>Tablas reales</b> con tipos y claves. No tiene métodos.<div class="ej">pedido.id uuid PK</div></div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>🗄️ Modelo físico</b>Es un <b>DIBUJO</b> de tablas y relaciones.</div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>📖 Diccionario</b>Es un <b>TEXTO</b> que explica cada columna.</div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>📦 Paquetes</b>Organiza el <b>código fuente</b> en carpetas.</div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🔌 Componentes</b>Piezas <b>que se ejecutan</b> y se comunican por interfaces.</div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>🔌 Componentes</b>Es <b>SOFTWARE</b>.<div class="ej">La API NestJS</div></div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🖥️ Despliegue</b>Es <b>HARDWARE</b> y lo que se instala en él.<div class="ej">El Mini PC donde corre la API</div></div>
+  </div>
+  <div class="versus">
+    <div class="lado"><b>🙋 Actor</b>Está <b>AFUERA</b> del sistema: es quien lo usa.<div class="ej">El cajero</div></div>
+    <div class="vs">VS</div>
+    <div class="lado"><b>🧩 Clase</b>Está <b>ADENTRO</b>: guarda sus datos.<div class="ej">La clase Usuario con su PIN</div></div>
+  </div>
+
+  <h3>🔗 Cómo se encadenan</h3>
+  <div class="caja cadena">
+    <span class="p">Actores</span><span class="f">→</span><span class="p">Casos de uso</span><span class="f">→</span>
+    <span class="p">Secuencia / Colaboración</span><span class="f">→</span><span class="p">Clases + Estados</span><span class="f">→</span>
+    <span class="p">Paquetes</span><span class="f">→</span><span class="p">Componentes</span><span class="f">→</span><span class="p">Despliegue</span>
+    <span class="f">·</span><span class="p">Clases</span><span class="f">→</span><span class="p">Modelo físico</span><span class="f">→</span><span class="p">Diccionario</span>
+  </div>
+
+  <h2>🎞️ Parte 2 · Cada diagrama con su historia</h2>
+  <div class="indice" id="indice"></div>
+
+  <!-- 1 ACTORES -->
+  <section class="diagrama" id="d1" data-nombre="Actores">
+    <div class="cabeza"><div class="emoji">🙋</div><div><div class="num">DIAGRAMA 1 · 1.1.1.1</div><h3>Actores del sistema</h3><div class="frase">Quién usa el sistema.</div></div></div>
+    <div class="historia">Antes de abrir la pollería, el dueño se sienta con un papel y escribe: "¿Quiénes van a tocar mi sistema?". Anota al cliente que come en la mesa, al mozo, al pollero, a la cajera, al repartidor y a él mismo. Luego se acuerda de los que no son personas: SUNAT, que recibe las boletas; la pasarela, que cobra con Yape; y el reloj, que libera los pedidos programados. Esa lista son los <b>actores</b>.</div>
+    <div class="dibujo"><svg viewBox="0 0 420 120" width="420"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="60" cy="25" r="10"/><path d="M60 35v30M40 45h40M60 65l-15 25M60 65l15 25"/><circle cx="210" cy="25" r="10"/><path d="M210 35v30M190 45h40M210 65l-15 25M210 65l15 25"/><rect x="320" y="20" width="80" height="50" rx="6"/></g><g fill="currentColor" font-size="13" text-anchor="middle" font-family="Segoe UI"><text x="60" y="110">Comensal</text><text x="210" y="110">Cajero</text><text x="360" y="50">«sistema»</text><text x="360" y="110">SUNAT</text></g></svg></div>
+    <ul>
+      <li>Un actor es un <b>rol</b>, no una persona. Rosa puede ser cajera el lunes y moza el martes.</li>
+      <li><b>Principales:</b> los que usan el sistema (comensal, mozo, pollero, cajero, repartidor, administrador).</li>
+      <li><b>Secundarios:</b> sistemas externos que el sistema llama (pasarela, SUNAT, consulta DNI/RUC, mensajería, temporizador).</li>
+      <li>Todo el personal hereda de "Personal del local": la flecha con triángulo blanco es <b>generalización</b>.</li>
+    </ul>
+    <div class="trampa"><b>Trampa de examen:</b> "El cajero Juan Pérez es un actor". ❌ El actor es <b>Cajero</b>, el rol. Juan es solo quien lo cumple hoy.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 2 CASOS DE USO -->
+  <section class="diagrama" id="d2" data-nombre="Casos de uso">
+    <div class="cabeza"><div class="emoji">📋</div><div><div class="num">DIAGRAMA 2 · 1.1.1.2</div><h3>Casos de uso</h3><div class="frase">Qué puede hacer cada actor.</div></div></div>
+    <div class="historia">Ahora el dueño dibuja un rectángulo grande, que es el sistema, y pone a los actores afuera. Dentro escribe óvalos con lo que cada uno puede hacer: el comensal "registra pedido por QR", la cajera "cobra cuenta", el administrador "gestiona la carta". No explica cómo funciona por dentro; solo dice <b>qué</b> se puede hacer y <b>quién</b> lo hace.</div>
+    <div class="dibujo"><svg viewBox="0 0 440 150" width="440"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="35" cy="55" r="9"/><path d="M35 64v26M20 72h30M35 90l-12 20M35 90l12 20"/><rect x="100" y="10" width="330" height="130" rx="10"/><ellipse cx="200" cy="50" rx="78" ry="22"/><ellipse cx="200" cy="110" rx="78" ry="22"/><ellipse cx="355" cy="80" rx="62" ry="20"/><path d="M50 70l72-15M278 50l20 15" /><path d="M278 110l20-15" stroke-dasharray="5 4"/></g><g fill="currentColor" font-size="12" text-anchor="middle" font-family="Segoe UI"><text x="35" y="128">Cajero</text><text x="200" y="54">Cobrar cuenta</text><text x="200" y="114">Dividir cuenta</text><text x="355" y="84">Emitir boleta</text><text x="300" y="45">«include»</text><text x="300" y="125">«extend»</text></g></svg></div>
+    <ul>
+      <li>Nuestro proyecto tiene <b>25 casos de uso</b> en 5 módulos.</li>
+      <li><b>«include»</b> = <b>siempre</b>. "Cobrar cuenta" siempre incluye "Emitir comprobante".</li>
+      <li><b>«extend»</b> = <b>solo a veces</b>. "Dividir cuenta" se agrega a "Cobrar cuenta" solo si los clientes lo piden.</li>
+    </ul>
+    <div class="trampa"><b>Truco para no confundirte:</b> include es como la papa del ¼ de pollo, siempre viene. Extend es la gaseosa: solo si la pides.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 3 SECUENCIA -->
+  <section class="diagrama" id="d3" data-nombre="Secuencia">
+    <div class="cabeza"><div class="emoji">🎬</div><div><div class="num">DIAGRAMAS 3, 4 Y 5 · 1.1.2.1</div><h3>Secuencia</h3><div class="frase">Cómo pasa algo, paso a paso en el tiempo.</div></div></div>
+    <div class="historia">Es viernes, 8 p. m. Una familia escanea el QR de la mesa 4 y pide un pollo entero. El celular le avisa a la API, la API revisa la carta, guarda el pedido en la base de datos y le avisa a la tablet del mozo. El mozo confirma y la API manda la comanda a la ticketera de cocina, que suena tres veces. Si lo grabas como una película, con los personajes arriba y el tiempo corriendo hacia abajo, tienes un <b>diagrama de secuencia</b>.</div>
+    <div class="dibujo"><svg viewBox="0 0 440 170" width="440"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="10" y="8" width="90" height="28" rx="5"/><rect x="175" y="8" width="90" height="28" rx="5"/><rect x="340" y="8" width="90" height="28" rx="5"/><path d="M55 36v130M220 36v130M385 36v130" stroke-dasharray="4 4"/><rect x="214" y="55" width="12" height="80"/><path d="M55 60h155M226 85h155"/><path d="M381 110H226M214 130H55" stroke-dasharray="6 4"/></g><g fill="currentColor"><path d="M210 60l-8-4v8zM381 85l-8-4v8zM226 110l8-4v8zM55 130l8-4v8z"/></g><g fill="currentColor" font-size="12" text-anchor="middle" font-family="Segoe UI"><text x="55" y="27">Celular</text><text x="220" y="27">API</text><text x="385" y="27">Base datos</text><text x="132" y="54">1: enviar pedido</text><text x="303" y="80">2: guardar</text><text x="303" y="105">ok</text><text x="132" y="124">pedido registrado</text></g></svg></div>
+    <ul>
+      <li><b>Línea de vida:</b> la línea punteada vertical de cada personaje.</li>
+      <li><b>Activación:</b> el rectángulo delgado, que indica "estoy trabajando".</li>
+      <li><b>Flecha llena:</b> mensaje. <b>Flecha punteada:</b> respuesta.</li>
+      <li><b>alt:</b> si pasa esto o lo otro. <b>opt:</b> solo si ocurre algo.</li>
+    </ul>
+    <div class="proyecto"><b>En nuestro proyecto hay 3:</b> el pedido por QR, el cobro con efectivo + Yape con la boleta, y el cierre de turno con arqueo ciego (la cajera cuenta el dinero sin ver cuánto debería haber).</div>
+    <div class="trampa"><b>Trampa de examen:</b> el tiempo va de <b>arriba hacia abajo</b>, no de izquierda a derecha.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 4 COLABORACIÓN -->
+  <section class="diagrama" id="d4" data-nombre="Colaboración">
+    <div class="cabeza"><div class="emoji">🕸️</div><div><div class="num">DIAGRAMA 6 · 1.1.2.2</div><h3>Colaboración (en UML 2: comunicación)</h3><div class="frase">El mismo guion, dibujado como mapa de contactos.</div></div></div>
+    <div class="historia">Toma la película del pedido por QR y, en vez de ordenarla por tiempo, pon a cada personaje en un punto del papel y únelos con líneas cuando se hablan. Sobre cada línea escribes el mensaje con un número: "1: enviar pedido", "2: validar carta", "3: guardar". Así salta a la vista que la <b>API</b> está en el centro y habla con todos. Si la API se cae, se cae todo: eso es lo que este diagrama te ayuda a ver.</div>
+    <div class="dibujo"><svg viewBox="0 0 400 160" width="400"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="150" y="62" width="100" height="34" rx="6"/><rect x="10" y="10" width="90" height="30" rx="6"/><rect x="300" y="10" width="90" height="30" rx="6"/><rect x="10" y="120" width="90" height="30" rx="6"/><rect x="300" y="120" width="90" height="30" rx="6"/><path d="M100 30l50 35M300 30l-50 35M100 135l50-38M300 135l-50-38"/></g><g fill="currentColor" font-size="12" text-anchor="middle" font-family="Segoe UI"><text x="200" y="84">API</text><text x="55" y="30">Celular</text><text x="345" y="30">Carta</text><text x="55" y="140">Tablet mozo</text><text x="345" y="140">Base datos</text><text x="112" y="58">1: pedir</text><text x="288" y="58">2: validar</text><text x="288" y="118">3: guardar</text><text x="112" y="118">4: avisar</text></g></svg></div>
+    <div class="trampa"><b>Trampa de examen:</b> "¿La colaboración tiene más información que la secuencia?" ❌ Tienen <b>la misma</b>. Solo cambia el orden: tiempo o conexiones.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 5 PAQUETES -->
+  <section class="diagrama" id="d5" data-nombre="Paquetes">
+    <div class="cabeza"><div class="emoji">📦</div><div><div class="num">DIAGRAMA 7 · 1.1.3</div><h3>Paquetes</h3><div class="frase">Cómo se ordena el código en carpetas.</div></div></div>
+    <div class="historia">Mijail y Nilton van a programar juntos. Si meten todo en una sola carpeta, a la semana nadie encuentra nada. Entonces dibujan cajones: arriba, el de <b>presentación</b> (las pantallas); en medio, el de <b>negocio</b>, con cajoncitos llamados pedidos, caja y facturación; abajo, el de <b>infraestructura</b> (base de datos e impresoras). Una flecha punteada dice "este cajón usa lo de aquel otro".</div>
+    <div class="dibujo"><svg viewBox="0 0 400 170" width="400"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M120 10h50v10h110v30H120z"/><path d="M120 70h50v10h110v30H120z"/><path d="M120 130h50v10h110v28H120z"/><path d="M200 50v18M200 110v18" stroke-dasharray="5 4"/></g><g fill="currentColor"><path d="M200 70l-5-8h10zM200 130l-5-8h10z"/></g><g fill="currentColor" font-size="13" text-anchor="middle" font-family="Segoe UI"><text x="200" y="40">presentación</text><text x="200" y="100">negocio</text><text x="200" y="158">infraestructura</text></g></svg></div>
+    <div class="trampa"><b>Lo que se evita:</b> la dependencia circular. Si caja depende de pedidos y pedidos de caja, cambiar uno rompe el otro.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 6 CLASES -->
+  <section class="diagrama" id="d6" data-nombre="Clases">
+    <div class="cabeza"><div class="emoji">🧩</div><div><div class="num">DIAGRAMA 8 · 1.1.4</div><h3>Clases</h3><div class="frase">Qué cosas existen, qué guardan y qué saben hacer.</div></div></div>
+    <div class="historia">Mira la pollería y pregúntate: "¿Qué <b>cosas</b> tengo que recordar?". Mesas, pedidos, platos de cada pedido, cuentas, pagos, boletas, turnos de caja. Cada cosa es una <b>clase</b>, una cajita con tres pisos: arriba su nombre, en medio sus datos (la Mesa tiene número y estado) y abajo lo que sabe hacer (el Pedido sabe <code>confirmar()</code> y <code>anular()</code>). Luego unes las cajitas con líneas: una mesa tiene muchos pedidos, un pedido tiene muchos ítems.</div>
+    <div class="dibujo"><svg viewBox="0 0 420 140" width="420"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="20" y="20" width="140" height="100" rx="4"/><path d="M20 46h140M20 90h140"/><rect x="260" y="20" width="140" height="100" rx="4"/><path d="M260 46h140M260 90h140"/><path d="M160 70h86"/><path d="M246 70l7-7 7 7-7 7z" fill="currentColor"/></g><g fill="currentColor" font-size="12" font-family="Segoe UI"><text x="90" y="38" text-anchor="middle" font-weight="700">Pedido</text><text x="28" y="64">estado</text><text x="28" y="80">horaProgramada</text><text x="28" y="110">confirmar()</text><text x="330" y="38" text-anchor="middle" font-weight="700">ItemPedido</text><text x="268" y="64">cantidad</text><text x="268" y="80">precio</text><text x="268" y="110">subtotal()</text><text x="168" y="64">1</text><text x="228" y="64">1..*</text></g></svg></div>
+    <ul>
+      <li>Nuestro proyecto: <b>17 clases</b> y <b>5 enumeraciones</b> (EstadoMesa, MedioPago…).</li>
+      <li><b>Multiplicidad:</b> <code>1</code> (uno), <code>0..*</code> (ninguno o muchos), <code>1..*</code> (al menos uno).</li>
+      <li><b>Composición ◆ (rombo negro):</b> la parte muere con el todo. Si borras el pedido, sus ítems desaparecen.</li>
+      <li><b>Asociación (línea simple):</b> se conocen, pero cada uno vive solo. La mesa sigue existiendo aunque se acabe el pedido.</li>
+    </ul>
+    <div class="trampa"><b>Pregunta clásica:</b> "¿Por qué el comensal no aparece como clase?". Porque es un actor de <b>afuera</b> y el sistema no guarda una ficha de cada cliente que come. Lo que sí se guarda es su <b>SesionMesa</b> (el QR que escaneó) y, si pide boleta con DNI, el documento queda escrito en el <b>Comprobante</b>.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 7 ESTADOS -->
+  <section class="diagrama" id="d7" data-nombre="Estados">
+    <div class="cabeza"><div class="emoji">🚦</div><div><div class="num">DIAGRAMAS 9 Y 10 · 1.1.5</div><h3>Estados</h3><div class="frase">Las etapas de la vida de UNA sola cosa.</div></div></div>
+    <div class="historia">Sigue con la mirada a la mesa 4 toda la noche. A las 7 está <b>libre</b> (verde). Llega una familia: <b>ocupada</b> (rojo). Piden la cuenta: <b>cuenta solicitada</b> (amarillo). Pagan y se van: <b>por limpiar</b> (gris). El mozo limpia: otra vez <b>libre</b>. Cada cambio pasa por un evento. Por eso el plano del mozo tiene colores: son los estados de este diagrama.</div>
+    <div class="dibujo"><svg viewBox="0 0 440 120" width="440"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="45" r="8" fill="currentColor"/><rect x="40" y="30" width="78" height="30" rx="14"/><rect x="145" y="30" width="78" height="30" rx="14"/><rect x="250" y="30" width="78" height="30" rx="14"/><rect x="355" y="30" width="78" height="30" rx="14"/><path d="M26 45h12M118 45h25M223 45h25M328 45h25"/><path d="M394 60v35H79V62"/></g><g fill="currentColor" font-size="12" text-anchor="middle" font-family="Segoe UI"><text x="79" y="50">Libre</text><text x="184" y="50">Ocupada</text><text x="289" y="50">Pide cuenta</text><text x="394" y="50">Por limpiar</text><text x="236" y="110">limpiar / volver a libre</text></g></svg></div>
+    <ul>
+      <li>Cada flecha se escribe: <code>evento [condición] / acción</code>.</li>
+      <li>Ejemplo del pedido: <code>anular [PIN del administrador] / imprimir ticket ANULACIÓN</code>.</li>
+      <li>Pedido: registrado → confirmado → en preparación → servido; o programado; o anulado.</li>
+      <li>El punto negro es el <b>inicio</b>; el círculo con punto (◉) es el <b>final</b>.</li>
+    </ul>
+    <div class="trampa"><b>Trampa de examen:</b> un diagrama de estados es de <b>un solo objeto</b>. Si ves varios personajes hablándose, eso es secuencia.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 8 COMPONENTES -->
+  <section class="diagrama" id="d8" data-nombre="Componentes">
+    <div class="cabeza"><div class="emoji">🔌</div><div><div class="num">DIAGRAMA 11 · 1.2.1</div><h3>Componentes</h3><div class="frase">Las piezas de software enchufables.</div></div></div>
+    <div class="historia">Piensa en la cocina: la licuadora, el horno y la freidora se enchufan al tomacorriente. Si se malogra la licuadora, compras otra y la enchufas, sin cambiar el horno. El software funciona igual. La <b>API NestJS</b> es una pieza; las <b>pantallas web</b> son otras piezas que se enchufan a ella por un tomacorriente llamado "API REST". Si mañana cambias Nubefact por otro proveedor de boletas, solo cambias el <b>adaptador</b>, esa pieza y nada más.</div>
+    <div class="dibujo"><svg viewBox="0 0 420 120" width="420"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="20" y="40" width="120" height="44" rx="4"/><rect x="270" y="40" width="130" height="44" rx="4"/><rect x="28" y="48" width="12" height="7"/><rect x="278" y="48" width="12" height="7"/><path d="M270 62h-55"/><circle cx="208" cy="62" r="7"/><path d="M140 62h50" stroke-dasharray="5 4"/><path d="M196 52a12 12 0 0 1 0 20"/></g><g fill="currentColor" font-size="12" text-anchor="middle" font-family="Segoe UI"><text x="80" y="70">Web de caja</text><text x="340" y="70">API NestJS</text><text x="208" y="35">API REST</text></g></svg></div>
+    <div class="trampa"><b>Notación:</b> el círculo ○ es la interfaz que una pieza <b>ofrece</b>; el semicírculo es la que otra <b>usa</b>. La flecha punteada significa "depende de".</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 9 DESPLIEGUE -->
+  <section class="diagrama" id="d9" data-nombre="Despliegue">
+    <div class="cabeza"><div class="emoji">🖥️</div><div><div class="num">DIAGRAMA 12 · 1.2.2</div><h3>Despliegue</h3><div class="frase">En qué aparatos se instala cada cosa.</div></div></div>
+    <div class="historia">Llega el técnico con cajas. Pone un <b>Mini PC</b> escondido en la trastienda, donde se instalan la API y PostgreSQL. En la caja, una computadora. En el salón, tablets. En la cocina, la ticketera. Todo se conecta a un <b>router</b> con cable Cat6 o WiFi, y el Mini PC va enchufado a un <b>UPS</b> por si se va la luz. En la nube hay un <b>VPS</b> que recibe una copia cuando hay internet. Ese plano de aparatos y cables es el despliegue.</div>
+    <div class="dibujo"><svg viewBox="0 0 420 130" width="420"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M20 40l12-12h110v62l-12 12H20z"/><path d="M20 40h110v62M130 40l12-12"/><path d="M270 40l12-12h120v62l-12 12H270z"/><path d="M270 40h120v62M390 40l12-12"/><path d="M130 72h140"/></g><g fill="currentColor" font-size="12" text-anchor="middle" font-family="Segoe UI"><text x="75" y="62">Tablet</text><text x="75" y="80">«device»</text><text x="330" y="62">Mini PC</text><text x="330" y="80">api · postgres</text><text x="200" y="66">WiFi</text></g></svg></div>
+    <div class="proyecto"><b>Por qué importa:</b> el servidor está <b>dentro</b> del local. Por eso, si se cae internet, la pollería sigue vendiendo y las boletas quedan en cola. Eso es lo que simula el botón "Sin internet" de la aplicación.</div>
+    <div class="trampa"><b>Trampa de examen:</b> los cubos 3D son <b>nodos</b> (hardware). Lo que va dentro se llama <b>artefacto</b> (el software instalado).</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 10 MODELO FÍSICO -->
+  <section class="diagrama" id="d10" data-nombre="Modelo físico">
+    <div class="cabeza"><div class="emoji">🗄️</div><div><div class="num">DIAGRAMA 13 · 1.3.1</div><h3>Modelo físico de la base de datos</h3><div class="frase">Cómo quedan las tablas de verdad.</div></div></div>
+    <div class="historia">Antes las cajeras anotaban todo en un cuaderno con columnas: fecha, mesa, total, medio de pago. El modelo físico es ese cuaderno pasado a PostgreSQL, pero con reglas estrictas: cada columna tiene un tipo exacto, cada fila un código único (<b>PK</b>) y las tablas se apuntan entre sí con <b>FK</b>. Las clases del diagrama 8 se convierten aquí en <b>19 tablas</b>, sin métodos, porque una tabla no "sabe hacer" nada: solo guarda.</div>
+    <div class="dibujo"><svg viewBox="0 0 420 120" width="420"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="20" y="15" width="140" height="90" rx="4"/><path d="M20 40h140"/><rect x="260" y="15" width="140" height="90" rx="4"/><path d="M260 40h140"/><path d="M160 60h100"/><path d="M168 52v16M176 52v16M260 60l-12-8M260 60l-12 8M244 52v16"/></g><g fill="currentColor" font-size="12" font-family="Segoe UI"><text x="90" y="32" text-anchor="middle" font-weight="700">mesa</text><text x="28" y="58">PK id uuid</text><text x="28" y="76">UQ numero varchar</text><text x="28" y="94">estado varchar</text><text x="330" y="32" text-anchor="middle" font-weight="700">sesion_mesa</text><text x="268" y="58">PK id uuid</text><text x="268" y="76">FK mesa_id</text><text x="268" y="94">token varchar</text></g></svg></div>
+    <ul>
+      <li><b>Pata de gallo:</b> la pata significa "muchos"; la barra, "uno"; el círculo, "opcional".</li>
+      <li>Una relación de muchos a muchos se convierte en una <b>tabla intermedia</b>, por ejemplo <code>item_opcion</code>.</li>
+      <li>El archivo <code>modelo_fisico.sql</code> es este dibujo escrito en código.</li>
+    </ul>
+    <div class="trampa"><b>Trampa de examen:</b> el modelo físico <b>no tiene métodos</b>. Si ves <code>confirmar()</code>, estás en el diagrama de clases.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <!-- 11 DICCIONARIO -->
+  <section class="diagrama" id="d11" data-nombre="Diccionario">
+    <div class="cabeza"><div class="emoji">📖</div><div><div class="num">DIAGRAMA 14 · 1.3.2</div><h3>Diccionario de datos</h3><div class="frase">Qué significa cada columna y qué acepta.</div></div></div>
+    <div class="historia">Un programador nuevo abre la tabla <code>pago</code> y ve una columna llamada <code>numero_operacion</code>. ¿Qué es eso? Abre el diccionario y lee: "Número de operación de Yape, Plin o POS. Es único para que nadie use la misma captura de pantalla dos veces". Ya no tiene que preguntarle a nadie. El diccionario es la <b>leyenda</b> del cuaderno.</div>
+    <div class="caja envoltura" style="margin:14px 0">
+      <table class="tabla">
+        <thead><tr><th>Columna</th><th>Tipo</th><th>¿Vacía?</th><th>Qué significa</th></tr></thead>
+        <tbody>
+          <tr><td>fraccion_pollo</td><td>numeric</td><td>No</td><td>Solo acepta 0, 0.125, 0.25, 0.5 o 1.</td></tr>
+          <tr><td>numero_operacion</td><td>varchar</td><td>Sí</td><td>Código de Yape, Plin o POS; único.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="trampa"><b>Trampa de examen:</b> el diccionario es <b>texto en tablas</b>, no un dibujo. Explica lo que el modelo físico solo dibuja.</div>
+    <label class="listo"><input type="checkbox"> Ya lo entendí</label>
+  </section>
+
+  <h2>⏰ Parte 3 · El despertador: 8 preguntas rápidas</h2>
+  <p class="intro">Toca la respuesta. Si fallas, te explica por qué.</p>
+  <div id="preguntas"></div>
+  <div class="caja"><span id="marcador">0 / 8</span> <span id="mensaje" class="intro"></span></div>
+
+</div>
+<script>
+  // Índice y casillas "Ya lo entendí"
+  const indice = document.getElementById('indice');
+  const tarjetas = [...document.querySelectorAll('.diagrama')];
+  let guardado = {};
+  try { guardado = JSON.parse(localStorage.getItem('diagramas-hechos') || '{}'); } catch {}
+  tarjetas.forEach(t => {
+    const a = document.createElement('a');
+    a.href = '#' + t.id; a.textContent = t.dataset.nombre;
+    indice.appendChild(a);
+    const caja = t.querySelector('.listo input');
+    const pintar = () => { t.classList.toggle('hecho', caja.checked); a.classList.toggle('hecho', caja.checked); a.textContent = (caja.checked ? '✅ ' : '') + t.dataset.nombre; };
+    caja.checked = !!guardado[t.id]; pintar();
+    caja.addEventListener('change', () => {
+      guardado[t.id] = caja.checked; pintar();
+      try { localStorage.setItem('diagramas-hechos', JSON.stringify(guardado)); } catch {}
+    });
+  });
+
+  // Barra de lectura
+  const barra = document.getElementById('progreso');
+  addEventListener('scroll', () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    barra.style.width = (max > 0 ? scrollY / max * 100 : 0) + '%';
+  });
+
+  // Preguntas
+  const preguntas = [
+    ['La familia de la mesa 4 escanea el QR, la API guarda el pedido y la cocina imprime. Todo en orden de tiempo. ¿Qué diagrama es?', ['Casos de uso', 'Secuencia', 'Estados'], 1, 'Varios personajes hablándose en orden de tiempo, de arriba hacia abajo: secuencia.'],
+    ['La mesa pasa de libre a ocupada, luego a cuenta solicitada y a por limpiar. ¿Qué diagrama es?', ['Estados', 'Colaboración', 'Clases'], 0, 'Es UNA sola cosa cambiando de etapa: diagrama de estados.'],
+    ['"Cobrar cuenta" siempre emite una boleta. ¿Qué relación es?', ['«extend»', '«include»', 'Generalización'], 1, 'Siempre = include. Solo a veces = extend.'],
+    ['¿Qué diagrama dice que la API corre en un Mini PC conectado a un UPS?', ['Componentes', 'Paquetes', 'Despliegue'], 2, 'Aparatos físicos y lo que se instala en ellos: despliegue.'],
+    ['Ves una cajita con "Pedido", sus datos y confirmar(). ¿Dónde estás?', ['Modelo físico', 'Clases', 'Diccionario'], 1, 'Tiene métodos, así que es el diagrama de clases. Las tablas no tienen métodos.'],
+    ['Secuencia y colaboración…', ['Muestran la misma información con distinto orden', 'Son totalmente diferentes', 'Colaboración no tiene mensajes'], 0, 'Misma información: una ordena por tiempo y la otra por conexiones numeradas.'],
+    ['¿Por qué el comensal no es una clase?', ['Porque no paga', 'Porque es un actor externo y no se guarda una ficha de él', 'Porque se olvidaron'], 1, 'Está afuera del sistema. Lo que se guarda es su SesionMesa y, si pide boleta con DNI, el dato va en el Comprobante.'],
+    ['¿Qué explica qué significa la columna numero_operacion?', ['Diccionario de datos', 'Modelo físico', 'Componentes'], 0, 'El diccionario es el texto que explica cada columna.'],
+  ];
+  const zona = document.getElementById('preguntas');
+  let puntos = 0, respondidas = 0;
+  preguntas.forEach(([texto, opciones, correcta, porque], i) => {
+    const div = document.createElement('div');
+    div.className = 'pregunta';
+    div.innerHTML = `<b>${i + 1}.</b> ${texto}<div class="opciones"></div><div class="explica"></div>`;
+    const caja = div.querySelector('.opciones'), explica = div.querySelector('.explica');
+    opciones.forEach((op, j) => {
+      const b = document.createElement('button');
+      b.textContent = op;
+      b.onclick = () => {
+        if (div.dataset.listo) return;
+        div.dataset.listo = 1; respondidas++;
+        b.classList.add(j === correcta ? 'bien' : 'mal');
+        caja.children[correcta].classList.add('bien');
+        if (j === correcta) puntos++;
+        explica.textContent = (j === correcta ? '¡Bien! ' : 'Casi. ') + porque;
+        explica.style.display = 'block';
+        document.getElementById('marcador').textContent = `${puntos} / ${preguntas.length}`;
+        if (respondidas === preguntas.length) {
+          document.getElementById('mensaje').textContent =
+            puntos === preguntas.length ? '🏆 Perfecto. Ya estás despierto y listo.' :
+            puntos >= 6 ? '🔥 Muy bien. Repasa las que fallaste.' : '☕ Toma agua, relee las trampas de examen y vuelve a intentarlo (recarga la página).';
+        }
+      };
+      caja.appendChild(b);
+    });
+    zona.appendChild(div);
+  });
+</script>
+</body>
+</html>

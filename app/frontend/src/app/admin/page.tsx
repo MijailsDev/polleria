@@ -2,20 +2,26 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Rol, useSesion } from '@/lib/sesion';
-import { soles } from '@/lib/util';
+import { soles, useEventos } from '@/lib/util';
 import { Aviso, Encabezado } from '@/components/Encabezado';
 import { CartaAdmin } from '@/components/admin/CartaAdmin';
 import { PedirPin } from '@/components/PedirPin';
 import { Reporte, ReporteZ } from '@/components/caja/Turno';
+import { Reclamos, Sistema, Sunat } from '@/components/admin/Operacion';
+import { Seguridad } from '@/components/admin/Seguridad';
 
-type Pestana = 'usuarios' | 'carta' | 'mesas' | 'config' | 'turnos' | 'bitacora';
+type Pestana = 'usuarios' | 'seguridad' | 'carta' | 'mesas' | 'config' | 'turnos' | 'sunat' | 'reclamos' | 'sistema' | 'bitacora';
 type Avisar = (a: { texto: string; tipo?: 'error' | 'ok' }) => void;
 const PESTANAS: [Pestana, string][] = [
   ['usuarios', '👥 Usuarios'],
+  ['seguridad', '🔒 Equipos y seguridad'],
   ['carta', '🍗 Carta y precios'],
   ['mesas', '🪑 Mesas'],
   ['config', '⚙ Configuración'],
   ['turnos', '💵 Turnos'],
+  ['sunat', '🧾 SUNAT'],
+  ['reclamos', '📕 Reclamos'],
+  ['sistema', '🩺 Sistema'],
   ['bitacora', '📜 Bitácora'],
 ];
 const ROLES: Rol[] = ['MOZO', 'CAJERO', 'REPARTIDOR', 'ADMINISTRADOR'];
@@ -25,6 +31,8 @@ export default function PaginaAdmin() {
   const sesion = useSesion(['ADMINISTRADOR']);
   const [pestana, setPestana] = useState<Pestana>('usuarios');
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'error' | 'ok' } | null>(null);
+  // Alertas de seguridad en vivo (PIN bloqueados, intentos desde equipos no vinculados…)
+  useEventos({ 'seguridad:alerta': (a: { texto: string }) => setAviso({ texto: `🚨 ${a.texto}`, tipo: 'error' }) });
   if (!sesion) return null;
   return (
     <div className="min-h-screen">
@@ -38,10 +46,14 @@ export default function PaginaAdmin() {
       </div>
       <main className="p-4">
         {pestana === 'usuarios' && <Usuarios alAviso={setAviso} miId={sesion.usuario.id} />}
+        {pestana === 'seguridad' && <Seguridad alAviso={setAviso} />}
         {pestana === 'carta' && <CartaAdmin alAviso={setAviso} />}
         {pestana === 'mesas' && <Mesas alAviso={setAviso} />}
         {pestana === 'config' && <Configuracion alAviso={setAviso} />}
         {pestana === 'turnos' && <Turnos alAviso={setAviso} />}
+        {pestana === 'sunat' && <Sunat alAviso={setAviso} />}
+        {pestana === 'reclamos' && <Reclamos alAviso={setAviso} />}
+        {pestana === 'sistema' && <Sistema />}
         {pestana === 'bitacora' && <Bitacora />}
       </main>
       {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} alCerrar={() => setAviso(null)} />}
@@ -188,6 +200,13 @@ const ETIQUETA: Record<string, string> = {
   umbral_cola_cocina: 'Avisar demora con más de (comandas)',
   minutos_correccion: 'Minutos para corrección sin PIN',
   sin_internet: 'Simular caída de internet',
+  tasa_icbper: 'ICBPER por bolsa (S/)',
+  ruc_emisor: 'RUC del local',
+  razon_social: 'Razón social',
+  direccion_local: 'Dirección fiscal',
+  impresora_cocina: 'Ticketera del pollero (IP)',
+  impresora_caja: 'Ticketera de caja (IP)',
+  celular_dueno: 'Celular del dueño (alertas por WhatsApp)',
 };
 
 function Configuracion({ alAviso }: { alAviso: Avisar }) {
@@ -210,6 +229,13 @@ function Configuracion({ alAviso }: { alAviso: Avisar }) {
             <button className={c.valor ? 'btn-rojo' : 'btn-secundario'} onClick={() => guardar(c.clave, !c.valor)}>
               {c.valor ? '🔌 Sin internet (modo local) · tocar para reconectar' : '🌐 Con internet · tocar para simular caída'}
             </button>
+          ) : typeof c.valor === 'string' ? (
+            <input
+              className="campo"
+              placeholder={c.clave.startsWith('impresora_') ? 'vacío = impresora virtual · ej. 192.168.1.50' : ''}
+              defaultValue={c.valor}
+              onBlur={(e) => e.target.value.trim() !== c.valor && guardar(c.clave, e.target.value.trim())}
+            />
           ) : (
             <input className="campo max-w-[10rem]" inputMode="decimal" defaultValue={String(c.valor)} onBlur={(e) => e.target.value !== String(c.valor) && guardar(c.clave, Number(e.target.value))} />
           )}

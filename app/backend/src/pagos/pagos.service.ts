@@ -7,7 +7,8 @@ import { numeroComprobante, recalcularCuenta } from '../comun/cuentas';
 import { aCentimos, aSoles } from '../comun/dinero';
 import { EventosGateway } from '../eventos/eventos.gateway';
 import { SalonService } from '../salon/salon.service';
-import { ComprobantesService } from '../caja/comprobantes.service';
+import { ComprobantesService, RE_DNI, RE_RUC } from '../caja/comprobantes.service';
+import { WhatsappService } from '../perifericos/whatsapp.service';
 
 export interface EventoPasarela {
   intentoId: string;
@@ -15,6 +16,19 @@ export interface EventoPasarela {
   idTransaccion: string;
   medio: 'YAPE' | 'PLIN' | 'TARJETA';
   monto: number;
+  propina?: number;
+}
+
+/** Lo que el comensal elige antes de ir a la pasarela. */
+export interface OpcionesPago {
+  token: string;
+  monto?: number; // su parte; vacío = todo lo que falta pagar
+  propina?: number;
+  tipo?: 'BOLETA' | 'FACTURA';
+  documento?: string;
+  nombre?: string;
+  celular?: string;
+  enlaceBase?: string;
 }
 
 /** Algoritmo de Luhn para validar el número de tarjeta en la pasarela simulada. */
@@ -37,6 +51,8 @@ function luhn(numero: string) {
 export class PagosService implements OnModuleInit, OnModuleDestroy {
   private readonly secreto = process.env.PASARELA_SECRETO ?? 'secreto-de-prueba-de-la-pasarela';
   private readonly log = new Logger('Pasarela');
+  /** En producción se reemplaza por Culqi o Izipay con sus llaves (CULQI_LLAVE_SECRETA); el flujo de webhook es el mismo. */
+  readonly proveedor = { nombre: 'Pasarela simulada (flujo Culqi/Izipay)', simulado: true };
   private reloj?: NodeJS.Timeout;
 
   constructor(
@@ -46,6 +62,7 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
     private config: ConfigService,
     private eventos: EventosGateway,
     private bitacora: BitacoraService,
+    private whatsapp: WhatsappService,
   ) {}
 
   onModuleInit() {
@@ -61,27 +78,73 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
     if (r.count) this.eventos.emitir('mesas:cambio');
   }
 
-  /** El comensal pulsa «Pagar ahora» en la carta QR. */
-  async iniciar(token: string) {
+  /** Saldo que aún se puede pagar: lo que falta menos lo que otros comensales están pagando ahora. */
+  private async disponible(cuentaId: string, saldo: number) {
+    const enCurso = await this.prisma.pago_en_linea.aggregate({ where: { cuenta_id: cuentaId, estado: 'PENDIENTE', expira_en: { gt: new Date() } }, _sum: { monto: true } });
+    return Math.max(0, aCentimos(saldo) - aCentimos(enCurso._sum.monto));
+  }
+
+  /**
+   * El comensal pulsa «Pagar» en la carta QR: elige su parte (cuenta dividida), el comprobante
+   * con su DNI o RUC, la propina y el celular donde recibirá la boleta (F-09).
+   */
+  async iniciar(o: OpcionesPago) {
     if (this.config.booleano('sin_internet')) throw new ServiceUnavailableException('El pago en línea no está disponible ahora. Pide la cuenta y paga en caja.');
     await this.expirar();
-    const { sesion, maestra } = await this.salon.validarToken(token);
+    const { sesion, maestra } = await this.salon.validarToken(o.token);
     const cuenta = await this.prisma.cuenta.findFirst({ where: { sesion_mesa_id: sesion.id, estado: 'ABIERTA' }, include: { pedido: { where: { estado: 'POR_CONFIRMAR' } } } });
     if (!cuenta || Number(cuenta.saldo) <= 0) throw new BadRequestException('Tu mesa no tiene saldo por pagar.');
     if (cuenta.pedido.length) throw new BadRequestException('Espera a que el mozo confirme tu último pedido para pagar.');
-    if (Number(cuenta.saldo) > 700) throw new BadRequestException('Las cuentas de más de S/ 700 se pagan en caja con tu DNI.');
-    const previo = await this.prisma.pago_en_linea.findFirst({ where: { cuenta_id: cuenta.id, estado: 'PENDIENTE' } });
-    const intento =
-      previo ?? (await this.prisma.pago_en_linea.create({ data: { cuenta_id: cuenta.id, monto: cuenta.saldo, expira_en: new Date(Date.now() + 10 * 60_000) } }));
-    this.eventos.emitir('alerta', { tipo: 'PAGO_EN_CURSO', mesaId: maestra.id, mesa: maestra.numero, mensaje: `${maestra.numero} está pagando en línea`, hora: new Date() });
-    return { intentoId: intento.id, monto: Number(intento.monto), expiraEn: intento.expira_en };
+    const disponible = await this.disponible(cuenta.id, Number(cuenta.saldo));
+    if (disponible <= 0) throw new BadRequestException('Otro comensal está pagando lo que falta. Espera unos segundos y vuelve a mirar la cuenta.');
+    const monto = o.monto === undefined || o.monto === null ? disponible : aCentimos(o.monto);
+    if (monto < 100) throw new BadRequestException('El pago mínimo en línea es S/ 1.00.');
+    if (monto > disponible) throw new BadRequestException(`Solo quedan S/ ${aSoles(disponible).toFixed(2)} por pagar.`);
+    const tipo = o.tipo === 'FACTURA' ? 'FACTURA' : 'BOLETA';
+    const documento = o.documento?.trim() || null;
+    if (documento && !RE_DNI.test(documento) && !RE_RUC.test(documento)) throw new BadRequestException('Escribe un DNI de 8 dígitos o un RUC de 11.');
+    this.comprobantes.validarCliente(tipo, monto, documento);
+    const nombre = o.nombre?.trim().slice(0, 120) || null;
+    if (documento && !nombre) throw new BadRequestException('Escribe tu nombre o razón social (o búscalo con tu documento).');
+    const propina = aCentimos(o.propina ?? 0);
+    if (propina < 0 || propina > monto) throw new BadRequestException('La propina no puede ser mayor que tu consumo.');
+    const celular = o.celular?.trim() || null;
+    if (celular && !/^9[0-9]{8}$/.test(celular)) throw new BadRequestException('El celular debe tener 9 dígitos y empezar con 9.');
+    const enlaceBase = o.enlaceBase && /^https?:\/\/[^\s/]+$/.test(o.enlaceBase) ? o.enlaceBase.slice(0, 120) : null;
+    const intento = await this.prisma.pago_en_linea.create({
+      data: {
+        cuenta_id: cuenta.id,
+        monto: aSoles(monto),
+        propina: aSoles(propina),
+        tipo_comprobante: tipo,
+        documento,
+        nombre_cliente: nombre,
+        celular,
+        enlace_base: enlaceBase,
+        expira_en: new Date(Date.now() + 10 * 60_000),
+      },
+    });
+    this.eventos.emitir('alerta', { tipo: 'PAGO_EN_CURSO', mesaId: maestra.id, mesa: maestra.numero, mensaje: `${maestra.numero} está pagando S/ ${aSoles(monto).toFixed(2)} en línea`, hora: new Date() });
+    return { intentoId: intento.id, monto: aSoles(monto), propina: aSoles(propina), total: aSoles(monto + propina), expiraEn: intento.expira_en };
   }
 
   /** Datos que muestra la página de la pasarela. */
   async intento(id: string) {
     const i = await this.prisma.pago_en_linea.findUnique({ where: { id }, include: { cuenta: { include: { sesion_mesa: { include: { mesa: true } } } } } });
     if (!i) throw new NotFoundException('Pago no encontrado');
-    return { id: i.id, monto: Number(i.monto), estado: i.estado, expiraEn: i.expira_en, mesa: i.cuenta.sesion_mesa?.mesa.numero ?? null };
+    return {
+      id: i.id,
+      monto: Number(i.monto),
+      propina: Number(i.propina),
+      total: aSoles(aCentimos(i.monto) + aCentimos(i.propina)),
+      comprobante: i.tipo_comprobante,
+      documento: i.documento,
+      nombre: i.nombre_cliente,
+      estado: i.estado,
+      expiraEn: i.expira_en,
+      mesa: i.cuenta.sesion_mesa?.mesa.numero ?? null,
+      comprobanteId: i.comprobante_id,
+    };
   }
 
   /**
@@ -112,6 +175,7 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
       idTransaccion: `SIM-${randomBytes(8).toString('hex').toUpperCase()}`,
       medio: d.medio,
       monto: Number(i.monto),
+      propina: Number(i.propina),
     };
     // La pasarela notifica al servidor con su firma (servidor a servidor)
     const cuerpo = JSON.stringify(evento);
@@ -152,14 +216,25 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
       const monto = Math.min(aCentimos(ev.monto), aCentimos(cuenta.saldo));
       await tx.pago_en_linea.update({ where: { id: i.id }, data: { estado: 'APROBADO', medio: ev.medio, id_transaccion: ev.idTransaccion } });
       if (monto <= 0) return null;
-      await tx.pago.create({ data: { cuenta_id: cuenta.id, medio: ev.medio, monto: aSoles(monto), id_transaccion: ev.idTransaccion } });
-      const comp = await this.comprobantes.emitir(tx, { cuentaId: cuenta.id, tipo: 'BOLETA', total: monto });
+      await tx.pago.create({ data: { cuenta_id: cuenta.id, medio: ev.medio, monto: aSoles(monto), propina: aSoles(aCentimos(ev.propina ?? 0)), id_transaccion: ev.idTransaccion } });
+      const comp = await this.comprobantes.emitir(tx, { cuentaId: cuenta.id, tipo: i.tipo_comprobante === 'FACTURA' ? 'FACTURA' : 'BOLETA', total: monto, documento: i.documento, nombre: i.nombre_cliente });
+      await tx.pago_en_linea.update({ where: { id: i.id }, data: { comprobante_id: comp.id } });
       const c = await recalcularCuenta(tx, cuenta.id);
       const mesa = cuenta.sesion_mesa?.mesa;
       if (c.estado === 'PAGADA' && mesa) await this.salon.estadoMesa(tx, mesa.id, 'POR_LIMPIAR');
       await this.bitacora.registrar('PAGO_EN_LINEA', 'cuenta', cuenta.id, null, { monto: aSoles(monto), medio: ev.medio, transaccion: ev.idTransaccion, comprobante: numeroComprobante(comp.serie, comp.correlativo) }, tx);
-      return { mesa, monto };
+      return { mesa, monto, comprobanteId: comp.id };
     });
+    if (r) {
+      await this.comprobantes.enviarAhora([r.comprobanteId]);
+      // REQ-FAC-06: la boleta llega al WhatsApp del comensal si dejó su celular
+      if (i.celular && i.enlace_base) {
+        const nombreComp = i.tipo_comprobante === 'FACTURA' ? 'factura' : 'boleta';
+        await this.whatsapp
+          .encolar(i.celular, 'COMPROBANTE', `${this.config.texto('razon_social')}: gracias por tu visita. Tu ${nombreComp} de la ${r.mesa?.numero ?? 'mesa'} por S/ ${aSoles(r.monto).toFixed(2)} está aquí:`, `${i.enlace_base}/c/${r.comprobanteId}`)
+          .catch(() => undefined);
+      }
+    }
     if (r?.mesa) {
       this.eventos.emitir('alerta', { tipo: 'PAGO_EN_LINEA', mesaId: r.mesa.id, mesa: r.mesa.numero, mensaje: `${r.mesa.numero} pagó S/ ${aSoles(r.monto).toFixed(2)} en línea (${ev.medio.toLowerCase()})`, hora: new Date() });
       this.eventos.emitir('cuenta:actualizada', { mesaId: r.mesa.id });

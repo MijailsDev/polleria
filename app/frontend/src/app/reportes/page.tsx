@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { api, descargarArchivo } from '@/lib/api';
 import { useSesion } from '@/lib/sesion';
 import { CANAL, MEDIO } from '@/lib/tipos';
 import { descargarCsv, soles } from '@/lib/util';
@@ -9,7 +9,8 @@ import { Aviso, Encabezado } from '@/components/Encabezado';
 interface Reporte {
   desde: string;
   hasta: string;
-  resumen: { ventas: number; notasCredito: number; ventasNetas: number; cuentas: number; ticketPromedio: number; pedidos: number };
+  resumen: { ventas: number; notasCredito: number; ventasNetas: number; cuentas: number; ticketPromedio: number; pedidos: number; propinas: number };
+  calificaciones: { cantidad: number; promedio: number | null; porEstrellas: Record<string, number>; comentarios: { estrellas: number; comentario: string; fecha: string; mesa: string | null }[] };
   porDia: { dia: string; total: number; cuentas: number }[];
   porMedio: { medio: string; total: number; pagos: number }[];
   porCanal: { canal: keyof typeof CANAL; total: number }[];
@@ -63,7 +64,7 @@ function Seccion({ titulo, csv, filas, children }: { titulo: string; csv?: strin
         <h3 className="font-bold">{titulo}</h3>
         {csv && filas && filas.length > 0 && (
           <button className="no-imprimir ml-auto rounded-lg px-2 py-1 text-xs font-semibold text-brasa-700 hover:bg-brasa-50" onClick={() => descargarCsv(csv, filas)}>
-            ⬇ Excel (CSV)
+            ⬇ CSV
           </button>
         )}
       </div>
@@ -117,6 +118,12 @@ export default function PaginaReportes() {
           30 días
         </button>
         <div className="flex-1" />
+        <button
+          className="btn-verde"
+          onClick={() => descargarArchivo(`/reportes/excel?desde=${desde}&hasta=${hasta}`, `reporte_${desde}${hasta !== desde ? '_' + hasta : ''}.xlsx`).catch((e) => setAviso({ texto: e.message, tipo: 'error' }))}
+        >
+          ⬇ Excel (.xlsx)
+        </button>
         <button className="btn-secundario" onClick={() => window.print()}>
           🖨 Imprimir o guardar PDF
         </button>
@@ -133,6 +140,44 @@ export default function PaginaReportes() {
             {kpi('Cuentas cobradas', String(r.resumen.cuentas))}
             {kpi('Ticket promedio', soles(r.resumen.ticketPromedio))}
             {kpi('Pedidos', String(r.resumen.pedidos))}
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="tarjeta p-4">
+              <h3 className="font-bold">⭐ Calificación de los comensales</h3>
+              {r.calificaciones.cantidad === 0 ? (
+                <p className="text-sm text-slate-500">Aún no hay calificaciones en este periodo.</p>
+              ) : (
+                <>
+                  <div className="my-2 text-3xl font-extrabold">
+                    {r.calificaciones.promedio?.toFixed(1)} <span className="text-base font-semibold text-slate-500">de 5 · {r.calificaciones.cantidad} opiniones</span>
+                  </div>
+                  {[5, 4, 3, 2, 1].map((e) => (
+                    <div key={e} className="flex items-center gap-2 text-sm">
+                      <span className="w-8">{e} ★</span>
+                      <div className="h-2 flex-1 rounded bg-slate-100">
+                        <div className="h-2 rounded bg-amber-400" style={{ width: `${(100 * (r.calificaciones.porEstrellas[e] ?? 0)) / r.calificaciones.cantidad}%` }} />
+                      </div>
+                      <span className="w-6 text-right">{r.calificaciones.porEstrellas[e] ?? 0}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+              <p className="mt-3 text-sm text-slate-600">Propinas recibidas por pago en línea: <b>{soles(r.resumen.propinas)}</b></p>
+            </section>
+            <section className="tarjeta p-4">
+              <h3 className="font-bold">Lo que dicen los comensales</h3>
+              {r.calificaciones.comentarios.length === 0 && <p className="text-sm text-slate-500">Sin comentarios.</p>}
+              <ul className="mt-2 space-y-2">
+                {r.calificaciones.comentarios.map((c, k) => (
+                  <li key={k} className={`rounded-lg p-2 text-sm ${c.estrellas <= 2 ? 'bg-red-50' : 'bg-slate-50'}`}>
+                    <div className="text-xs text-slate-500">
+                      {'★'.repeat(c.estrellas)} · {c.mesa ?? ''} · {new Date(c.fecha).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}
+                    </div>
+                    {c.comentario}
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

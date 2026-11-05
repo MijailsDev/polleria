@@ -70,7 +70,7 @@ export default function PaginaMozo() {
       'mesas:cambio': cargar,
       'cocina:actualizar': () => cargarCuenta(sel),
       alerta: (a) => {
-        if (a.tipo === 'DELIVERY') return; // las entregas fallidas las atiende la caja
+        if (['DELIVERY', 'SUNAT', 'IMPRESORA', 'RECLAMO'].includes(a.tipo)) return; // los atiende la caja o el administrador
         pitido(2, 1200);
         setAlertas((l) => [{ ...a, id: `${Date.now()}-${Math.random()}` }, ...l].slice(0, 20));
         cargar();
@@ -130,6 +130,7 @@ export default function PaginaMozo() {
                     {e.icono} {e.texto}
                   </div>
                   <div className="text-xs text-slate-600">{m.apertura && m.estado !== 'LIBRE' ? `${minutosDesde(m.apertura)} en mesa` : `${m.capacidad} sillas`}</div>
+                  {m.editandoPor && m.editandoPor.usuarioId !== sesion.usuario.id && <div className="mt-1 text-xs font-bold text-amber-800">✏️ {m.editandoPor.nombre} tomando pedido</div>}
                   {m.unidaA && <div className="mt-1 text-xs font-bold text-slate-700">🔗 Unida a {m.unidaA}</div>}
                   {m.unidas.length > 0 && <div className="mt-1 text-xs font-bold text-slate-700">🔗 + {m.unidas.join(', ')}</div>}
                   {m.total > 0 && !m.unidaA && <div className="mt-2 text-lg font-bold text-slate-900">{soles(m.total)}</div>}

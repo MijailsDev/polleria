@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../comun/prisma.service';
 import { BitacoraService } from '../comun/bitacora.service';
@@ -10,6 +10,9 @@ import { INCLUIR_COMANDA, PedidosService } from '../pedidos/pedidos.service';
 import { SalonService } from '../salon/salon.service';
 import { ComprobantesService, RE_DNI, RE_RUC } from './comprobantes.service';
 import { aCentimos, aSoles } from '../comun/dinero';
+import { ImpresionService } from '../perifericos/impresion.service';
+import { WhatsappService } from '../perifericos/whatsapp.service';
+import { SincronizacionService } from '../perifericos/sincronizacion.service';
 
 export interface PagoEntrada {
   medio: 'EFECTIVO' | 'YAPE' | 'PLIN' | 'TARJETA';
@@ -36,6 +39,9 @@ export class CajaService {
     private pedidos: PedidosService,
     private salon: SalonService,
     private comprobantes: ComprobantesService,
+    private impresion: ImpresionService,
+    private whatsapp: WhatsappService,
+    private sync: SincronizacionService,
   ) {}
 
   // ---------------------------------------------------------------- Turnos (F-11)
@@ -74,7 +80,7 @@ export class CajaService {
       data: { turno_id: t.id, tipo, monto: aSoles(cent), motivo: motivo.trim(), autorizado_por: autorizadoPor },
     });
     await this.bitacora.registrar(`MOVIMIENTO_${tipo}`, 'movimiento_caja', m.id, usuarioId, { monto, motivo, autorizadoPor });
-    if (tipo === 'EGRESO') this.eventos.emitir('gaveta:abrir', { motivo: 'Egreso de caja' });
+    if (tipo === 'EGRESO') await this.impresion.abrirGaveta('Egreso de caja');
     return { ok: true };
   }
 
@@ -83,7 +89,7 @@ export class CajaService {
     if (!motivo?.trim()) throw new BadRequestException('Escribe el motivo.');
     const autorizadoPor = await this.auth.autorizarAdmin(pinAdmin);
     await this.bitacora.registrar('ABRIR_GAVETA', 'turno', null, usuarioId, { motivo: motivo.trim(), autorizadoPor });
-    this.eventos.emitir('gaveta:abrir', { motivo: motivo.trim() });
+    await this.impresion.abrirGaveta(motivo.trim());
     return { ok: true };
   }
 
@@ -177,7 +183,12 @@ export class CajaService {
       data: { cierre: new Date(), diferencia: aSoles(diferencia), comentario: comentario?.trim() || null },
     });
     await this.bitacora.registrar('CERRAR_TURNO', 'turno', t.id, usuarioId, { declarado: Number(declarado), diferencia: aSoles(diferencia) });
-    return { cerrado: true, reporte: await this.reporteZ(t.id) };
+    const reporte = await this.reporteZ(t.id);
+    await this.prisma.$transaction((tx) => this.sync.registrar(tx, 'turno', t.id, 'CERRAR', reporte));
+    if (Math.abs(diferencia) > aCentimos(this.config.numero('margen_arqueo'))) {
+      await this.whatsapp.alertaDueno(`Cierre de caja de ${reporte.cajero}: ${diferencia < 0 ? 'faltan' : 'sobran'} S/ ${Math.abs(aSoles(diferencia)).toFixed(2)}. Comentario: ${comentario?.trim() ?? ''}`);
+    }
+    return { cerrado: true, reporte };
   }
 
   /** Reporte Z del turno (REQ-TUR-05). Reporte X = el mismo cálculo con el turno abierto (solo administrador). */
@@ -210,8 +221,10 @@ export class CajaService {
     };
   }
 
+  /** Con varios turnos abiertos, el corte X es del que tuvo el último cobro (o del más reciente). */
   async reporteX() {
-    const t = await this.prisma.turno.findFirst({ where: { cierre: null }, orderBy: { apertura: 'desc' } });
+    const conVenta = await this.prisma.pago.findFirst({ where: { turno: { cierre: null } }, orderBy: { fecha: 'desc' }, select: { turno_id: true } });
+    const t = conVenta?.turno_id ? { id: conVenta.turno_id } : await this.prisma.turno.findFirst({ where: { cierre: null }, orderBy: { apertura: 'desc' } });
     if (!t) throw new BadRequestException('No hay turnos abiertos.');
     return this.reporteZ(t.id);
   }
@@ -281,6 +294,7 @@ export class CajaService {
       saldo: Number(cuenta.saldo),
       descuento: Number(cuenta.descuento),
       motivoDescuento: cuenta.motivo_descuento,
+      bolsas: cuenta.bolsas,
       pagoEnLinea: cuenta.pago_en_linea.length > 0,
       pedidos: pedidos.map((p) => this.pedidos.formatoComanda(p)),
       pagos: cuenta.pago.map((p) => ({ medio: p.medio, monto: Number(p.monto), numeroOperacion: p.numero_operacion ?? p.id_transaccion, fecha: p.fecha })),
@@ -315,12 +329,9 @@ export class CajaService {
       }));
   }
 
-  /** Consulta DNI/RUC simulada (en producción: ApisPeru). Sin internet se ingresa a mano (REQ-FAC-02). */
+  /** Consulta DNI/RUC (padrón simulado o ApisPeru). Sin internet se ingresa a mano (REQ-FAC-02). */
   consultarDocumento(numero: string) {
-    if (this.config.booleano('sin_internet')) throw new ServiceUnavailableException('Sin internet: escribe el nombre a mano. El comprobante quedará en cola.');
-    if (RE_DNI.test(numero)) return { tipo: 'DNI', numero, nombre: `CLIENTE DE PRUEBA ${numero.slice(-4)}` };
-    if (RE_RUC.test(numero)) return { tipo: 'RUC', numero, nombre: `EMPRESA DE PRUEBA ${numero.slice(-3)} S.A.C.`, direccion: 'Av. León Velarde 100, Tambopata', estado: 'ACTIVO', condicion: 'HABIDO' };
-    throw new BadRequestException('Número de documento inválido');
+    return this.comprobantes.consultarDocumento(numero);
   }
 
   /**
@@ -379,7 +390,9 @@ export class CajaService {
       });
       const efectivo = lineas.filter((l) => l.medio === 'EFECTIVO');
       const vuelto = efectivo.reduce((s, l) => s + ((l.recibido ?? l.monto) - l.monto), 0);
-      if (efectivo.length) this.eventos.emitir('gaveta:abrir', { motivo: 'Cobro en efectivo' }); // REQ-CAJ-06
+      await this.comprobantes.enviarAhora([r.comprobanteId]);
+      await this.comprobantes.imprimir(r.comprobanteId);
+      if (efectivo.length) await this.impresion.abrirGaveta('Cobro en efectivo'); // REQ-CAJ-06
       this.eventos.emitir('mesas:cambio');
       this.eventos.emitir('despacho:cambio');
       if (r.mesaId) this.eventos.emitir('cuenta:actualizada', { mesaId: r.mesaId });
@@ -435,6 +448,7 @@ export class CajaService {
     this.eventos.emitir('mesas:cambio');
     this.eventos.emitir('despacho:cambio');
     if (mesaId) this.eventos.emitir('cuenta:actualizada', { mesaId });
+    await this.whatsapp.alertaDueno(`Fuga de comensal registrada: ${motivo.trim()}`);
     return { ok: true };
   }
 
@@ -492,8 +506,43 @@ export class CajaService {
         diferencia: aSoles(aCentimos(rendido) - esperado),
       }, tx);
     });
-    this.eventos.emitir('gaveta:abrir', { motivo: 'Liquidación de repartidor' });
+    await this.comprobantes.enviarAhora(comprobantes);
+    await this.impresion.abrirGaveta('Liquidación de repartidor');
     this.eventos.emitir('despacho:cambio');
     return { pedidos: ps.length, esperado: aSoles(esperado), rendido: Number(rendido), diferencia: aSoles(aCentimos(rendido) - esperado), comprobantes };
+  }
+
+  // ---------------------------------------------------------------- Bolsas (ICBPER) y envío del comprobante
+
+  /** Bolsas de plástico entregadas: cada una suma el ICBPER al total de la cuenta. */
+  async bolsas(cuentaId: string, cantidad: number, usuarioId: string) {
+    const n = Math.trunc(Number(cantidad));
+    if (!(n >= 0 && n <= 50)) throw new BadRequestException('Cantidad de bolsas inválida (0 a 50).');
+    const mesaId = await this.prisma.$transaction(async (tx) => {
+      const cuenta = await tx.cuenta.findUnique({ where: { id: cuentaId }, include: { pago: true, sesion_mesa: true } });
+      if (!cuenta || cuenta.estado !== 'ABIERTA') throw new BadRequestException('La cuenta no está abierta.');
+      if (cuenta.pago.length) throw new BadRequestException('Registra las bolsas antes del primer cobro.');
+      await tx.cuenta.update({ where: { id: cuentaId }, data: { bolsas: n } });
+      await recalcularCuenta(tx, cuentaId);
+      await this.bitacora.cambio('BOLSAS', 'cuenta', cuentaId, usuarioId, { bolsas: cuenta.bolsas }, { bolsas: n }, tx);
+      return cuenta.sesion_mesa?.mesa_id;
+    });
+    this.eventos.emitir('mesas:cambio');
+    if (mesaId) this.eventos.emitir('cuenta:actualizada', { mesaId });
+    return { ok: true };
+  }
+
+  /** Envía el enlace del comprobante por WhatsApp al celular del cliente (REQ-FAC-06). */
+  async whatsappComprobante(comprobanteId: string, celular: string, enlace: string) {
+    const c = await this.prisma.comprobante.findUnique({ where: { id: comprobanteId } });
+    if (!c) throw new NotFoundException('Comprobante no encontrado');
+    if (!/^https?:\/\/\S+$/.test(enlace ?? '')) throw new BadRequestException('Enlace inválido.');
+    const nombre = c.tipo === 'FACTURA' ? 'factura' : c.tipo === 'BOLETA' ? 'boleta' : 'nota de crédito';
+    return this.whatsapp.encolar(
+      celular,
+      'COMPROBANTE',
+      `${this.config.texto('razon_social')}: gracias por su compra. Su ${nombre} ${numeroComprobante(c.serie, c.correlativo)} por S/ ${Number(c.total).toFixed(2)} está aquí:`,
+      enlace,
+    );
   }
 }

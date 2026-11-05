@@ -60,3 +60,9 @@ $RECYCLE.BIN/
 .env.*.local
 *.pem
 *.key
+
+# ------------------------------------------------------------------------------
+# 8. Respaldos de la base de datos (contienen datos de clientes)
+# ------------------------------------------------------------------------------
+base_de_datos/respaldos/
+*.dump

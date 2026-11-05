@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../comun/prisma.service';
 import { BitacoraService } from '../comun/bitacora.service';
@@ -8,9 +8,45 @@ import { EventosGateway } from '../eventos/eventos.gateway';
 type Tx = Prisma.TransactionClient;
 type Sesion = Prisma.sesion_mesaGetPayload<object>;
 
+const BLOQUEO_MS = 45_000;
+
 @Injectable()
 export class SalonService {
+  // REQ-SAL-05: quién está tomando el pedido de cada mesa (en memoria; vence si la tablet se apaga)
+  private bloqueos = new Map<string, { usuarioId: string; nombre: string; hasta: number }>();
+
   constructor(private prisma: PrismaService, private eventos: EventosGateway, private bitacora: BitacoraService) {}
+
+  private bloqueoVigente(mesaId: string) {
+    const b = this.bloqueos.get(mesaId);
+    if (b && b.hasta < Date.now()) {
+      this.bloqueos.delete(mesaId);
+      return null;
+    }
+    return b ?? null;
+  }
+
+  bloquear(mesaId: string, usuarioId: string, nombre: string) {
+    const b = this.bloqueoVigente(mesaId);
+    if (b && b.usuarioId !== usuarioId) throw new ConflictException(`${b.nombre} está tomando el pedido de esta mesa. Espera a que termine.`);
+    this.bloqueos.set(mesaId, { usuarioId, nombre, hasta: Date.now() + BLOQUEO_MS });
+    if (!b) this.eventos.emitir('mesas:cambio');
+    return { ok: true, vence: BLOQUEO_MS };
+  }
+
+  desbloquear(mesaId: string, usuarioId: string) {
+    const b = this.bloqueoVigente(mesaId);
+    if (b?.usuarioId === usuarioId) {
+      this.bloqueos.delete(mesaId);
+      this.eventos.emitir('mesas:cambio');
+    }
+    return { ok: true };
+  }
+
+  verificarBloqueo(mesaId: string, usuarioId: string) {
+    const b = this.bloqueoVigente(mesaId);
+    if (b && b.usuarioId !== usuarioId) throw new ConflictException(`${b.nombre} está tomando el pedido de esta mesa. Tu pedido no se envió para evitar duplicados.`);
+  }
 
   /** Plano del salón: cada mesa con su estado, tiempo y monto acumulado (REQ-SAL-01). */
   async mesas() {
@@ -37,6 +73,7 @@ export class SalonService {
       // Si la mesa está unida a otra, muestra los montos de la cuenta maestra
       const s = propia?.unida_a ? porSesion.get(propia.unida_a) ?? propia : propia;
       const c = s?.cuenta[0];
+      const bloqueo = this.bloqueoVigente(m.id);
       return {
         id: m.id,
         numero: m.numero,
@@ -51,6 +88,7 @@ export class SalonService {
         porConfirmar: c?.pedido.length ?? 0,
         unidaA: propia?.sesion_mesa?.mesa.numero ?? null,
         unidas: propia?.other_sesion_mesa.map((o) => o.mesa.numero) ?? [],
+        editandoPor: bloqueo ? { usuarioId: bloqueo.usuarioId, nombre: bloqueo.nombre } : null,
       };
     });
   }

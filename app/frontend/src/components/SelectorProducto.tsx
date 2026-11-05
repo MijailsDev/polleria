@@ -54,7 +54,10 @@ export function SelectorProducto({
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 sm:items-center" onClick={alCerrar}>
       <div
-        className="animar-entrada flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white sm:rounded-3xl"
+        className="animar-entrada alto-hoja flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white sm:rounded-3xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label={producto.nombre}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
@@ -62,7 +65,7 @@ export function SelectorProducto({
             <h2 className="text-xl font-bold">{producto.nombre}</h2>
             <p className="font-bold text-brasa-700">{soles(producto.precio)}</p>
           </div>
-          <button className="btn-secundario min-h-10 px-3" onClick={alCerrar} aria-label="Cerrar">
+          <button className="btn-secundario h-12 w-12 shrink-0 px-0 text-lg" onClick={alCerrar} aria-label="Cerrar">
             ✕
           </button>
         </div>
@@ -117,7 +120,7 @@ export function SelectorProducto({
           </section>
         </div>
 
-        <div className="flex items-center gap-3 border-t border-slate-100 p-4">
+        <div className="relleno-seguro-abajo flex items-center gap-3 border-t border-slate-100 px-4 pt-4">
           <div className="flex items-center rounded-xl border border-slate-300">
             <button className="h-12 w-12 text-xl font-bold" onClick={() => setCantidad((c) => Math.max(1, c - 1))} aria-label="Menos">
               −

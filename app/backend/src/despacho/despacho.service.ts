@@ -6,6 +6,8 @@ import { aCentimos, aSoles } from '../comun/dinero';
 import { EventosGateway } from '../eventos/eventos.gateway';
 import { AuthService } from '../auth/auth.service';
 import { INCLUIR_COMANDA, ItemEntrada, PedidosService } from '../pedidos/pedidos.service';
+import { WhatsappService } from '../perifericos/whatsapp.service';
+import { ConfigService } from '../comun/config.service';
 
 export interface PedidoDespachoEntrada {
   canal: 'LLEVAR' | 'DELIVERY' | 'APP_EXTERNA';
@@ -31,6 +33,8 @@ export class DespachoService {
     private eventos: EventosGateway,
     private bitacora: BitacoraService,
     private auth: AuthService,
+    private whatsapp: WhatsappService,
+    private config: ConfigService,
   ) {}
 
   /** Autocompleta al cliente de delivery por su celular (REQ-DEL-03). */
@@ -136,7 +140,7 @@ export class DespachoService {
   /** Asignar repartidor y cambiar el estado de despacho, desde la caja o el celular del repartidor. */
   async estado(pedidoId: string, estado: string, repartidorId: string | undefined, usuario: { sub: string; rol: string }) {
     if (!['PENDIENTE', 'EN_RUTA', 'ENTREGADO', 'FALLIDO'].includes(estado)) throw new BadRequestException('Estado no válido.');
-    const d = await this.prisma.pedido_delivery.findUnique({ where: { pedido_id: pedidoId }, include: { pedido: true } });
+    const d = await this.prisma.pedido_delivery.findUnique({ where: { pedido_id: pedidoId }, include: { pedido: { include: { cuenta: true } }, cliente: true } });
     if (!d) throw new NotFoundException('Pedido de delivery no encontrado');
     if (usuario.rol === 'REPARTIDOR' && d.repartidor_id !== usuario.sub) throw new ForbiddenException('Este pedido no está asignado a ti.');
     if (d.liquidado) throw new BadRequestException('Este pedido ya fue liquidado.');
@@ -150,6 +154,18 @@ export class DespachoService {
       data: { estado_despacho: estado, repartidor_id: repartidor, entregado_en: estado === 'ENTREGADO' ? new Date() : undefined },
     });
     await this.bitacora.registrar('DESPACHO_' + estado, 'pedido', pedidoId, usuario.sub, { repartidor });
+    // Aviso al cliente por WhatsApp (REQ-DEL-04)
+    const codigo = `#D-${String(d.pedido.numero).padStart(2, '0')}`;
+    const local = this.config.texto('razon_social');
+    if (estado === 'EN_RUTA' && d.estado_despacho !== 'EN_RUTA') {
+      const rep = repartidor ? await this.prisma.usuario.findUnique({ where: { id: repartidor }, select: { nombre: true } }) : null;
+      const saldo = Number(d.pedido.cuenta.saldo);
+      const cobro = saldo > 0 ? ` Monto a pagar: S/ ${saldo.toFixed(2)}${d.paga_con ? ` (llevamos vuelto de S/ ${Number(d.paga_con).toFixed(2)})` : ''}.` : ' Tu pedido ya está pagado.';
+      await this.whatsapp.encolar(d.cliente.celular, 'DELIVERY_EN_RUTA', `${local}: ¡Hola ${d.cliente.nombre}! Tu pedido ${codigo} salió con ${rep?.nombre ?? 'nuestro repartidor'} hacia ${d.direccion}.${cobro}`).catch(() => undefined);
+    }
+    if (estado === 'ENTREGADO') {
+      await this.whatsapp.encolar(d.cliente.celular, 'DELIVERY_ENTREGADO', `${local}: tu pedido ${codigo} fue entregado. ¡Gracias por tu preferencia! 🍗`).catch(() => undefined);
+    }
     this.eventos.emitir('despacho:cambio');
     if (estado === 'FALLIDO') this.eventos.emitir('alerta', { tipo: 'DELIVERY', mensaje: `Entrega fallida: delivery #D-${String(d.pedido.numero).padStart(2, '0')}`, hora: new Date() });
     return { ok: true };

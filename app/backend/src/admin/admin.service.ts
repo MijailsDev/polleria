@@ -91,7 +91,12 @@ export class AdminService {
       include: {
         producto: {
           orderBy: [{ activo: 'desc' }, { precio: 'asc' }],
-          include: { grupo_modificador: { orderBy: { nombre: 'asc' }, include: { opcion_modificador: { orderBy: { recargo: 'asc' } } } } },
+          include: {
+            grupo_modificador: { orderBy: { nombre: 'asc' }, include: { opcion_modificador: { orderBy: { recargo: 'asc' } } } },
+            precio_canal: true,
+            producto_foto: { select: { actualizado_en: true } },
+            componentes: { include: { componente: { select: { nombre: true } } } },
+          },
         },
       },
     });
@@ -107,6 +112,11 @@ export class AdminService {
         destino: p.destino_impresion,
         activo: p.activo,
         agotado: p.agotado,
+        descripcion: p.descripcion,
+        tieneFoto: !!p.producto_foto,
+        fotoUrl: p.producto_foto ? `/api/productos/${p.id}/foto?v=${+p.producto_foto.actualizado_en}` : null,
+        precios: Object.fromEntries(p.precio_canal.map((x) => [x.canal, Number(x.precio)])),
+        componentes: p.componentes.map((c) => ({ id: c.componente_id, nombre: c.componente.nombre, cantidad: c.cantidad })),
         grupos: p.grupo_modificador.map((g) => ({
           id: g.id,
           nombre: g.nombre,
@@ -132,7 +142,7 @@ export class AdminService {
     return { id: c.id };
   }
 
-  private datosProducto(d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean }, nuevo: boolean) {
+  private datosProducto(d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string }, nuevo: boolean) {
     if (nuevo && !d.nombre?.trim()) throw new BadRequestException('Escribe el nombre del producto.');
     if (d.precio !== undefined && !(Number(d.precio) >= 0)) throw new BadRequestException('El precio debe ser un número mayor o igual a cero.');
     if (d.fraccionPollo !== undefined && !FRACCIONES.includes(Number(d.fraccionPollo))) throw new BadRequestException('La fracción de pollo debe ser 0, 1/8, 1/4, 1/2 o 1.');
@@ -144,6 +154,7 @@ export class AdminService {
       fraccion_pollo: d.fraccionPollo === undefined ? undefined : Number(d.fraccionPollo),
       destino_impresion: d.destino,
       activo: d.activo,
+      descripcion: d.descripcion === undefined ? undefined : d.descripcion.trim().slice(0, 200) || null,
     };
   }
 
@@ -160,7 +171,7 @@ export class AdminService {
   }
 
   /** Al cambiar un precio, los pedidos anteriores conservan el suyo y el cambio queda en la bitácora (REQ-CAT-07). */
-  async editarProducto(id: string, d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean }, adminId: string) {
+  async editarProducto(id: string, d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string }, adminId: string) {
     const antes = await this.prisma.producto.findUnique({ where: { id } });
     if (!antes) throw new NotFoundException('Producto no encontrado');
     const datos = this.datosProducto(d, false);
@@ -174,6 +185,72 @@ export class AdminService {
       { nombre: antes.nombre, precio: Number(antes.precio), activo: antes.activo, fraccion: Number(antes.fraccion_pollo), destino: antes.destino_impresion },
       { nombre: p.nombre, precio: Number(p.precio), activo: p.activo, fraccion: Number(p.fraccion_pollo), destino: p.destino_impresion },
     );
+    this.avisarCarta();
+    return { ok: true };
+  }
+
+  /**
+   * Foto del plato: llega como data URL (JPEG o WebP ya reducido en el navegador) y se guarda
+   * en la base. Con imagen vacía se quita la foto.
+   */
+  async foto(productoId: string, imagen: string | null, adminId: string) {
+    const p = await this.prisma.producto.findUnique({ where: { id: productoId } });
+    if (!p) throw new NotFoundException('Producto no encontrado');
+    if (!imagen) {
+      await this.prisma.producto_foto.deleteMany({ where: { producto_id: productoId } });
+    } else {
+      const m = /^data:(image\/(?:jpeg|webp|png));base64,([A-Za-z0-9+/=]+)$/.exec(imagen);
+      if (!m) throw new BadRequestException('Formato de imagen no válido (JPEG, WebP o PNG).');
+      const contenido = Buffer.from(m[2], 'base64');
+      if (contenido.length > 400_000) throw new BadRequestException('La foto pesa más de 400 KB. Usa una imagen más pequeña.');
+      await this.prisma.producto_foto.upsert({
+        where: { producto_id: productoId },
+        update: { contenido, tipo: m[1], actualizado_en: new Date() },
+        create: { producto_id: productoId, contenido, tipo: m[1] },
+      });
+    }
+    await this.bitacora.registrar(imagen ? 'FOTO_PRODUCTO' : 'QUITAR_FOTO', 'producto', productoId, adminId, { nombre: p.nombre });
+    this.avisarCarta();
+    return { ok: true };
+  }
+
+  /** REQ-CAT-06: precio por canal; vacío o null vuelve al precio del salón. */
+  async precioCanal(productoId: string, canal: string, precio: number | null, adminId: string) {
+    if (!['LLEVAR', 'DELIVERY', 'APP_EXTERNA'].includes(canal)) throw new BadRequestException('Canal no válido.');
+    const p = await this.prisma.producto.findUnique({ where: { id: productoId }, include: { precio_canal: { where: { canal } } } });
+    if (!p) throw new NotFoundException('Producto no encontrado');
+    const antes = p.precio_canal[0] ? Number(p.precio_canal[0].precio) : null;
+    if (precio === null || (precio as unknown) === '' || precio === undefined) {
+      await this.prisma.precio_canal.deleteMany({ where: { producto_id: productoId, canal } });
+    } else {
+      if (!(Number(precio) >= 0)) throw new BadRequestException('El precio debe ser un número mayor o igual a cero.');
+      const v = Math.round(Number(precio) * 100) / 100;
+      await this.prisma.precio_canal.upsert({ where: { producto_id_canal: { producto_id: productoId, canal } }, update: { precio: v }, create: { producto_id: productoId, canal, precio: v } });
+    }
+    await this.bitacora.cambio('CAMBIO_PRECIO', 'producto', productoId, adminId, { nombre: p.nombre, canal, precio: antes ?? Number(p.precio) }, { nombre: p.nombre, canal, precio: precio === null || (precio as unknown) === '' ? Number(p.precio) : Number(precio) });
+    this.avisarCarta();
+    return { ok: true };
+  }
+
+  /** REQ-CAT-03: componentes de un combo (cantidad 0 lo quita). */
+  async componente(productoId: string, componenteId: string, cantidad: number, adminId: string) {
+    if (productoId === componenteId) throw new BadRequestException('Un combo no puede contenerse a sí mismo.');
+    const n = Math.trunc(Number(cantidad));
+    if (!(n >= 0 && n <= 20)) throw new BadRequestException('Cantidad inválida (0 a 20).');
+    const [combo, comp] = await Promise.all([
+      this.prisma.producto.findUnique({ where: { id: productoId } }),
+      this.prisma.producto.findUnique({ where: { id: componenteId }, include: { componentes: { select: { producto_id: true } } } }),
+    ]);
+    if (!combo || !comp) throw new NotFoundException('Producto no encontrado');
+    if (comp.componentes.length) throw new BadRequestException('Un combo no puede llevar otro combo como componente.');
+    if (n === 0) await this.prisma.producto_componente.deleteMany({ where: { producto_id: productoId, componente_id: componenteId } });
+    else
+      await this.prisma.producto_componente.upsert({
+        where: { producto_id_componente_id: { producto_id: productoId, componente_id: componenteId } },
+        update: { cantidad: n },
+        create: { producto_id: productoId, componente_id: componenteId, cantidad: n },
+      });
+    await this.bitacora.cambio('COMPONENTE_COMBO', 'producto', productoId, adminId, null, { combo: combo.nombre, componente: comp.nombre, cantidad: n });
     this.avisarCarta();
     return { ok: true };
   }

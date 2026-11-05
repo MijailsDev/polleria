@@ -19,6 +19,7 @@ export function TomaPedido({
   panelExtra,
   mesaId,
   mesa,
+  canal = 'SALON',
   alTerminar,
 }: {
   titulo?: string;
@@ -28,6 +29,8 @@ export function TomaPedido({
   panelExtra?: React.ReactNode;
   mesaId?: string;
   mesa?: string;
+  /** Canal de venta: la carta muestra el precio de ese canal (REQ-CAT-06). */
+  canal?: string;
   alTerminar: (msg: string) => void;
 }) {
   const [carta, setCarta] = useState<Categoria[]>([]);
@@ -37,12 +40,29 @@ export function TomaPedido({
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const [clave, setClave] = useState(uuid); // la misma clave en los reintentos evita pedidos duplicados
+  const [ocupadaPor, setOcupadaPor] = useState('');
 
-  const cargar = () => api<Categoria[]>('GET', '/carta').then(setCarta).catch((e) => setError(e.message));
+  const cargar = () => api<Categoria[]>('GET', `/carta${canal !== 'SALON' ? '?canal=' + canal : ''}`).then(setCarta).catch((e) => setError(e.message));
   useEffect(() => {
     cargar();
-  }, []);
-  useEventos({ 'carta:actualizada': cargar });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canal]);
+  useEventos({ 'carta:actualizada': cargar }, [canal]);
+
+  // REQ-SAL-05: mientras la toma está abierta, la mesa queda reservada para este usuario
+  useEffect(() => {
+    if (!mesaId) return;
+    const reservar = () =>
+      api('POST', `/mesas/${mesaId}/bloqueo`)
+        .then(() => setOcupadaPor(''))
+        .catch((e: ErrorApi) => e.status === 409 && setOcupadaPor(e.message));
+    reservar();
+    const t = setInterval(reservar, 15_000);
+    return () => {
+      clearInterval(t);
+      api('DELETE', `/mesas/${mesaId}/bloqueo`).catch(() => {});
+    };
+  }, [mesaId]);
 
   const total = carrito.reduce((s, i) => s + precioItem(i), 0);
 
@@ -90,6 +110,7 @@ export function TomaPedido({
               className={`tarjeta min-h-28 p-4 text-left transition ${p.agotado ? 'opacity-50' : 'hover:border-brasa-500 active:scale-[0.98]'}`}
             >
               <div className="font-bold">{p.nombre}</div>
+              {p.componentes && p.componentes.length > 0 && <div className="text-xs text-slate-500">Incluye: {p.componentes.join(' + ')}</div>}
               <div className="mt-1 font-bold text-brasa-700">{soles(p.precio)}</div>
               {p.agotado && <div className="mt-1 text-xs font-bold text-slate-500">AGOTADO</div>}
               {p.grupos.some((g) => g.obligatorio) && !p.agotado && <div className="mt-1 text-xs text-slate-500">elige presa u opciones</div>}
@@ -119,9 +140,10 @@ export function TomaPedido({
             </div>
           ))}
         </div>
+        {ocupadaPor && <p className="mx-4 mb-2 rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900">🔒 {ocupadaPor}</p>}
         {error && <p className="px-4 pb-2 text-sm font-semibold text-red-600">{error}</p>}
         <div className="border-t border-slate-100 p-4">
-          <button className="btn-primario w-full text-lg" disabled={!carrito.length || enviando} onClick={comandar}>
+          <button className="btn-primario w-full text-lg" disabled={!carrito.length || enviando || !!ocupadaPor} onClick={comandar}>
             {enviando ? 'Enviando…' : `${textoBoton} · ${soles(total)}`}
           </button>
         </div>

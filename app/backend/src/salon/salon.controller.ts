@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { SalonService } from './salon.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -11,6 +11,21 @@ export class SalonController {
   @UseGuards(AuthGuard)
   mesas() {
     return this.salon.mesas();
+  }
+
+  /** REQ-SAL-05: el mozo que abre la toma de pedido reserva la mesa; se renueva cada 15 s. */
+  @Post('mesas/:id/bloqueo')
+  @UseGuards(AuthGuard)
+  @Roles('MOZO', 'CAJERO')
+  bloquear(@Param('id') id: string, @Req() req) {
+    return this.salon.bloquear(id, req.usuario.sub, req.usuario.nombre);
+  }
+
+  @Delete('mesas/:id/bloqueo')
+  @UseGuards(AuthGuard)
+  @Roles('MOZO', 'CAJERO')
+  desbloquear(@Param('id') id: string, @Req() req) {
+    return this.salon.desbloquear(id, req.usuario.sub);
   }
 
   @Post('mesas/:id/abrir')

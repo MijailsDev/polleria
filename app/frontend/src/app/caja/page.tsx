@@ -9,11 +9,13 @@ import { ComprobanteImpreso } from '@/components/ComprobanteImpreso';
 import { Cobro } from '@/components/caja/Cobro';
 import { Despacho } from '@/components/caja/Despacho';
 import { Inventario } from '@/components/caja/Inventario';
+import { Bebidas, useBebidasPendientes } from '@/components/caja/Bebidas';
 import { TurnoAbierto, TurnoPanel } from '@/components/caja/Turno';
 
-type Pestana = 'cobrar' | 'despacho' | 'inventario' | 'agotados' | 'turno';
+type Pestana = 'cobrar' | 'bebidas' | 'despacho' | 'inventario' | 'agotados' | 'turno';
 const PESTANAS: { clave: Pestana; texto: string }[] = [
   { clave: 'cobrar', texto: 'Cobrar' },
+  { clave: 'bebidas', texto: 'Bebidas' },
   { clave: 'despacho', texto: 'Llevar y delivery' },
   { clave: 'inventario', texto: 'Inventario' },
   { clave: 'agotados', texto: 'Agotados' },
@@ -32,6 +34,7 @@ export default function PaginaCaja() {
   const [cuenta, setCuenta] = useState<CuentaDetalle | null>(null);
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'error' | 'ok' } | null>(null);
   const [impreso, setImpreso] = useState<{ id: string; vuelto?: number } | null>(null);
+  const bebidas = useBebidasPendientes();
 
   const cargarTurno = useCallback(() => api<TurnoAbierto | null>('GET', '/turnos/actual').then(setTurno).catch(() => setTurno(null)), []);
   const cargarListas = useCallback(() => {
@@ -68,7 +71,7 @@ export default function PaginaCaja() {
       },
       'gaveta:abrir': (d) => setAviso({ texto: `🗄 Gaveta abierta (${d?.motivo ?? 'cobro'})`, tipo: 'ok' }),
       alerta: (a) => {
-        if (['PAGO_EN_LINEA', 'STOCK', 'DELIVERY'].includes(a.tipo)) {
+        if (['PAGO_EN_LINEA', 'STOCK', 'DELIVERY', 'SUNAT', 'IMPRESORA'].includes(a.tipo)) {
           pitido(2, 1000);
           setAviso({ texto: a.mensaje, tipo: a.tipo === 'PAGO_EN_LINEA' ? 'ok' : 'error' });
         }
@@ -92,13 +95,14 @@ export default function PaginaCaja() {
             {PESTANAS.map((p) => (
               <button key={p.clave} className={`rounded-lg px-3 py-2 text-sm font-semibold ${pestana === p.clave ? 'bg-brasa-700' : 'hover:bg-slate-800'}`} onClick={() => setPestana(p.clave)}>
                 {p.texto}
+                {p.clave === 'bebidas' && bebidas.pedidos.length > 0 && <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 text-xs font-extrabold text-slate-900">{bebidas.pedidos.length}</span>}
               </button>
             ))}
           </nav>
         }
       />
 
-      {!turno && pestana !== 'agotados' && pestana !== 'inventario' ? (
+      {!turno && pestana !== 'agotados' && pestana !== 'inventario' && pestana !== 'bebidas' ? (
         <AbrirTurno
           alAbrir={() => {
             cargarTurno();
@@ -170,6 +174,8 @@ export default function PaginaCaja() {
             <div className="tarjeta grid place-items-center p-10 text-slate-500">Elige una mesa o un pedido para ver su cuenta y cobrar.</div>
           )}
         </div>
+      ) : pestana === 'bebidas' ? (
+        <Bebidas pedidos={bebidas.pedidos} alCambio={bebidas.cargar} alAviso={setAviso} />
       ) : pestana === 'despacho' ? (
         <Despacho
           alAviso={setAviso}

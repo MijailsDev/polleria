@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { avisarCredenciales } from './equipo';
 
 export type Rol = 'MOZO' | 'CAJERO' | 'REPARTIDOR' | 'ADMINISTRADOR';
 export interface Sesion {
@@ -20,9 +21,11 @@ export function leerSesion(): Sesion | null {
 }
 export function guardarSesion(s: Sesion) {
   localStorage.setItem(CLAVE, JSON.stringify(s));
+  avisarCredenciales();
 }
 export function cerrarSesion() {
   localStorage.removeItem(CLAVE);
+  avisarCredenciales();
 }
 
 /** Pantalla del personal: pide sesión y uno de los roles indicados (el administrador entra a todo). */

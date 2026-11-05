@@ -8,6 +8,8 @@ import { EventosGateway } from '../eventos/eventos.gateway';
 import { SalonService } from '../salon/salon.service';
 import { AuthService } from '../auth/auth.service';
 import { aCentimos, aSoles } from '../comun/dinero';
+import { ImpresionService } from '../perifericos/impresion.service';
+import { Ticket } from '../perifericos/escpos';
 
 type Tx = Prisma.TransactionClient;
 
@@ -36,18 +38,48 @@ export const INCLUIR_COMANDA = {
   pedido_delivery: { include: { cliente: true, usuario: { select: { nombre: true } } } },
   item_pedido: {
     include: {
-      producto: { select: { nombre: true, destino_impresion: true } },
+      producto: {
+        select: {
+          nombre: true,
+          destino_impresion: true,
+          componentes: { include: { componente: { select: { nombre: true, destino_impresion: true } } } },
+        },
+      },
       item_opcion: { include: { opcion_modificador: { include: { grupo_modificador: { select: { nombre: true } } } } } },
     },
   },
 } satisfies Prisma.pedidoInclude;
 
 export type PedidoComanda = Prisma.pedidoGetPayload<{ include: typeof INCLUIR_COMANDA }>;
+type ItemComanda = PedidoComanda['item_pedido'][number];
 
-const INCLUIR_EFECTO = { item_pedido: { include: { producto: true, item_opcion: { include: { opcion_modificador: true } } } } } satisfies Prisma.pedidoInclude;
+/** Las bebidas salen de la refrigeradora de caja; lo demás lo prepara el pollero. Un combo puede tener de ambos. */
+export const vaACocina = (i: Pick<ItemComanda, 'producto'>) =>
+  i.producto.destino_impresion !== 'CAJA' || i.producto.componentes.some((c) => c.componente.destino_impresion !== 'CAJA');
+export const tieneBebida = (i: Pick<ItemComanda, 'producto'>) =>
+  i.producto.destino_impresion === 'CAJA' || i.producto.componentes.some((c) => c.componente.destino_impresion === 'CAJA');
+
+/** Comandas en preparación que tienen algo para el pollero (los pedidos solo de bebidas no cuentan). */
+const PARA_COCINA = {
+  estado: 'EN_PREPARACION',
+  item_pedido: {
+    some: {
+      estado: { not: 'ANULADO' },
+      producto: { OR: [{ destino_impresion: { not: 'CAJA' } }, { componentes: { some: { componente: { destino_impresion: { not: 'CAJA' } } } } }] },
+    },
+  },
+} satisfies Prisma.pedidoWhereInput;
+
+const INCLUIR_EFECTO = {
+  item_pedido: { include: { producto: { include: { componentes: { include: { componente: true } } } }, item_opcion: { include: { opcion_modificador: true } } } },
+} satisfies Prisma.pedidoInclude;
 type ItemConEfecto = Prisma.item_pedidoGetPayload<{ include: (typeof INCLUIR_EFECTO)['item_pedido']['include'] }>;
 
-/** Pollos y cuartos de presa que consume un ítem (REQ-INV-02). */
+/**
+ * Pollos y cuartos de presa que consume un ítem (REQ-INV-02). En un combo se suma cada
+ * componente (REQ-CAT-03): un componente de pollo sin presa elegida descuenta mitad pecho
+ * y mitad pierna (1 pollo = 2 cuartos de pecho + 2 de pierna).
+ */
 function efectoItem(it: ItemConEfecto) {
   let pecho = 0;
   let pierna = 0;
@@ -56,7 +88,14 @@ function efectoItem(it: ItemConEfecto) {
     pecho += (ef.cuartos_pecho ?? 0) * it.cantidad;
     pierna += (ef.cuartos_pierna ?? 0) * it.cantidad;
   }
-  return { pollos: Number(it.producto.fraccion_pollo) * it.cantidad, pecho, pierna };
+  let pollos = Number(it.producto.fraccion_pollo) * it.cantidad;
+  for (const c of it.producto.componentes) {
+    const f = Number(c.componente.fraccion_pollo) * c.cantidad * it.cantidad;
+    pollos += f;
+    pecho += f * 2;
+    pierna += f * 2;
+  }
+  return { pollos, pecho, pierna };
 }
 
 @Injectable()
@@ -71,6 +110,7 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
     private bitacora: BitacoraService,
     private config: ConfigService,
     private auth: AuthService,
+    private impresion: ImpresionService,
   ) {}
 
   // Libera a cocina los pedidos programados cuando llega su hora (REQ-DEL-02)
@@ -85,17 +125,23 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
    * Valida los ítems contra la carta (RN-01: modificadores obligatorios, agotados)
    * y calcula el precio de cada uno con sus recargos.
    */
-  private async prepararItems(items: ItemEntrada[], tx: Tx) {
+  private async prepararItems(items: ItemEntrada[], tx: Tx, canal = 'SALON') {
     if (!Array.isArray(items) || items.length === 0) throw new BadRequestException('El pedido no tiene productos.');
     const ids = [...new Set(items.map((i) => i.productoId))];
     const productos = await tx.producto.findMany({
       where: { id: { in: ids } },
-      include: { grupo_modificador: { include: { opcion_modificador: true } } },
+      include: {
+        grupo_modificador: { include: { opcion_modificador: true } },
+        precio_canal: { where: { canal } },
+        componentes: { include: { componente: { select: { nombre: true, activo: true, agotado: true } } } },
+      },
     });
     return items.map((it) => {
       const p = productos.find((x) => x.id === it.productoId);
       if (!p || !p.activo) throw new BadRequestException('Uno de los productos ya no está en la carta.');
       if (p.agotado) throw new BadRequestException(`El producto «${p.nombre}» se agotó hace un momento. Por favor elige otra opción.`);
+      const faltante = p.componentes.find((c) => c.componente.agotado || !c.componente.activo);
+      if (faltante) throw new BadRequestException(`«${p.nombre}» no está disponible: se agotó ${faltante.componente.nombre}.`);
       const cantidad = Math.trunc(Number(it.cantidad));
       if (!(cantidad >= 1 && cantidad <= 50)) throw new BadRequestException(`Cantidad inválida para «${p.nombre}».`);
       const elegidas = new Set(it.opciones ?? []);
@@ -116,7 +162,8 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
         }
       }
       if (elegidas.size) throw new BadRequestException(`Hay opciones que no corresponden a «${p.nombre}».`);
-      const precio = aCentimos(p.precio) + opciones.reduce((s, o) => s + o.recargo, 0);
+      // REQ-CAT-06: precio del canal (llevar, delivery, apps) si el administrador lo definió
+      const precio = aCentimos(p.precio_canal[0]?.precio ?? p.precio) + opciones.reduce((s, o) => s + o.recargo, 0);
       const nota = it.nota?.trim().slice(0, 100) || null;
       return { producto: p, cantidad, nota, opciones, precio };
     });
@@ -134,7 +181,7 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
       const previo = await tx.pedido.findUnique({ where: { clave_idempotencia: datos.clave } });
       if (previo) return { pedido: previo, repetido: true };
     }
-    const items = await this.prepararItems(datos.items, tx);
+    const items = await this.prepararItems(datos.items, tx, datos.canal);
     const pedido = await tx.pedido.create({
       data: {
         cuenta_id: datos.cuentaId,
@@ -227,7 +274,16 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
 
   async avisarCocina(pedidoId: string) {
     const p = await this.prisma.pedido.findUniqueOrThrow({ where: { id: pedidoId }, include: INCLUIR_COMANDA });
-    this.eventos.emitir('cocina:comanda', this.formatoComanda(p));
+    const comanda = this.formatoComanda(p);
+    if (comanda.items.some((i) => i.cocina)) {
+      this.eventos.emitir('cocina:comanda', comanda);
+      await this.impresion.imprimir('COCINA', 'COMANDA', this.ticketComanda(comanda, 'cocina'), { pitidos: 3 });
+    }
+    if (comanda.items.some((i) => i.bebida)) {
+      // Las bebidas salen por la ticketera de caja (refrigeradora junto a la caja)
+      this.eventos.emitir('bebidas:cambio', { nuevo: comanda.origen });
+      await this.impresion.imprimir('CAJA', 'BEBIDAS', this.ticketComanda(comanda, 'bebida', 'BEBIDAS'), { pitidos: 1 });
+    }
     this.eventos.emitir('mesas:cambio');
     if (p.canal !== 'SALON') this.eventos.emitir('despacho:cambio');
     const mesaId = p.cuenta.sesion_mesa?.mesa_id;
@@ -278,19 +334,95 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
         .filter((i) => i.estado !== 'ANULADO')
         .map((i) => ({
           id: i.id,
+          productoId: i.producto_id,
+          opcionIds: i.item_opcion.map((o) => o.opcion_id),
           cantidad: i.cantidad,
           producto: i.producto.nombre,
           destino: i.producto.destino_impresion,
+          cocina: vaACocina(i),
+          bebida: tieneBebida(i),
+          entregadoEn: i.entregado_en,
           precio: Number(i.precio_unitario),
           nota: i.nota,
           opciones: i.item_opcion.map((o) => ({ grupo: o.opcion_modificador.grupo_modificador.nombre, nombre: o.opcion_modificador.nombre })),
+          componentes: i.producto.componentes.map((c) => ({ cantidad: c.cantidad * i.cantidad, nombre: c.componente.nombre, destino: c.componente.destino_impresion })),
         })),
     };
+  }
+
+  /** Ticket térmico de la comanda: solo lo que prepara cada estación (cocina o bebidas de caja). */
+  ticketComanda(c: ReturnType<PedidosService['formatoComanda']>, estacion: 'cocina' | 'bebida', encabezado?: string, detalle?: string) {
+    const t = new Ticket();
+    if (encabezado) t.titulo(encabezado);
+    if (detalle) t.centro(detalle, true);
+    t.titulo(c.origen).centro(`Orden #${c.numero} · ${new Date(c.creadoEn).toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' })} · ${c.mozo}`);
+    if (c.reposicion) t.centro('*** REPOSICIÓN – SIN COSTO ***', true);
+    if (c.horaProgramada) t.centro(`PROGRAMADO para las ${new Date(c.horaProgramada).toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' })}`, true);
+    t.separador();
+    const deEstacion = (destino: string) => (estacion === 'bebida' ? destino === 'CAJA' : destino !== 'CAJA');
+    for (const i of c.items.filter((x) => (estacion === 'cocina' ? x.cocina : x.bebida))) {
+      const propio = deEstacion(i.destino);
+      t.texto(`${i.cantidad} x ${i.producto}`, { b: true, g: estacion === 'cocina' && propio });
+      for (const o of i.opciones) t.texto(`   - ${o.grupo}: ${o.nombre}`);
+      for (const comp of i.componentes.filter((x) => deEstacion(x.destino))) t.texto(`   + ${comp.cantidad} ${comp.nombre}`);
+      if (i.nota) t.texto(`   NOTA: ${i.nota}`, { b: true });
+    }
+    if (c.delivery) t.separador().texto(`Cliente: ${c.delivery.cliente} · ${c.delivery.celular}`).texto(`Dirección: ${c.delivery.direccion}`);
+    if (c.nombreCliente && !c.delivery) t.separador().texto(`Cliente: ${c.nombreCliente}`, { b: true });
+    return t;
+  }
+
+  // ---------------------------------------------------------------- Bebidas despachadas por la caja
+
+  /** Pedidos confirmados con bebidas que la caja aún no entrega (las bebidas no van al pollero). */
+  async bebidas() {
+    const ps = await this.prisma.pedido.findMany({
+      where: {
+        estado: { in: ['EN_PREPARACION', 'SERVIDO'] },
+        // Solo el servicio en curso: una bebida de hace más de 12 h ya no se entrega
+        impreso_en: { gte: new Date(Date.now() - 12 * 3_600_000) },
+        cuenta: { estado: { not: 'ANULADA' } },
+        item_pedido: {
+          some: {
+            estado: { not: 'ANULADO' },
+            entregado_en: null,
+            producto: { OR: [{ destino_impresion: 'CAJA' }, { componentes: { some: { componente: { destino_impresion: 'CAJA' } } } }] },
+          },
+        },
+      },
+      include: INCLUIR_COMANDA,
+      orderBy: { impreso_en: 'asc' },
+    });
+    return ps.map((p) => {
+      const c = this.formatoComanda(p);
+      return { ...c, items: c.items.filter((i) => i.bebida && !i.entregadoEn) };
+    });
+  }
+
+  /** La caja entregó las bebidas del pedido: avisa al mozo para recogerlas (salón). */
+  async entregarBebidas(pedidoId: string, usuarioId: string) {
+    const p = await this.prisma.pedido.findUnique({ where: { id: pedidoId }, include: INCLUIR_COMANDA });
+    if (!p) throw new NotFoundException('Pedido no encontrado');
+    const pendientes = p.item_pedido.filter((i) => i.estado !== 'ANULADO' && !i.entregado_en && tieneBebida(i));
+    if (!pendientes.length) throw new BadRequestException('Este pedido no tiene bebidas por entregar.');
+    await this.prisma.item_pedido.updateMany({ where: { id: { in: pendientes.map((i) => i.id) } }, data: { entregado_en: new Date() } });
+    // Un pedido solo de bebidas no pasa por la cocina: queda servido al entregarlas
+    const soloBebidas = p.item_pedido.filter((i) => i.estado !== 'ANULADO').every((i) => !vaACocina(i));
+    if (soloBebidas && p.estado === 'EN_PREPARACION') await this.prisma.pedido.update({ where: { id: p.id }, data: { estado: 'SERVIDO', servido_en: new Date() } });
+    await this.bitacora.registrar('ENTREGAR_BEBIDAS', 'pedido', p.id, usuarioId, { bebidas: pendientes.map((i) => `${i.cantidad}× ${i.producto.nombre}`) });
+    const origen = this.origen(p);
+    this.eventos.emitir('bebidas:cambio', {});
+    if (p.cuenta.sesion_mesa) {
+      this.eventos.emitir('alerta', { tipo: 'BEBIDAS', mesaId: p.cuenta.sesion_mesa.mesa_id, mesa: p.cuenta.sesion_mesa.mesa.numero, mensaje: `${p.cuenta.sesion_mesa.mesa.numero}: bebidas listas en caja`, hora: new Date() });
+    }
+    if (p.canal !== 'SALON') this.eventos.emitir('despacho:cambio');
+    return { ok: true, origen };
   }
 
   // ---------------------------------------------------------------- Personal (tablet o caja)
 
   async crearDesdePersonal(mesaId: string, items: ItemEntrada[], usuarioId: string, clave?: string) {
+    this.salon.verificarBloqueo(mesaId, usuarioId); // REQ-SAL-05: otro mozo está editando la mesa
     const { pedidoId, repetido } = await this.prisma.$transaction(async (tx) => {
       const mesa = await tx.mesa.findUnique({ where: { id: mesaId } });
       if (!mesa) throw new NotFoundException('Mesa no encontrada');
@@ -373,13 +505,13 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
   /** Comandas que la estación del pollero aún no despacha (simula la ticketera). */
   cocina() {
     return this.prisma.pedido
-      .findMany({ where: { estado: 'EN_PREPARACION' }, include: INCLUIR_COMANDA, orderBy: { impreso_en: 'asc' } })
+      .findMany({ where: PARA_COCINA, include: INCLUIR_COMANDA, orderBy: { impreso_en: 'asc' } })
       .then((ps) => ps.map((p) => this.formatoComanda(p)));
   }
 
   /** REQ-QR-07: si la estación del pollero tiene muchas comandas, la carta avisa la demora. */
   async carga() {
-    const pendientes = await this.prisma.pedido.count({ where: { estado: 'EN_PREPARACION' } });
+    const pendientes = await this.prisma.pedido.count({ where: PARA_COCINA });
     const umbral = this.config.numero('umbral_cola_cocina');
     return { pendientes, umbral, demora: pendientes > umbral };
   }
@@ -392,6 +524,12 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
     await this.prisma.pedido.update({ where: { id: pedidoId }, data: { estado: 'SERVIDO', servido_en: new Date() } });
     this.eventos.emitir('cocina:actualizar', { id: pedidoId, estado: 'SERVIDO' });
     if (p.canal !== 'SALON') this.eventos.emitir('despacho:cambio');
+    // El celular del comensal vibra: «¡Tu pedido está listo!»
+    const sesion = await this.prisma.cuenta.findUnique({ where: { id: p.cuenta_id }, select: { sesion_mesa: { select: { mesa_id: true } } } });
+    if (sesion?.sesion_mesa) {
+      this.eventos.emitir('pedido:listo', { mesaId: sesion.sesion_mesa.mesa_id, pedidoId, numero: p.numero });
+      this.eventos.emitir('cuenta:actualizada', { mesaId: sesion.sesion_mesa.mesa_id });
+    }
     return { ok: true };
   }
 
@@ -407,7 +545,11 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
     const r = await this.prisma.$transaction(async (tx) => {
       const it = await tx.item_pedido.findUnique({
         where: { id: itemId },
-        include: { producto: true, item_opcion: { include: { opcion_modificador: true } }, pedido: { include: { cuenta: { include: { sesion_mesa: true } } } } },
+        include: {
+          producto: { include: { componentes: { include: { componente: true } } } },
+          item_opcion: { include: { opcion_modificador: true } },
+          pedido: { include: { cuenta: { include: { sesion_mesa: true } } } },
+        },
       });
       if (!it || it.estado === 'ANULADO') throw new NotFoundException('El ítem ya no existe o ya fue anulado.');
       const p = it.pedido;
@@ -436,7 +578,9 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
       return { pedidoId: p.id, item: `${it.cantidad}× ${it.producto.nombre}`, mesaId: p.cuenta.sesion_mesa?.mesa_id };
     });
     const p = await this.prisma.pedido.findUniqueOrThrow({ where: { id: r.pedidoId }, include: INCLUIR_COMANDA });
-    this.eventos.emitir('cocina:especial', { tipo: 'ANULACIÓN', detalle: `${r.item} · ${motivo.trim()}`, comanda: this.formatoComanda(p), hora: new Date() });
+    const comanda = this.formatoComanda(p);
+    this.eventos.emitir('cocina:especial', { tipo: 'ANULACIÓN', detalle: `${r.item} · ${motivo.trim()}`, comanda, hora: new Date() });
+    await this.impresion.imprimir('COCINA', 'ANULACION', new Ticket().titulo('*** ANULACIÓN ***').titulo(comanda.origen).centro(`Orden #${comanda.numero}`).separador().texto(`NO PREPARAR: ${r.item}`, { b: true, g: true }).texto(`Motivo: ${motivo.trim()}`), { pitidos: 2 });
     this.eventos.emitir('cocina:actualizar', { id: r.pedidoId });
     this.eventos.emitir('mesas:cambio');
     this.eventos.emitir('despacho:cambio');
@@ -489,7 +633,9 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
     const p = await this.prisma.pedido.findUnique({ where: { id: pedidoId }, include: INCLUIR_COMANDA });
     if (!p) throw new NotFoundException('Pedido no encontrado');
     await this.bitacora.registrar('REIMPRIMIR_COMANDA', 'pedido', p.id, usuarioId, { numero: p.numero });
-    this.eventos.emitir('cocina:especial', { tipo: 'REIMPRESIÓN', detalle: `Orden #${p.numero}`, comanda: this.formatoComanda(p), hora: new Date() });
+    const comanda = this.formatoComanda(p);
+    this.eventos.emitir('cocina:especial', { tipo: 'REIMPRESIÓN', detalle: `Orden #${p.numero}`, comanda, hora: new Date() });
+    await this.impresion.imprimir('COCINA', 'REIMPRESION', this.ticketComanda(comanda, 'cocina', '*** REIMPRESIÓN ***'), { pitidos: 2 });
     return { ok: true };
   }
 
@@ -546,6 +692,9 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
     const pedidos = cuenta
       ? await this.prisma.pedido.findMany({ where: { cuenta_id: cuenta.id, estado: { not: 'ANULADO' } }, include: INCLUIR_COMANDA, orderBy: { creado_en: 'asc' } })
       : [];
+    const estimados = await this.estimarListo(pedidos.filter((p) => p.estado === 'EN_PREPARACION').map((p) => p.id));
+    const calificada = cuenta ? (await this.prisma.calificacion.count({ where: { cuenta_id: cuenta.id } })) > 0 : false;
+    const enCurso = cuenta ? await this.prisma.pago_en_linea.aggregate({ where: { cuenta_id: cuenta.id, estado: 'PENDIENTE', expira_en: { gt: new Date() } }, _sum: { monto: true } }) : null;
     return {
       mesa: mesa.numero,
       maestra: maestra.numero !== mesa.numero ? maestra.numero : null,
@@ -557,8 +706,61 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
       descuento: Number(cuenta?.descuento ?? 0),
       porConfirmar: pedidos.some((p) => p.estado === 'POR_CONFIRMAR'),
       pagoEnCurso: cuenta?.pago_en_linea[0]?.id ?? null,
+      // Lo que aún se puede pagar en línea (si otro comensal está pagando su parte)
+      disponible: Math.max(0, aSoles(aCentimos(cuenta?.saldo ?? 0) - aCentimos(enCurso?._sum.monto ?? 0))),
+      calificada,
       comprobantes: cuenta?.comprobante.map((c) => ({ id: c.id, numero: `${c.serie}-${String(c.correlativo).padStart(6, '0')}` })) ?? [],
-      pedidos: pedidos.map((p) => this.formatoComanda(p)),
+      pedidos: pedidos.map((p) => ({ ...this.formatoComanda(p), listoEnMin: estimados.get(p.id) ?? null })),
     };
+  }
+
+  /**
+   * Minutos que faltan para que salga cada pedido: el tiempo promedio de preparación de las
+   * últimas 3 horas (o 12 min sin historial) más 1.5 min por cada comanda que está antes en la cola.
+   */
+  async estimarListo(ids: string[]) {
+    const r = new Map<string, number>();
+    if (!ids.length) return r;
+    const hace3h = new Date(Date.now() - 3 * 3_600_000);
+    const recientes = await this.prisma.pedido.findMany({ where: { servido_en: { gte: hace3h }, impreso_en: { not: null }, es_reposicion: false }, select: { impreso_en: true, servido_en: true }, take: 200 });
+    const muestras = recientes.map((p) => (+p.servido_en! - +p.impreso_en!) / 60_000).filter((m) => m > 0 && m < 90);
+    const promedio = muestras.length >= 3 ? muestras.reduce((s, m) => s + m, 0) / muestras.length : 12;
+    const cola = await this.prisma.pedido.findMany({ where: PARA_COCINA, select: { id: true, impreso_en: true }, orderBy: { impreso_en: 'asc' } });
+    cola.forEach((p, posicion) => {
+      if (!ids.includes(p.id)) return;
+      const transcurrido = (Date.now() - +(p.impreso_en ?? new Date())) / 60_000;
+      r.set(p.id, Math.max(1, Math.round(promedio + 1.5 * posicion - transcurrido)));
+    });
+    return r;
+  }
+
+  /** El comensal cancela su pedido antes de que el mozo lo confirme (para corregirlo). */
+  async cancelarDesdeQR(token: string, pedidoId: string) {
+    const { mesa, sesion } = await this.salon.validarToken(token);
+    await this.prisma.$transaction(async (tx) => {
+      const p = await tx.pedido.findUnique({ where: { id: pedidoId }, include: { cuenta: true } });
+      if (!p || p.cuenta.sesion_mesa_id !== sesion.id) throw new NotFoundException('Pedido no encontrado.');
+      if (p.estado !== 'POR_CONFIRMAR') throw new BadRequestException('El mozo ya confirmó este pedido y está en cocina. Para cambiarlo, llama al mozo.');
+      await tx.pedido.update({ where: { id: p.id }, data: { estado: 'ANULADO' } });
+      await this.bitacora.registrar('CANCELAR_PEDIDO_QR', 'pedido', p.id, null, { mesa: mesa.numero, numero: p.numero }, tx);
+      await this.recalcularEstadoMesa(tx, mesa.id);
+    });
+    this.eventos.emitir('mesas:cambio');
+    this.eventos.emitir('cuenta:actualizada', { mesaId: mesa.id });
+    this.eventos.emitir('pedido:cancelado', { pedidoId, mesaId: mesa.id });
+    return { ok: true };
+  }
+
+  /** Calificación de la atención al terminar (una por cuenta). */
+  async calificar(token: string, estrellas: number, comentario?: string) {
+    const { sesion, mesa } = await this.salon.validarToken(token);
+    const e = Math.trunc(Number(estrellas));
+    if (!(e >= 1 && e <= 5)) throw new BadRequestException('Elige de 1 a 5 estrellas.');
+    const cuenta = await this.prisma.cuenta.findFirst({ where: { sesion_mesa_id: sesion.id, estado: { not: 'ANULADA' } }, orderBy: { creada_en: 'desc' } });
+    if (!cuenta) throw new BadRequestException('Aún no hay una cuenta en esta mesa.');
+    if (await this.prisma.calificacion.findUnique({ where: { cuenta_id: cuenta.id } })) throw new BadRequestException('Ya calificaste esta atención. ¡Gracias!');
+    await this.prisma.calificacion.create({ data: { cuenta_id: cuenta.id, estrellas: e, comentario: comentario?.trim().slice(0, 500) || null } });
+    if (e <= 2) this.eventos.emitir('alerta', { tipo: 'CALIFICACION', mesaId: mesa.id, mesa: mesa.numero, mensaje: `${mesa.numero} calificó con ${e} estrella(s)${comentario?.trim() ? ': ' + comentario.trim().slice(0, 80) : ''}`, hora: new Date() });
+    return { ok: true };
   }
 }

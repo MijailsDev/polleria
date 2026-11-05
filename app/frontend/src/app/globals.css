@@ -68,3 +68,109 @@ body {
   .no-imprimir { display: none !important; }
   body { background: #fff; }
 }
+
+/* =============================================================================
+   Carta del comensal: lectura cómoda en los celulares más usados de 2022 a 2026
+   · Anchos de 320 a 440 px (iPhone SE, iPhone 12 a 17, Pro Max, Galaxy A y S,
+     Redmi, Moto G, Pixel) y pantallas plegables (Galaxy Z Fold: 344 px cerrado,
+     más de 600 px abierto).
+   · Muesca, Dynamic Island y barra de gestos: márgenes seguros (safe-area).
+   · Barras del navegador que aparecen y desaparecen: alto dinámico (dvh).
+   · Letra mínima de 14 px, contraste AA (4.5:1) y botones de 48 px.
+   · Tamaño de letra y alto contraste elegidos por el comensal (botón «Aa»).
+   ============================================================================= */
+@custom-variant apaisado (@media (orientation: landscape) and (max-height: 500px));
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.alto-hoja {
+  max-height: 92vh;
+  max-height: 92dvh;
+}
+.alto-pantalla {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.relleno-seguro-arriba {
+  padding-top: max(1.5rem, calc(env(safe-area-inset-top) + 0.75rem));
+}
+.relleno-seguro-abajo {
+  padding-bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+}
+.lados-seguros {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.arriba-seguro {
+  top: calc(env(safe-area-inset-top) + 0.75rem);
+}
+
+/* Tamaño de letra elegido (100 %, 115 % o 130 %): todo el diseño usa rem y crece junto */
+html.comensal {
+  font-size: calc(100% * var(--escala, 1));
+}
+/* Nada menor de 14 px y grises legibles sobre blanco */
+html.comensal .text-xs {
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+html.comensal .text-slate-400,
+html.comensal .text-slate-500 {
+  color: var(--color-slate-600);
+}
+html.comensal .text-amber-600 {
+  color: var(--color-amber-800);
+}
+/* Botones de opción de al menos 48 px de alto, que admiten dos líneas */
+html.comensal .chip-on,
+html.comensal .chip-off {
+  min-height: 3rem;
+  line-height: 1.2;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+/* Alto contraste: textos casi negros, bordes marcados y naranja más oscuro */
+html.alto-contraste {
+  --color-slate-400: #1e293b;
+  --color-slate-500: #0f172a;
+  --color-slate-600: #0f172a;
+  --color-slate-700: #0f172a;
+  --color-slate-200: #475569;
+  --color-slate-100: #cbd5e1;
+  --color-brasa-700: #7c2d12;
+  --color-brasa-600: #7c2d12;
+  --color-amber-800: #451a03;
+  --color-green-700: #14532d;
+  --color-red-600: #991b1b;
+}
+html.alto-contraste .tarjeta,
+html.alto-contraste .campo,
+html.alto-contraste .chip-off,
+html.alto-contraste .btn-secundario {
+  border-width: 2px;
+  border-color: #334155;
+}
+html.alto-contraste a {
+  text-decoration-thickness: 2px;
+}
+
+/* Foco visible al navegar con teclado o lector de pantalla */
+:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+/* Si el celular pide menos movimiento, sin animaciones */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

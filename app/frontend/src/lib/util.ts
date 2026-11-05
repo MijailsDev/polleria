@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { urlServidor } from './api';
+import { leerSesion } from './sesion';
+import { leerEquipo } from './equipo';
 
 export const soles = (n: number) => `S/ ${Number(n ?? 0).toFixed(2)}`;
 
@@ -26,7 +28,12 @@ export const uuid = () =>
 
 let socket: Socket | null = null;
 export function obtenerSocket() {
-  if (!socket) socket = io(urlServidor(), { transports: ['websocket', 'polling'] });
+  if (!socket) {
+    // El servidor pone en la sala del personal solo a sesiones y equipos vinculados
+    const s = io(urlServidor(), { transports: ['websocket', 'polling'], auth: (cb) => cb({ token: leerSesion()?.token, equipo: leerEquipo()?.llave }) });
+    window.addEventListener('polleria:credenciales', () => s.disconnect().connect());
+    socket = s;
+  }
   return socket;
 }
 

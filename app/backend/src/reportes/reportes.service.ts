@@ -95,6 +95,19 @@ export class ReportesService {
         WHERE t.cierre >= ${ini} AND t.cierre < ${fin} ORDER BY t.cierre`),
     ]);
 
+    // Propinas del pago en línea y calificaciones de los comensales
+    const [propinas, calif, comentarios] = await Promise.all([
+      this.prisma.pago.aggregate({ where: { fecha: { gte: ini, lt: fin } }, _sum: { propina: true } }),
+      q(Prisma.sql`SELECT estrellas, count(*) AS cantidad FROM calificacion WHERE creado_en >= ${ini} AND creado_en < ${fin} GROUP BY 1 ORDER BY 1 DESC`),
+      q(Prisma.sql`
+        SELECT c.estrellas, c.comentario, c.creado_en AS fecha, m.numero AS mesa
+        FROM calificacion c JOIN cuenta cu ON cu.id = c.cuenta_id
+        LEFT JOIN sesion_mesa s ON s.id = cu.sesion_mesa_id LEFT JOIN mesa m ON m.id = s.mesa_id
+        WHERE c.creado_en >= ${ini} AND c.creado_en < ${fin} AND c.comentario IS NOT NULL
+        ORDER BY c.creado_en DESC LIMIT 20`),
+    ]);
+    const totalCalif = calif.reduce((s, x) => s + num(x.cantidad), 0);
+
     // Nombre de quien autorizó cada evento sensible (REQ-REP-04)
     const ids = [...new Set(eventos.map((e) => (e.valores_despues as Fila | null)?.autorizadoPor).filter(Boolean) as string[])];
     const autoriza = new Map((await this.prisma.usuario.findMany({ where: { id: { in: ids } }, select: { id: true, nombre: true } })).map((u) => [u.id, u.nombre]));
@@ -112,6 +125,13 @@ export class ReportesService {
         cuentas,
         ticketPromedio: cuentas ? redondear(totalVentas / cuentas) : 0,
         pedidos: franjas.reduce((s, x) => s + num(x.pedidos), 0),
+        propinas: redondear(Number(propinas._sum.propina ?? 0)),
+      },
+      calificaciones: {
+        cantidad: totalCalif,
+        promedio: totalCalif ? redondear(calif.reduce((s, x) => s + num(x.estrellas) * num(x.cantidad), 0) / totalCalif) : null,
+        porEstrellas: Object.fromEntries([5, 4, 3, 2, 1].map((e) => [e, num(calif.find((x) => num(x.estrellas) === e)?.cantidad)])),
+        comentarios: comentarios.map((x) => ({ estrellas: num(x.estrellas), comentario: x.comentario as string, fecha: x.fecha, mesa: x.mesa as string | null })),
       },
       porDia: porDia.map((x) => ({ dia: x.dia, total: num(x.total), cuentas: num(x.cuentas) })),
       porMedio: porMedio.map((x) => ({ medio: x.medio, total: num(x.total), pagos: num(x.pagos) })),

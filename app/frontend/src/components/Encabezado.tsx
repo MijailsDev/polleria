@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { cerrarSesion, Rol, Sesion } from '@/lib/sesion';
 import { useConexion, useEstadoSistema } from '@/lib/util';
 
@@ -21,7 +22,8 @@ export function Encabezado({ titulo, sesion, extra }: { titulo: string; sesion: 
   const rol = sesion?.usuario.rol;
   const enlaces = ENLACES.filter((e) => rol && e.href !== ruta && (rol === 'ADMINISTRADOR' || e.roles.includes(rol)));
   return (
-    <header className="no-imprimir sticky top-0 z-30 flex flex-wrap items-center gap-2 bg-slate-900 px-4 py-2 text-white">
+    <>
+    <header className="no-imprimir sticky top-0 z-30 flex flex-wrap items-center gap-2 bg-slate-900 px-4 py-2 text-white" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
       <Link href="/" className="mr-1 text-lg font-bold">
         🍗 <span className="text-brasa-200">Pollería</span>
       </Link>
@@ -61,6 +63,27 @@ export function Encabezado({ titulo, sesion, extra }: { titulo: string; sesion: 
         </div>
       )}
     </header>
+    <BannerSinConexion conectado={conectado} />
+    </>
+  );
+}
+
+/**
+ * Alerta visible si se pierde la conexión con el servidor del local (servidor apagado,
+ * cable o WiFi). Espera unos segundos para no parpadear en una reconexión breve.
+ */
+function BannerSinConexion({ conectado }: { conectado: boolean }) {
+  const [mostrar, setMostrar] = useState(false);
+  useEffect(() => {
+    if (conectado) return setMostrar(false);
+    const t = setTimeout(() => setMostrar(true), 4000);
+    return () => clearTimeout(t);
+  }, [conectado]);
+  if (!mostrar) return null;
+  return (
+    <div role="alert" className="no-imprimir sticky top-[52px] z-20 bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white">
+      Sin conexión con el servidor del local. Revisa que la computadora del servidor esté encendida y conectada al router. Reintentando…
+    </div>
   );
 }
 

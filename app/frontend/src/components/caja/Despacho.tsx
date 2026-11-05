@@ -308,6 +308,7 @@ function NuevoPedido({ canal, alCerrar, alTerminar }: { canal: 'LLEVAR' | 'DELIV
     <TomaPedido
       titulo={`Nuevo pedido · ${CANAL[canal].texto}`}
       textoBoton={programar ? 'Programar' : 'Enviar a cocina'}
+      canal={canal}
       panelExtra={panel}
       alCerrar={alCerrar}
       alTerminar={alTerminar}

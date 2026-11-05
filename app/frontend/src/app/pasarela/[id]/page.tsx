@@ -4,7 +4,18 @@ import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { soles } from '@/lib/util';
 
-interface Intento { id: string; monto: number; estado: string; expiraEn: string; mesa: string | null }
+interface Intento {
+  id: string;
+  monto: number;
+  propina: number;
+  total: number;
+  comprobante: 'BOLETA' | 'FACTURA';
+  documento: string | null;
+  nombre: string | null;
+  estado: string;
+  expiraEn: string;
+  mesa: string | null;
+}
 type Medio = 'YAPE' | 'PLIN' | 'TARJETA';
 
 /**
@@ -22,6 +33,7 @@ function Pasarela({ id }: { id: string }) {
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [restante, setRestante] = useState(0);
+  const [acepta, setAcepta] = useState(false);
 
   useEffect(() => {
     api<Intento>('GET', `/pasarela/${id}`).then(setI).catch((e) => setError(e.message));
@@ -57,7 +69,14 @@ function Pasarela({ id }: { id: string }) {
         <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
           <div className="bg-indigo-700 p-5 text-white">
             <div className="text-sm opacity-80">Pollería y Brasas del Sur{i?.mesa ? ` · Mesa ${i.mesa}` : ''}</div>
-            <div className="text-4xl font-black">{i ? soles(i.monto) : '…'}</div>
+            <div className="text-4xl font-black">{i ? soles(i.total) : '…'}</div>
+            {i && (
+              <div className="mt-1 text-xs opacity-80">
+                Consumo {soles(i.monto)}
+                {i.propina > 0 && ` + propina ${soles(i.propina)}`} · {i.comprobante === 'FACTURA' ? 'Factura' : 'Boleta'}
+                {i.documento ? ` a ${i.nombre} (${i.documento})` : ''}
+              </div>
+            )}
             {i && !resultado && i.estado === 'PENDIENTE' && (
               <div className="mt-1 text-xs opacity-80">
                 Tiempo para pagar: {Math.floor(restante / 60)}:{String(restante % 60).padStart(2, '0')}
@@ -119,9 +138,23 @@ function Pasarela({ id }: { id: string }) {
                   </p>
                 </>
               )}
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0" checked={acepta} onChange={(e) => setAcepta(e.target.checked)} />
+                <span>
+                  Acepto los{' '}
+                  <a className="text-blue-700 underline" href="/terminos" target="_blank">
+                    términos y condiciones
+                  </a>{' '}
+                  y la{' '}
+                  <a className="text-blue-700 underline" href="/privacidad" target="_blank">
+                    política de privacidad
+                  </a>
+                  .
+                </span>
+              </label>
               {error && <p className="font-semibold text-red-600">{error}</p>}
-              <button className="btn-primario w-full bg-indigo-700 text-lg hover:bg-indigo-800" disabled={enviando || !i} onClick={pagar}>
-                {enviando ? 'Procesando…' : `Pagar ${i ? soles(i.monto) : ''}`}
+              <button className="btn-primario w-full bg-indigo-700 text-lg hover:bg-indigo-800" disabled={enviando || !i || !acepta} onClick={pagar}>
+                {enviando ? 'Procesando…' : `Pagar ${i ? soles(i.total) : ''}`}
               </button>
               <button
                 className="block w-full text-center text-sm text-slate-500 underline"

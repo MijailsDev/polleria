@@ -34,6 +34,13 @@ Luego ejecuta los scripts en orden y muestra un resumen. Si la base ya existe co
 | `03_datos_iniciales.sql` | Carga la carta con precios, las 10 mesas, los modificadores y usuarios de prueba. |
 | `04_verificar.sql` | Muestra las tablas, la carta, las mesas, el stock y los usuarios. |
 | `05_ampliacion.sql` | Agrega la configuración del local, los pagos en línea, la fusión de mesas, descuentos, notas de crédito y delivery. Se puede ejecutar varias veces. |
+| `06_produccion.sql` | Agrega bebidas despachadas por caja, combos, precios por canal, ICBPER, respuesta de SUNAT y resumen diario, WhatsApp, cola de impresión, sincronización con la nube, Libro de Reclamaciones y registro de errores. Se puede ejecutar varias veces. |
+| `07_comensal.sql` | Agrega fotos y descripción de los platos, comprobante con DNI/RUC, cuenta dividida, propina y celular en el pago en línea, y la calificación de la atención. Se puede ejecutar varias veces. |
+| `08_seguridad.sql` | Agrega los equipos vinculados (tablet, caja, cocina, reparto y administración), la verificación en dos pasos del administrador y el parámetro para exigir equipos vinculados. Se puede ejecutar varias veces. |
+| `respaldo.ps1` | Crea un respaldo (`respaldos/`, se conservan los últimos 14). Con `-Programar` lo deja diario a las 23:30; con `-Conexion "postgresql://…"` respalda la base de la nube. |
+| `restaurar.ps1` | Restaura un respaldo; reemplaza todos los datos (pide confirmación). |
+| `limpiar_datos_de_prueba.sql` | Borra pedidos, ventas, turnos y bitácora; conserva carta, mesas, usuarios y configuración, y deja 30 pollos de stock. No se puede deshacer. |
+| `consultas_de_ayuda.sql` | 55 consultas de solo lectura listas para usar en pgAdmin: carta, mesas, pedidos, caja, comprobantes, delivery, inventario, reportes y bitácora. No la ejecuta el script de creación. |
 | `crear_base_de_datos.ps1` | Ejecuta todo en orden. |
 | `.env` | Se genera al final con la cadena de conexión. **No se sube a GitHub.** |
 

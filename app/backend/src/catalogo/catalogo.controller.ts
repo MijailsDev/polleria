@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Param, Patch, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
+import { Response } from 'express';
 import { CatalogoService } from './catalogo.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -9,8 +11,22 @@ export class CatalogoController {
 
   /** Pública: la usa la carta QR del comensal. */
   @Get('carta')
-  carta() {
-    return this.catalogo.carta();
+  carta(@Query('canal') canal?: string) {
+    return this.catalogo.carta(['LLEVAR', 'DELIVERY', 'APP_EXTERNA'].includes(canal ?? '') ? canal : 'SALON');
+  }
+
+  @Get('carta/destacados')
+  destacados() {
+    return this.catalogo.destacados();
+  }
+
+  @Get('productos/:id/foto')
+  @SkipThrottle()
+  async foto(@Param('id') id: string, @Res() res: Response) {
+    const f = await this.catalogo.foto(id);
+    res.setHeader('Content-Type', f.tipo);
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    res.send(Buffer.from(f.contenido));
   }
 
   @Patch('agotados/:tipo/:id')

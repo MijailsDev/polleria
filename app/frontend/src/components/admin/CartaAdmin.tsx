@@ -2,11 +2,30 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { soles } from '@/lib/util';
+import { FotoYDescripcion } from './FotoProducto';
 
 type Avisar = (a: { texto: string; tipo?: 'error' | 'ok' }) => void;
 interface OpcionA { id: string; nombre: string; recargo: number; agotado: boolean; efecto: Record<string, number> | null }
 interface GrupoA { id: string; nombre: string; obligatorio: boolean; minimo: number; maximo: number; opciones: OpcionA[] }
-interface ProductoA { id: string; nombre: string; precio: number; fraccionPollo: number; destino: string; activo: boolean; agotado: boolean; grupos: GrupoA[] }
+interface ProductoA {
+  id: string;
+  nombre: string;
+  precio: number;
+  fraccionPollo: number;
+  destino: string;
+  activo: boolean;
+  agotado: boolean;
+  descripcion: string | null;
+  fotoUrl: string | null;
+  precios: Record<string, number>;
+  componentes: { id: string; nombre: string; cantidad: number }[];
+  grupos: GrupoA[];
+}
+const CANALES = [
+  ['LLEVAR', 'Para llevar'],
+  ['DELIVERY', 'Delivery'],
+  ['APP_EXTERNA', 'Apps'],
+] as const;
 interface CategoriaA { id: string; nombre: string; orden: number; productos: ProductoA[] }
 
 const FRACCIONES = [
@@ -82,7 +101,7 @@ export function CartaAdmin({ alAviso }: { alAviso: Avisar }) {
               </thead>
               <tbody>
                 {c.productos.map((p) => (
-                  <FilaProducto key={p.id} p={p} abierto={abierto === p.id} alAbrir={() => setAbierto(abierto === p.id ? null : p.id)} guardar={guardar} />
+                  <FilaProducto key={p.id} p={p} todos={carta.flatMap((x) => x.productos)} abierto={abierto === p.id} alAbrir={() => setAbierto(abierto === p.id ? null : p.id)} guardar={guardar} />
                 ))}
                 <tr className="border-t border-slate-100">
                   <td className="py-2 pr-2">
@@ -125,7 +144,9 @@ export function CartaAdmin({ alAviso }: { alAviso: Avisar }) {
   );
 }
 
-function FilaProducto({ p, abierto, alAbrir, guardar }: { p: ProductoA; abierto: boolean; alAbrir: () => void; guardar: (fn: () => Promise<unknown>, ok: string) => Promise<void> }) {
+function FilaProducto({ p, todos, abierto, alAbrir, guardar }: { p: ProductoA; todos: ProductoA[]; abierto: boolean; alAbrir: () => void; guardar: (fn: () => Promise<unknown>, ok: string) => Promise<void> }) {
+  const [componente, setComponente] = useState({ id: '', cantidad: '1' });
+  const disponibles = todos.filter((x) => x.id !== p.id && x.activo && x.componentes.length === 0 && !p.componentes.some((c) => c.id === x.id));
   const editar = (datos: Record<string, unknown>, ok = 'Producto actualizado') => guardar(() => api('PATCH', `/admin/productos/${p.id}`, datos), ok);
   const [grupo, setGrupo] = useState({ nombre: '', obligatorio: false, minimo: '0', maximo: '1' });
   const [opcion, setOpcion] = useState<Record<string, { nombre: string; recargo: string }>>({});
@@ -166,13 +187,73 @@ function FilaProducto({ p, abierto, alAbrir, guardar }: { p: ProductoA; abierto:
         </td>
         <td>
           <button className="rounded-lg px-2 py-1 text-xs font-semibold text-brasa-700 hover:bg-brasa-50" onClick={alAbrir}>
-            {abierto ? 'Cerrar' : `Opciones (${p.grupos.length})`}
+            {abierto ? 'Cerrar' : `Opciones (${p.grupos.length})${p.componentes.length ? ' · combo' : ''}${Object.keys(p.precios).length ? ' · precios' : ''}`}
           </button>
         </td>
       </tr>
       {abierto && (
         <tr>
           <td colSpan={6} className="bg-slate-50 p-3">
+            <div className="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <FotoYDescripcion p={p} guardar={guardar} />
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="font-bold">Precio por canal</div>
+                <p className="mb-2 text-xs text-slate-500">Vacío = el mismo precio del salón ({soles(p.precio)}). Los pedidos anteriores conservan su precio.</p>
+                {CANALES.map(([canal, texto]) => (
+                  <label key={canal} className="flex items-center gap-2 py-0.5 text-sm">
+                    <span className="w-28">{texto}</span>
+                    <span className="text-xs">S/</span>
+                    <input
+                      className="campo min-h-9 w-24 text-sm"
+                      inputMode="decimal"
+                      placeholder={p.precio.toFixed(2)}
+                      defaultValue={p.precios[canal]?.toFixed(2) ?? ''}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v === (p.precios[canal]?.toFixed(2) ?? '')) return;
+                        guardar(() => api('PATCH', `/admin/productos/${p.id}/precios/${canal}`, { precio: v === '' ? null : Number(v) }), v === '' ? `${texto}: vuelve al precio del salón` : `${texto}: ${soles(Number(v))}`);
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="font-bold">Combo: productos que incluye</div>
+                <p className="mb-2 text-xs text-slate-500">Al vender el combo se descuenta del inventario cada componente. Las bebidas del combo van al panel de bebidas de caja.</p>
+                {p.componentes.map((c) => (
+                  <div key={c.id} className="flex items-center gap-2 py-0.5 text-sm">
+                    <input
+                      className="campo min-h-9 w-14 text-sm"
+                      inputMode="numeric"
+                      defaultValue={c.cantidad}
+                      onBlur={(e) => Number(e.target.value) !== c.cantidad && guardar(() => api('PATCH', `/admin/productos/${p.id}/componentes/${c.id}`, { cantidad: Number(e.target.value) }), 'Combo actualizado')}
+                    />
+                    <span className="flex-1">{c.nombre}</span>
+                    <button className="px-2 text-red-600" aria-label="Quitar del combo" onClick={() => guardar(() => api('PATCH', `/admin/productos/${p.id}/componentes/${c.id}`, { cantidad: 0 }), `${c.nombre} quitado del combo`)}>
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <div className="mt-2 flex gap-2">
+                  <input className="campo min-h-9 w-14 text-sm" inputMode="numeric" value={componente.cantidad} onChange={(e) => setComponente({ ...componente, cantidad: e.target.value })} />
+                  <select className="campo min-h-9 flex-1 text-sm" value={componente.id} onChange={(e) => setComponente({ ...componente, id: e.target.value })}>
+                    <option value="">Agregar producto al combo…</option>
+                    {disponibles.map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {x.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="btn-secundario min-h-9 px-3 text-sm"
+                    disabled={!componente.id}
+                    onClick={() => guardar(() => api('PATCH', `/admin/productos/${p.id}/componentes/${componente.id}`, { cantidad: Number(componente.cantidad) || 1 }), 'Agregado al combo').then(() => setComponente({ id: '', cantidad: '1' }))}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
             <div className="grid gap-3 md:grid-cols-2">
               {p.grupos.map((g) => (
                 <div key={g.id} className="rounded-xl border border-slate-200 bg-white p-3">

@@ -1,0 +1,28 @@
+# Render (plan gratuito) apaga la API tras 15 minutos sin visitas y tarda cerca de un
+# minuto en despertar. Este flujo la visita cada 10 minutos de 6:00 a 23:59 (hora de Lima)
+# para que esté lista en la demostración. Consume unas 590 de las 750 horas gratis al mes.
+#
+# Para activarlo: GitHub → Settings → Secrets and variables → Actions → Variables →
+# New repository variable  API_URL = https://tu-api.onrender.com/api
+# GitHub pausa los flujos programados si el repositorio pasa 60 días sin cambios.
+name: Mantener la API despierta
+
+on:
+  schedule:
+    - cron: '*/10 11-23,0-4 * * *' # UTC: equivale a 6:00–23:59 en Lima (UTC-5)
+  workflow_dispatch:
+
+jobs:
+  despertar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Visitar /api/salud
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "Falta la variable API_URL del repositorio; no se hace nada."
+            exit 0
+          fi
+          curl -fsS --max-time 90 "$API_URL/salud" || (sleep 30 && curl -fsS --max-time 90 "$API_URL/salud")

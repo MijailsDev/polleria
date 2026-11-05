@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ItemEntrada, PedidosService } from './pedidos.service';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard, EquipoGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
 
 @Controller()
@@ -12,6 +12,21 @@ export class PedidosController {
   @Roles('MOZO', 'CAJERO')
   crear(@Body() body: { mesaId: string; items: ItemEntrada[]; clave?: string }, @Req() req) {
     return this.pedidos.crearDesdePersonal(body.mesaId, body.items, req.usuario.sub, body.clave);
+  }
+
+  /** Bebidas que la caja debe entregar (no pasan por el pollero). */
+  @Get('bebidas')
+  @UseGuards(AuthGuard)
+  @Roles('CAJERO')
+  bebidas() {
+    return this.pedidos.bebidas();
+  }
+
+  @Post('bebidas/:pedidoId/entregar')
+  @UseGuards(AuthGuard)
+  @Roles('CAJERO')
+  entregarBebidas(@Param('pedidoId') pedidoId: string, @Req() req) {
+    return this.pedidos.entregarBebidas(pedidoId, req.usuario.sub);
   }
 
   @Get('pedidos/por-confirmar')
@@ -66,12 +81,14 @@ export class PedidosController {
 
   /** Pantalla de cocina (simula la ticketera del pollero): solo lectura. */
   @Get('cocina')
+  @UseGuards(EquipoGuard)
   cocina() {
     return this.pedidos.cocina();
   }
 
-  /** El pollero marca la comanda como lista (pantalla de cocina, sin sesión como la ticketera). */
+  /** El pollero marca la comanda como lista (pantalla de cocina, sin PIN como la ticketera; con equipos exigidos, solo desde un equipo vinculado). */
   @Post('cocina/:id/listo')
+  @UseGuards(EquipoGuard)
   listo(@Param('id') id: string) {
     return this.pedidos.servido(id);
   }
@@ -85,6 +102,16 @@ export class PedidosController {
   @Post('qr/pedidos')
   crearQR(@Body() body: { token: string; items: ItemEntrada[]; clave?: string }) {
     return this.pedidos.crearDesdeQR(body.token, body.items, body.clave);
+  }
+
+  @Post('qr/pedidos/:id/cancelar')
+  cancelarQR(@Param('id') id: string, @Body() body: { token: string }) {
+    return this.pedidos.cancelarDesdeQR(body.token, id);
+  }
+
+  @Post('qr/calificar')
+  calificar(@Body() body: { token: string; estrellas: number; comentario?: string }) {
+    return this.pedidos.calificar(body.token, body.estrellas, body.comentario);
   }
 
   @Get('qr-cuenta')

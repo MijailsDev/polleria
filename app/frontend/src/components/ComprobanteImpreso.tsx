@@ -1,7 +1,8 @@
 'use client';
+import { urlComensal } from '@/lib/modo';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { api } from '@/lib/api';
+import { api, urlServidor } from '@/lib/api';
 import { soles } from '@/lib/util';
 
 export interface Comprobante {
@@ -9,15 +10,20 @@ export interface Comprobante {
   tipo: 'BOLETA' | 'FACTURA' | 'NOTA_CREDITO';
   numero: string;
   emitidoEn: string;
+  emisor: { ruc: string; razonSocial: string; direccion: string };
   documento: string | null;
   nombre: string | null;
   mesa: string | null;
   items: { cantidad: number; descripcion: string; importe: number }[];
   base: number;
   impuesto: number;
+  icbper: number;
   total: number;
   tasa: number;
   estadoSunat: string;
+  codigoSunat: string | null;
+  mensajeSunat: string | null;
+  hash: string | null;
   motivo: string | null;
   referencia: string | null;
   qr: string;
@@ -25,14 +31,14 @@ export interface Comprobante {
 
 const TITULO = { BOLETA: 'BOLETA DE VENTA', FACTURA: 'FACTURA', NOTA_CREDITO: 'NOTA DE CRÉDITO' };
 
-/** Ticket de 80 mm del comprobante electrónico (simulado, sin envío real a SUNAT). */
+/** Representación impresa (ticket de 80 mm) del comprobante electrónico. */
 export function TicketComprobante({ c, qr }: { c: Comprobante; qr: string }) {
   return (
     <div className="w-[320px] bg-white p-5 font-mono text-[13px] text-black shadow-xl">
       <div className="text-center">
-        <div className="text-base font-black">POLLERÍA Y BRASAS DEL SUR</div>
-        <div>RUC 20000000001</div>
-        <div>Puerto Maldonado - Madre de Dios</div>
+        <div className="text-base font-black">{c.emisor.razonSocial}</div>
+        <div>RUC {c.emisor.ruc}</div>
+        <div>{c.emisor.direccion}</div>
         <div className="mt-2 font-black">{TITULO[c.tipo]} ELECTRÓNICA</div>
         <div className="font-black">{c.numero}</div>
       </div>
@@ -65,16 +71,32 @@ export function TicketComprobante({ c, qr }: { c: Comprobante; qr: string }) {
           <span>IGV + IPM ({(c.tasa * 100).toFixed(1)}%)</span>
           <span>{c.impuesto.toFixed(2)}</span>
         </div>
+        {c.icbper > 0 && (
+          <div className="flex justify-between">
+            <span>ICBPER (bolsas)</span>
+            <span>{c.icbper.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-base font-black">
           <span>TOTAL</span>
           <span>{soles(c.total)}</span>
         </div>
       </div>
       {qr && <img src={qr} alt="Código QR tributario" className="mx-auto mt-3 h-32 w-32" />}
-      <div className="mt-2 text-center text-[11px]">
-        Representación impresa del comprobante electrónico.
+      <div className="mt-2 break-all text-center text-[11px]">
+        {c.hash && <div>Resumen: {c.hash}</div>}
+        Representación impresa de la {TITULO[c.tipo].toLowerCase()} electrónica.
         <br />
-        Estado SUNAT: {c.estadoSunat === 'PENDIENTE' ? 'EN COLA, se enviará al volver internet' : c.estadoSunat} (simulado)
+        {c.estadoSunat === 'PENDIENTE'
+          ? 'Pendiente de envío a SUNAT: se enviará al volver internet.'
+          : c.estadoSunat === 'RECHAZADO'
+            ? `RECHAZADO por SUNAT: ${c.mensajeSunat ?? ''}`
+            : c.mensajeSunat ?? `Estado SUNAT: ${c.estadoSunat}`}
+        <br />
+        Consulte su comprobante en el QR · Libro de Reclamaciones disponible
+        <a className="no-imprimir mt-1 block font-bold text-blue-700 underline" href={`${urlServidor()}/api/publico/comprobantes/${c.id}/xml`}>
+          Descargar XML
+        </a>
       </div>
     </div>
   );
@@ -99,8 +121,10 @@ export function useComprobante(id: string, publico = false) {
 export function ComprobanteImpreso({ id, vuelto, alCerrar }: { id: string; vuelto?: number; alCerrar: () => void }) {
   const { c, qr } = useComprobante(id);
   const [celular, setCelular] = useState('');
+  const [envio, setEnvio] = useState<'' | 'enviando' | 'ok' | string>('');
   const [qrDescarga, setQrDescarga] = useState('');
-  const enlace = typeof window !== 'undefined' ? `${window.location.origin}/c/${id}` : '';
+  // El enlace del comprobante es del sitio del comensal, aunque se imprima desde la caja
+  const enlace = typeof window !== 'undefined' ? `${urlComensal()}/c/${id}` : '';
 
   useEffect(() => {
     if (enlace) QRCode.toDataURL(enlace, { margin: 1, width: 140 }).then(setQrDescarga);
@@ -133,15 +157,28 @@ export function ComprobanteImpreso({ id, vuelto, alCerrar }: { id: string; vuelt
           <label className="mt-3 block text-sm font-semibold">Enviar por WhatsApp</label>
           <div className="mt-1 flex gap-2">
             <input className="campo min-h-10 text-sm" inputMode="numeric" placeholder="987654321" maxLength={9} value={celular} onChange={(e) => setCelular(e.target.value.replace(/\D/g, ''))} />
-            <a
-              className={`btn-verde min-h-10 px-3 text-sm ${/^9\d{8}$/.test(celular) ? '' : 'pointer-events-none opacity-50'}`}
-              target="_blank"
-              rel="noreferrer"
-              href={`https://wa.me/51${celular}?text=${encodeURIComponent(`Pollería y Brasas del Sur: tu comprobante ${c?.numero ?? ''} está aquí ${enlace}`)}`}
+            <button
+              className="btn-verde min-h-10 px-3 text-sm"
+              disabled={!/^9\d{8}$/.test(celular) || envio === 'enviando'}
+              onClick={() => {
+                setEnvio('enviando');
+                api('POST', `/comprobantes/${id}/whatsapp`, { celular, enlace })
+                  .then(() => setEnvio('ok'))
+                  .catch((e) => setEnvio(e.message));
+              }}
             >
               Enviar
-            </a>
+            </button>
           </div>
+          {envio === 'ok' && (
+            <p className="mt-1 text-xs font-semibold text-green-700">
+              En cola de WhatsApp ✓ ·{' '}
+              <a className="underline" href="/whatsapp" target="_blank">
+                ver el celular simulado
+              </a>
+            </p>
+          )}
+          {envio && envio !== 'ok' && envio !== 'enviando' && <p className="mt-1 text-xs font-semibold text-red-600">{envio}</p>}
         </div>
       </div>
     </div>

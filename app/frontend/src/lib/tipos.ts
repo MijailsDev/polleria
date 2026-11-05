@@ -8,6 +8,9 @@ export interface Producto {
   destino: string;
   fotoUrl: string | null;
   agotado: boolean;
+  descripcion?: string | null;
+  /** Contenido del combo, por ejemplo «1 Gaseosa 1.5 L» (REQ-CAT-03). */
+  componentes?: string[];
   grupos: Grupo[];
 }
 export interface Categoria { id: string; nombre: string; productos: Producto[] }
@@ -32,6 +35,8 @@ export interface Mesa {
   porConfirmar: number;
   unidaA: string | null;
   unidas: string[];
+  /** Mozo que está tomando el pedido en este momento (REQ-SAL-05). */
+  editandoPor: { usuarioId: string; nombre: string } | null;
 }
 
 export interface Delivery {
@@ -49,12 +54,20 @@ export interface Delivery {
 
 export interface ItemComanda {
   id: string;
+  productoId?: string;
+  opcionIds?: string[];
   cantidad: number;
   producto: string;
   destino: string;
+  /** Tiene algo que prepara el pollero. */
+  cocina: boolean;
+  /** Tiene bebidas que entrega la caja. */
+  bebida: boolean;
+  entregadoEn: string | null;
   precio: number;
   nota: string | null;
   opciones: { grupo: string; nombre: string }[];
+  componentes: { cantidad: number; nombre: string; destino: string }[];
 }
 
 export interface Comanda {
@@ -87,6 +100,7 @@ export interface CuentaDetalle {
   saldo: number;
   descuento: number;
   motivoDescuento: string | null;
+  bolsas: number;
   pagoEnLinea: boolean;
   pedidos: Comanda[];
   pagos: { medio: string; monto: number; numeroOperacion: string | null; fecha: string }[];

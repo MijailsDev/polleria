@@ -62,6 +62,15 @@ export function Cobro({
     }
   }
 
+  async function bolsas(cantidad: number) {
+    try {
+      await api('POST', `/cuentas/${cuenta.cuentaId}/bolsas`, { cantidad });
+      alCambio();
+    } catch (e: any) {
+      alAviso({ texto: e.message, tipo: 'error' });
+    }
+  }
+
   async function cobrar() {
     setEnviando(true);
     try {
@@ -102,8 +111,26 @@ export function Cobro({
         <div className="mt-3">
           <DetalleCuenta cuenta={cuenta} alCambio={alCambio} alAviso={alAviso} />
         </div>
+        {(cuenta.bolsas > 0 || (cuenta.estado === 'ABIERTA' && cuenta.pagos.length === 0 && cuenta.total > 0)) && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 p-2 text-sm">
+            <span className="flex-1">
+              🛍 Bolsas plásticas <span className="text-slate-500">(ICBPER S/ 0.50 c/u)</span>
+            </span>
+            {cuenta.pagos.length === 0 && cuenta.estado === 'ABIERTA' && (
+              <button className="btn-secundario min-h-9 w-9 p-0" aria-label="Quitar bolsa" disabled={cuenta.bolsas === 0} onClick={() => bolsas(cuenta.bolsas - 1)}>
+                −
+              </button>
+            )}
+            <b className="w-6 text-center text-base">{cuenta.bolsas}</b>
+            {cuenta.pagos.length === 0 && cuenta.estado === 'ABIERTA' && (
+              <button className="btn-secundario min-h-9 w-9 p-0" aria-label="Agregar bolsa" onClick={() => bolsas(cuenta.bolsas + 1)}>
+                +
+              </button>
+            )}
+          </div>
+        )}
         <div className="mt-3 flex justify-between text-lg">
-          <span>Total</span>
+          <span>Total{cuenta.bolsas > 0 && <span className="text-sm text-slate-500"> (incluye ICBPER {soles(cuenta.bolsas * 0.5)})</span>}</span>
           <b>{soles(cuenta.total)}</b>
         </div>
         {cuenta.pagos.length > 0 && (
@@ -122,6 +149,7 @@ export function Cobro({
                 </button>
                 <span className={c.anulado ? 'text-slate-400 line-through' : ''}>{soles(c.total)}</span>
                 {c.estadoSunat === 'PENDIENTE' && <span className="rounded bg-amber-100 px-2 text-xs font-bold text-amber-800">en cola</span>}
+                {c.estadoSunat === 'RECHAZADO' && <span className="rounded bg-red-100 px-2 text-xs font-bold text-red-800">rechazado por SUNAT</span>}
                 {c.anulado && <span className="text-xs font-semibold text-red-600">anulado con NC</span>}
                 {c.tipo !== 'NOTA_CREDITO' && !c.anulado && (
                   <button className="ml-auto text-xs font-semibold text-red-600 hover:underline" onClick={() => setNc(c)}>

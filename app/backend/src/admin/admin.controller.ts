@@ -45,8 +45,23 @@ export class AdminController {
   }
 
   @Patch('productos/:id')
-  editarProducto(@Param('id') id: string, @Body() b: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean }, @Req() req) {
+  editarProducto(@Param('id') id: string, @Body() b: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string }, @Req() req) {
     return this.admin.editarProducto(id, b, req.usuario.sub);
+  }
+
+  @Patch('productos/:id/foto')
+  foto(@Param('id') id: string, @Body() b: { imagen: string | null }, @Req() req) {
+    return this.admin.foto(id, b.imagen, req.usuario.sub);
+  }
+
+  @Patch('productos/:id/precios/:canal')
+  precioCanal(@Param('id') id: string, @Param('canal') canal: string, @Body() b: { precio: number | null }, @Req() req) {
+    return this.admin.precioCanal(id, canal, b.precio, req.usuario.sub);
+  }
+
+  @Patch('productos/:id/componentes/:componenteId')
+  componente(@Param('id') id: string, @Param('componenteId') componenteId: string, @Body() b: { cantidad: number }, @Req() req) {
+    return this.admin.componente(id, componenteId, b.cantidad, req.usuario.sub);
   }
 
   @Post('productos/:id/grupos')

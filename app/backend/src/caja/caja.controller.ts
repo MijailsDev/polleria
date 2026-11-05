@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
 import { CajaService, ComprobanteEntrada, PagoEntrada } from './caja.service';
 import { ComprobantesService } from './comprobantes.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -20,6 +21,15 @@ export class CajaController {
   @Get('publico/comprobantes/:id')
   comprobantePublico(@Param('id') id: string) {
     return this.comprobantes.ver(id);
+  }
+
+  /** XML UBL 2.1 del comprobante, para descargar desde la representación impresa. */
+  @Get('publico/comprobantes/:id/xml')
+  async xmlPublico(@Param('id') id: string, @Res() res: Response) {
+    const { nombre, xml } = await this.comprobantes.xml(id);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+    res.send(xml);
   }
 
   // ---------------------------------------------------------------- Turnos
@@ -132,6 +142,13 @@ export class CajaController {
     return this.caja.fuga(id, body.motivo, body.pinAdmin, req.usuario.sub);
   }
 
+  @Post('cuentas/:id/bolsas')
+  @UseGuards(AuthGuard)
+  @Roles('CAJERO')
+  bolsas(@Param('id') id: string, @Body() body: { cantidad: number }, @Req() req) {
+    return this.caja.bolsas(id, body.cantidad, req.usuario.sub);
+  }
+
   @Get('documentos/:numero')
   @UseGuards(AuthGuard)
   @Roles('CAJERO')
@@ -151,6 +168,50 @@ export class CajaController {
   @Roles('CAJERO')
   notaCredito(@Param('id') id: string, @Body() body: { motivo: string; pinAdmin: string; devolverEfectivo?: boolean }, @Req() req) {
     return this.comprobantes.notaCredito(id, body.motivo, body.pinAdmin, !!body.devolverEfectivo, req.usuario.sub);
+  }
+
+  @Post('comprobantes/:id/imprimir')
+  @UseGuards(AuthGuard)
+  @Roles('CAJERO')
+  imprimir(@Param('id') id: string) {
+    return this.comprobantes.imprimir(id);
+  }
+
+  @Post('comprobantes/:id/whatsapp')
+  @UseGuards(AuthGuard)
+  @Roles('CAJERO')
+  whatsapp(@Param('id') id: string, @Body() body: { celular: string; enlace: string }) {
+    return this.caja.whatsappComprobante(id, body.celular, body.enlace);
+  }
+
+  // ---------------------------------------------------------------- SUNAT (administrador)
+
+  @Get('sunat/observados')
+  @UseGuards(AuthGuard)
+  @Roles('ADMINISTRADOR')
+  observados() {
+    return this.comprobantes.observados();
+  }
+
+  @Post('sunat/reenviar')
+  @UseGuards(AuthGuard)
+  @Roles('ADMINISTRADOR')
+  reenviar() {
+    return this.comprobantes.procesarCola().then((enviados) => ({ enviados }));
+  }
+
+  @Get('sunat/resumenes')
+  @UseGuards(AuthGuard)
+  @Roles('ADMINISTRADOR')
+  resumenes() {
+    return this.comprobantes.resumenes();
+  }
+
+  @Post('sunat/resumen-diario')
+  @UseGuards(AuthGuard)
+  @Roles('ADMINISTRADOR')
+  resumenDiario(@Query('fecha') fecha: string | undefined, @Req() req) {
+    return this.comprobantes.resumenDiario(fecha, req.usuario.sub);
   }
 
   // ---------------------------------------------------------------- Repartidores

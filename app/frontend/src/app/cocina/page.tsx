@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { EquipoNoVinculado } from '@/components/EquipoNoVinculado';
 import { Comanda } from '@/lib/tipos';
 import { hora, minutosDesde, pitido, useConexion, useEventos } from '@/lib/util';
 
@@ -14,7 +15,8 @@ const SIERRA =
 
 /** Cuerpo del ticket: origen en grande, presa en mayúsculas y opciones críticas resaltadas (REQ-COC-02). */
 function Ticket({ c, marca, detalle }: { c: Comanda; marca?: string; detalle?: string }) {
-  const items = c.items.filter((i) => i.destino !== 'CAJA');
+  // Las bebidas las entrega la caja; de un combo, el pollero solo ve lo que prepara
+  const items = c.items.filter((i) => i.cocina ?? i.destino !== 'CAJA');
   return (
     <>
       {marca && <div className="mb-2 bg-black py-1 text-center text-lg font-black text-white">*** {marca} ***</div>}
@@ -47,6 +49,11 @@ function Ticket({ c, marca, detalle }: { c: Comanda; marca?: string; detalle?: s
                   - {o.grupo}: {o.nombre.toUpperCase()}
                 </div>
               ))}
+              {it.componentes?.filter((x) => x.destino !== 'CAJA').map((x) => (
+                <div key={x.nombre} className="pl-3 font-bold">
+                  + {x.cantidad} {x.nombre.toUpperCase()}
+                </div>
+              ))}
               {it.nota && <div className="pl-3 font-black">NOTA: {it.nota.toUpperCase()}</div>}
             </div>
           );
@@ -68,10 +75,13 @@ export default function PaginaCocina() {
   const [nuevas, setNuevas] = useState<Set<string>>(new Set());
   const [carga, setCarga] = useState({ pendientes: 0, umbral: 12, demora: false });
   const conectado = useConexion();
+  const [noVinculado, setNoVinculado] = useState(false);
   const [, setTic] = useState(0);
 
   const cargar = () => {
-    api<Comanda[]>('GET', '/cocina').then(setComandas).catch(() => {});
+    api<Comanda[]>('GET', '/cocina')
+      .then(setComandas)
+      .catch((e) => e.codigo === 'EQUIPO_NO_VINCULADO' && setNoVinculado(true));
     api('GET', '/cocina/carga').then(setCarga).catch(() => {});
   };
   useEffect(() => {
@@ -97,7 +107,8 @@ export default function PaginaCocina() {
     [sonido],
   );
 
-  const visibles = comandas.filter((c) => c.items.some((i) => i.destino !== 'CAJA'));
+  if (noVinculado) return <EquipoNoVinculado />;
+  const visibles = comandas.filter((c) => c.items.some((i) => i.cocina ?? i.destino !== 'CAJA'));
 
   return (
     <div className="min-h-screen bg-stone-800 text-stone-900">
@@ -105,7 +116,7 @@ export default function PaginaCocina() {
         <Link href="/" className="text-lg font-bold">
           🔥 Estación del pollero
         </Link>
-        <span className="text-sm text-stone-400">Simulación de la ticketera con buzzer</span>
+        <span className="text-sm text-stone-400">Simulación de la ticketera con buzzer · el botón «Listo» es solo para la demo</span>
         <span className={`rounded-full px-3 py-1 text-xs font-bold ${carga.demora ? 'bg-red-500' : 'bg-stone-700'}`}>
           {carga.pendientes} en cola{carga.demora ? ' · la carta avisa demora' : ''}
         </span>
@@ -141,8 +152,13 @@ export default function PaginaCocina() {
               <div className={`mt-1 border-t-2 border-dashed border-stone-400 pt-2 text-center text-sm font-bold ${min >= 15 ? 'text-red-600' : 'text-stone-500'}`}>
                 {min >= 15 ? `⚠ ${minutosDesde(c.impresoEn)} esperando` : `hace ${minutosDesde(c.impresoEn)}`}
               </div>
-              <button className="mt-2 w-full rounded bg-green-700 py-2 font-sans font-bold text-white" onClick={() => api('POST', `/cocina/${c.id}/listo`).then(cargar).catch(() => {})}>
-                ✓ Listo
+              {/* Solo para la demo: la ticketera real no tiene botones; en el local el mozo marca «Servido» desde su tablet */}
+              <button
+                className="mt-2 w-full rounded border-2 border-dashed border-green-700 bg-green-50 py-2 font-sans font-bold text-green-800"
+                title="En el local real la ticketera no tiene botones: el mozo marca el pedido como servido desde su tablet."
+                onClick={() => api('POST', `/cocina/${c.id}/listo`).then(cargar).catch(() => {})}
+              >
+                ✓ Listo <span className="text-xs font-semibold">(simulación)</span>
               </button>
             </article>
           );

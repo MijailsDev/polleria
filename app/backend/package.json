@@ -1,15 +1,20 @@
 {
   "name": "polleria-backend",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "API del Sistema para Pollerías (NestJS + Prisma + PostgreSQL)",
   "scripts": {
     "build": "nest build",
     "start": "node dist/main",
     "dev": "nest start --watch",
+    "postinstall": "prisma generate",
     "prisma:pull": "prisma db pull",
     "prisma:generate": "prisma generate",
-    "test": "jest"
+    "db:migrar": "prisma migrate deploy",
+    "db:semilla": "node prisma/semilla.mjs",
+    "db:generar-migraciones": "node prisma/generar-migraciones.mjs",
+    "test:e2e": "node ../pruebas/e2e.mjs",
+    "test:carga": "node ../pruebas/carga.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -17,12 +22,15 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/platform-socket.io": "^11.0.0",
+    "@nestjs/throttler": "^6.7.1",
     "@nestjs/websockets": "^11.0.0",
     "@prisma/client": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "helmet": "^8.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.0"
@@ -39,5 +47,8 @@
     "prisma@6.19.3": true,
     "@prisma/client@6.19.3": true,
     "@prisma/engines@6.19.3": true
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
