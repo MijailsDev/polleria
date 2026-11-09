@@ -1,4 +1,5 @@
 'use client';
+import { Estrella } from '@/components/Iconos';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 
@@ -31,10 +32,10 @@ export function Calificar({ token, alListo, alError }: { token: string; alListo:
             role="radio"
             aria-checked={estrellas === n}
             aria-label={`${n} estrella${n > 1 ? 's' : ''}`}
-            className={`min-h-12 min-w-12 text-4xl transition ${n <= estrellas ? 'scale-110' : 'opacity-30 grayscale'}`}
+            className={`grid min-h-12 min-w-12 place-items-center transition ${n <= estrellas ? 'scale-110 text-amber-500' : 'text-slate-300'}`}
             onClick={() => setEstrellas(n)}
           >
-            ⭐
+            <Estrella llena className="h-10 w-10" />
           </button>
         ))}
       </div>

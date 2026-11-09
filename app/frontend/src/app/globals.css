@@ -9,7 +9,14 @@
   --color-brasa-600: #ea580c;
   --color-brasa-700: #c2410c;
   --color-brasa-800: #9a3412;
+  --color-brasa-900: #7c2d12;
   --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Tipografía de la marca (Google Fonts, servida por Next.js): títulos en Anton y textos en Poppins */
+@theme inline {
+  --font-titulo: var(--fuente-titulo), Impact, "Arial Narrow", sans-serif;
+  --font-marca: var(--fuente-marca), "Segoe UI", system-ui, sans-serif;
 }
 
 html,
@@ -45,6 +52,10 @@ body {
 }
 @utility tarjeta {
   @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+/* Tarjeta de plato de la carta: foto arriba, sombra suave como en las webs de pollerías */
+@utility tarjeta-plato {
+  @apply rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99];
 }
 @utility campo {
   @apply min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base outline-none focus:border-brasa-600 focus:ring-2 focus:ring-brasa-200;
@@ -111,6 +122,10 @@ html {
 html.comensal {
   font-size: calc(100% * var(--escala, 1));
 }
+/* Páginas del comensal con la tipografía de la marca */
+html.comensal body {
+  font-family: var(--font-marca);
+}
 /* Nada menor de 14 px y grises legibles sobre blanco */
 html.comensal .text-xs {
   font-size: 0.875rem;
@@ -130,6 +145,13 @@ html.comensal .chip-off {
   line-height: 1.2;
   padding-top: 0.35rem;
   padding-bottom: 0.35rem;
+}
+
+/* Con letra grande, una sola columna de platos en celulares para que nada se apriete */
+@media (max-width: 639px) {
+  html.letra-grande .rejilla-platos {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* Alto contraste: textos casi negros, bordes marcados y naranja más oscuro */

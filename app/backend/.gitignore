@@ -2,3 +2,7 @@ node_modules
 dist
 .env
 *.tsbuildinfo
+
+# Datos de la nube (contraseñas): nunca a GitHub
+.env.*
+!.env.example

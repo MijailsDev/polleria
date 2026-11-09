@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { Opcion, Producto } from '@/lib/tipos';
 import { soles } from '@/lib/util';
+import { Foto } from '@/components/Foto';
 
 const NOTAS_RAPIDAS = ['Vinagreta aparte', 'Retirar pellejo', 'Bastante ají', 'Para compartir'];
 
@@ -14,11 +15,14 @@ export function SelectorProducto({
   alAgregar,
   alCerrar,
   notasRapidas = false,
+  foto,
 }: {
   producto: Producto;
   alAgregar: (cantidad: number, opciones: Opcion[], nota: string) => void;
   alCerrar: () => void;
   notasRapidas?: boolean;
+  /** Foto grande del plato (carta del comensal). */
+  foto?: string;
 }) {
   const [elegidas, setElegidas] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(producto.grupos.map((g) => [g.id, []])),
@@ -60,6 +64,11 @@ export function SelectorProducto({
         aria-label={producto.nombre}
         onClick={(e) => e.stopPropagation()}
       >
+        {foto && (
+          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-brasa-50 min-[400px]:h-52 apaisado:hidden">
+            <Foto src={foto} inicial={producto.nombre} className="h-full w-full" />
+          </div>
+        )}
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
           <div>
             <h2 className="text-xl font-bold">{producto.nombre}</h2>

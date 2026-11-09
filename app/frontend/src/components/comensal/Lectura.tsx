@@ -26,6 +26,7 @@ function aplicar(p: Preferencias | null) {
   const html = document.documentElement;
   html.classList.toggle('comensal', !!p);
   html.classList.toggle('alto-contraste', !!p?.contraste);
+  html.classList.toggle('letra-grande', !!p && p.escala > 1);
   if (p && p.escala !== 1) html.style.setProperty('--escala', String(p.escala));
   else html.style.removeProperty('--escala');
 }

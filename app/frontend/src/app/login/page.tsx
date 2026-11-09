@@ -6,6 +6,7 @@ import { api, ErrorApi } from '@/lib/api';
 import { guardarSesion, Rol, Sesion } from '@/lib/sesion';
 import { EquipoGuardado, leerEquipo, tipoEquipo } from '@/lib/equipo';
 import { EquipoNoVinculado } from '@/components/EquipoNoVinculado';
+import { Logo } from '@/components/Logo';
 
 interface Usuario { id: string; nombre: string; rol: Rol }
 type Respuesta = Sesion | { requiere2fa: true };
@@ -116,8 +117,8 @@ function Ingreso() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
-      <Link href="/" className="mb-2 text-center text-2xl font-extrabold">
-        🍗 Pollería
+      <Link href="/" className="mx-auto mb-4">
+        <Logo />
       </Link>
       {equipo && (
         <p className="mb-4 text-center text-sm text-slate-600">

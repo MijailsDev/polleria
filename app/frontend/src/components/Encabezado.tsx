@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cerrarSesion, Rol, Sesion } from '@/lib/sesion';
 import { useConexion, useEstadoSistema } from '@/lib/util';
+import { Emblema } from '@/components/Logo';
 
 const ENLACES: { href: string; texto: string; roles: Rol[] }[] = [
   { href: '/mozo', texto: 'Salón', roles: ['MOZO', 'CAJERO'] },
@@ -24,8 +25,8 @@ export function Encabezado({ titulo, sesion, extra }: { titulo: string; sesion: 
   return (
     <>
     <header className="no-imprimir sticky top-0 z-30 flex flex-wrap items-center gap-2 bg-slate-900 px-4 py-2 text-white" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
-      <Link href="/" className="mr-1 text-lg font-bold">
-        🍗 <span className="text-brasa-200">Pollería</span>
+      <Link href="/" className="mr-1 inline-flex items-center gap-2 text-lg font-bold">
+        <Emblema className="h-8 w-8" /> <span className="font-titulo uppercase tracking-wide text-brasa-200">Brasa Dorada</span>
       </Link>
       <h1 className="text-lg font-semibold">{titulo}</h1>
       {enlaces.length > 0 && (

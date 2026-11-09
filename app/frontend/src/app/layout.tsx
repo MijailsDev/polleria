@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from 'next';
+import { Anton, Poppins } from 'next/font/google';
 import { RegistrarSW } from '@/components/RegistrarSW';
 import { LecturaComensal } from '@/components/comensal/Lectura';
 import './globals.css';
+
+// Fuentes de la marca: se descargan al compilar y se sirven desde el propio sitio (sin pedir a Google en cada visita)
+const titulo = Anton({ subsets: ['latin'], weight: '400', variable: '--fuente-titulo', display: 'swap' });
+const marca = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], variable: '--fuente-marca', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Sistema para Pollerías',
@@ -19,7 +24,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className={`${titulo.variable} ${marca.variable}`}>
       <body className="min-h-screen antialiased">
         {children}
         <RegistrarSW />
