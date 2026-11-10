@@ -19,7 +19,7 @@ TRUNCATE
   item_opcion, item_pedido, pedido_delivery, pedido, pago, pago_en_linea, comprobante,
   cuenta, sesion_mesa, movimiento_caja, turno, movimiento_inventario, cliente,
   reclamo, resumen_diario, mensaje_saliente, impresion, evento_sync, nube_evento,
-  error_registro, bitacora
+  error_registro, calificacion, bitacora
 RESTART IDENTITY;
 
 -- Restos de las pruebas automáticas (productos, mesas y usuarios creados y desactivados)
