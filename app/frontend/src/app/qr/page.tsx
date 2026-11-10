@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import QRCode from 'qrcode';
@@ -44,7 +45,7 @@ export default function PaginaQR() {
         <h1 className="text-2xl font-extrabold">Códigos QR de las mesas</h1>
         <div className="flex-1" />
         <button className="btn-primario" onClick={() => window.print()}>
-          🖨 Imprimir
+          <Ico n="impresora" /> Imprimir
         </button>
       </div>
       {faltaDominio && (

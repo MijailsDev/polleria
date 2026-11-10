@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -43,7 +44,9 @@ function Vincular() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
       <div className="tarjeta p-6">
-        <div className="text-center text-4xl">🔗</div>
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-brasa-100 text-3xl text-brasa-800">
+          <Ico n="enlace" />
+        </div>
         <h1 className="mt-2 text-center text-xl font-bold">Vincular este equipo</h1>
         {actual && (
           <div className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-900">

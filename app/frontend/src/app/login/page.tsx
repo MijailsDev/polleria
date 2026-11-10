@@ -7,9 +7,19 @@ import { guardarSesion, Rol, Sesion } from '@/lib/sesion';
 import { EquipoGuardado, leerEquipo, tipoEquipo } from '@/lib/equipo';
 import { EquipoNoVinculado } from '@/components/EquipoNoVinculado';
 import { Logo } from '@/components/Logo';
+import { Foto } from '@/components/Foto';
+import { Ico, NombreIcono } from '@/components/Ico';
+import { foto, FOTOS } from '@/lib/imagenes';
 
 interface Usuario { id: string; nombre: string; rol: Rol }
 type Respuesta = Sesion | { requiere2fa: true };
+const ROL: Record<Rol, { texto: string; icono: NombreIcono; color: string }> = {
+  MOZO: { texto: 'Mozo', icono: 'mesa', color: 'bg-brasa-100 text-brasa-800' },
+  CAJERO: { texto: 'Caja', icono: 'billete', color: 'bg-green-100 text-green-800' },
+  REPARTIDOR: { texto: 'Reparto', icono: 'moto', color: 'bg-sky-100 text-sky-800' },
+  ADMINISTRADOR: { texto: 'Administrador', icono: 'escudo', color: 'bg-slate-900 text-white' },
+};
+const iniciales = (n: string) => n.split(/\s+/).filter((p) => /^[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(p)).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
 const DESTINO: Record<Rol, string> = { MOZO: '/mozo', CAJERO: '/caja', ADMINISTRADOR: '/admin', REPARTIDOR: '/reparto' };
 
 /** Campo para el código de 6 dígitos de la app autenticadora (Google o Microsoft Authenticator). */
@@ -116,20 +126,36 @@ function Ingreso() {
   if (bloqueado && !modoAdmin) return <EquipoNoVinculado alAdmin={() => setModoAdmin(true)} />;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
-      <Link href="/" className="mx-auto mb-4">
+    <div className="alto-pantalla grid lg:grid-cols-[1.1fr_1fr]">
+      {/* Panel con foto: solo en pantallas anchas (caja, laptop, tablet apaisada) */}
+      <aside className="relative isolate hidden overflow-hidden bg-brasa-950 text-white lg:block">
+        <Foto src={foto(FOTOS.polloAsador, 1200, 1400)} prioridad className="absolute inset-0 -z-10 h-full w-full" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/40 to-black/60" />
+        <div className="flex h-full flex-col justify-between p-10">
+          <Logo claro />
+          <div>
+            <h2 className="font-titulo text-6xl uppercase leading-[0.95] tracking-wide">
+              Buen turno, <span className="text-amber-300">equipo</span>
+            </h2>
+            <p className="mt-4 max-w-md text-lg text-white/90">Mesas, comandas, caja y delivery en un solo lugar.</p>
+          </div>
+        </div>
+      </aside>
+
+    <main className="mx-auto flex w-full max-w-md flex-col justify-center px-4 py-8">
+      <Link href="/" className="mx-auto mb-5 lg:hidden">
         <Logo />
       </Link>
       {equipo && (
-        <p className="mb-4 text-center text-sm text-slate-600">
-          {tipoEquipo(equipo.equipo.tipo).icono} {equipo.equipo.nombre} · equipo vinculado
+        <p className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1.5 text-sm font-semibold text-green-800">
+          <Ico n="escudo" /> {equipo.equipo.nombre} · equipo vinculado
         </p>
       )}
 
       {modoAdmin ? (
         <div className="tarjeta p-6 animar-entrada">
-          <button className="mb-2 text-sm text-slate-600" onClick={() => (setModoAdmin(false), volver())}>
-            ← Volver
+          <button className="-ml-2 mb-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-slate-600 hover:bg-slate-100" onClick={() => (setModoAdmin(false), volver())}>
+            <Ico n="atras" /> Volver
           </button>
           <h1 className="text-xl font-bold">Ingreso del administrador</h1>
           <p className="mb-4 text-sm text-slate-600">Desde un equipo no vinculado. Te avisaremos por WhatsApp de este ingreso.</p>
@@ -160,12 +186,25 @@ function Ingreso() {
         </div>
       ) : !elegido ? (
         <div className="tarjeta p-6">
-          <h1 className="mb-4 text-xl font-bold">¿Quién eres?</h1>
-          <div className="grid gap-3">
+          <h1 className="text-2xl font-bold">¿Quién eres?</h1>
+          <p className="mb-4 text-slate-600">Toca tu nombre para ingresar con tu PIN.</p>
+          <div className="grid gap-2.5">
             {usuarios.map((u) => (
-              <button key={u.id} className="btn-secundario justify-between" onClick={() => setElegido(u)}>
-                <span>{u.nombre}</span>
-                <span className="text-xs text-slate-500">{u.rol.toLowerCase()}</span>
+              <button
+                key={u.id}
+                className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-left transition hover:border-brasa-500 hover:bg-brasa-50 active:scale-[0.99]"
+                onClick={() => setElegido(u)}
+              >
+                <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-base font-bold ${ROL[u.rol].color}`}>
+                  {iniciales(u.nombre) || <Ico n="persona" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-semibold text-slate-900">{u.nombre}</span>
+                  <span className="flex items-center gap-1.5 text-sm text-slate-600">
+                    <Ico n={ROL[u.rol].icono} /> {ROL[u.rol].texto}
+                  </span>
+                </span>
+                <Ico n="atras" className="rotate-180 text-slate-400" />
               </button>
             ))}
           </div>
@@ -178,10 +217,18 @@ function Ingreso() {
         </div>
       ) : (
         <div className="tarjeta p-6 animar-entrada">
-          <button className="mb-2 text-sm text-slate-500" onClick={volver}>
-            ← Cambiar usuario
+          <button className="-ml-2 mb-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-slate-600 hover:bg-slate-100" onClick={volver}>
+            <Ico n="atras" /> Cambiar usuario
           </button>
-          <h1 className="text-xl font-bold">{elegido.nombre}</h1>
+          <div className="mb-4 flex items-center gap-3">
+            <span aria-hidden className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg font-bold ${ROL[elegido.rol].color}`}>
+              {iniciales(elegido.nombre) || <Ico n="persona" />}
+            </span>
+            <div>
+              <h1 className="text-xl font-bold leading-tight">{elegido.nombre}</h1>
+              <p className="text-sm text-slate-600">{ROL[elegido.rol].texto}</p>
+            </div>
+          </div>
           {elegido.rol === 'ADMINISTRADOR' && (
             <input className="campo mb-3" type="password" placeholder="Contraseña del administrador" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" disabled={pide2fa} />
           )}
@@ -194,30 +241,34 @@ function Ingreso() {
             </>
           ) : (
             <>
-              <p className="mb-4 text-slate-500">Ingresa tu PIN</p>
-              <div className="mb-4 flex justify-center gap-3">
+              <p className="mb-3 text-center font-medium text-slate-600">Ingresa tu PIN</p>
+              <div className="mb-5 flex justify-center gap-3" role="status" aria-label={`${pin.length} dígitos ingresados`}>
                 {Array.from({ length: Math.max(4, pin.length) }).map((_, i) => (
-                  <span key={i} className={`h-4 w-4 rounded-full ${i < pin.length ? 'bg-brasa-700' : 'bg-slate-200'}`} />
+                  <span key={i} className={`h-4 w-4 rounded-full transition ${i < pin.length ? 'scale-110 bg-brasa-700' : 'bg-slate-200'}`} />
                 ))}
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="mx-auto grid max-w-72 grid-cols-3 gap-3">
                 {['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'].map((t) => (
                   <button
                     key={t}
-                    className={`h-16 rounded-2xl text-2xl font-bold ${t === 'OK' ? 'bg-brasa-700 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                    aria-label={t === '⌫' ? 'Borrar' : t === 'OK' ? 'Ingresar' : t}
+                    className={`grid h-16 place-items-center rounded-2xl text-2xl font-semibold transition active:scale-95 disabled:opacity-50 ${
+                      t === 'OK' ? 'bg-brasa-700 text-white shadow-sm hover:bg-brasa-800' : t === '⌫' ? 'bg-white text-slate-600 hover:bg-slate-100' : 'border border-slate-200 bg-white hover:border-brasa-500 hover:bg-brasa-50'
+                    }`}
                     onClick={() => tecla(t)}
-                    disabled={cargando}
+                    disabled={cargando || (t === 'OK' && pin.length < 4)}
                   >
-                    {t}
+                    {t === '⌫' ? <Ico n="borrar" /> : t === 'OK' ? <Ico n="check" /> : t}
                   </button>
                 ))}
               </div>
             </>
           )}
-          {error && <p className="mt-4 text-center font-semibold text-red-600">{error}</p>}
+          {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-center font-semibold text-red-700">{error}</p>}
         </div>
       )}
     </main>
+    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 'use client';
+import type { NombreIcono } from '@/components/Ico';
 // Llave del equipo vinculado (tablet del salón, caja, cocina, celular de reparto o laptop
 // del dueño). La entrega el servidor al canjear el código de vinculación y viaja en la
 // cabecera X-Equipo de cada solicitud.
@@ -8,12 +9,12 @@ export interface EquipoGuardado { llave: string; equipo: { id: string; nombre: s
 
 const CLAVE = 'polleria.equipo';
 
-export const TIPOS_EQUIPO: { tipo: TipoEquipo; nombre: string; icono: string; pantalla: string; quien: string }[] = [
-  { tipo: 'SALON', nombre: 'Tablet del salón', icono: '📱', pantalla: '/mozo', quien: 'Mozos' },
-  { tipo: 'CAJA', nombre: 'Terminal de caja', icono: '💵', pantalla: '/caja', quien: 'Cajeros' },
-  { tipo: 'COCINA', nombre: 'Pantalla de cocina', icono: '🔥', pantalla: '/cocina', quien: 'Sin PIN: solo ve comandas' },
-  { tipo: 'REPARTO', nombre: 'Celular de reparto', icono: '🛵', pantalla: '/reparto', quien: 'Repartidores' },
-  { tipo: 'ADMINISTRACION', nombre: 'Equipo de administración', icono: '⚙️', pantalla: '/', quien: 'Todo el personal' },
+export const TIPOS_EQUIPO: { tipo: TipoEquipo; nombre: string; icono: NombreIcono; pantalla: string; quien: string }[] = [
+  { tipo: 'SALON', nombre: 'Tablet del salón', icono: 'mesa', pantalla: '/mozo', quien: 'Mozos' },
+  { tipo: 'CAJA', nombre: 'Terminal de caja', icono: 'billete', pantalla: '/caja', quien: 'Cajeros' },
+  { tipo: 'COCINA', nombre: 'Pantalla de cocina', icono: 'llama', pantalla: '/cocina', quien: 'Sin PIN: solo ve comandas' },
+  { tipo: 'REPARTO', nombre: 'Celular de reparto', icono: 'moto', pantalla: '/reparto', quien: 'Repartidores' },
+  { tipo: 'ADMINISTRACION', nombre: 'Equipo de administración', icono: 'ajustes', pantalla: '/', quien: 'Todo el personal' },
 ];
 export const tipoEquipo = (t: string) => TIPOS_EQUIPO.find((x) => x.tipo === t) ?? TIPOS_EQUIPO[4];
 

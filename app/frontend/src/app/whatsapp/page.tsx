@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -10,11 +11,11 @@ interface Chat { destino: string; ultimo: string; mensajes: Mensaje[] }
 interface Bandeja { proveedor: string; simulado: boolean; chats: Chat[] }
 
 const CHECKS: Record<string, { icono: string; color: string; texto: string }> = {
-  EN_COLA: { icono: '🕓', color: 'text-stone-400', texto: 'en cola' },
+  EN_COLA: { icono: '◷', color: 'text-stone-400', texto: 'en cola' },
   ENVIADO: { icono: '✓', color: 'text-stone-400', texto: 'enviado' },
   ENTREGADO: { icono: '✓✓', color: 'text-stone-400', texto: 'entregado' },
   LEIDO: { icono: '✓✓', color: 'text-sky-500', texto: 'leído' },
-  FALLIDO: { icono: '⚠', color: 'text-red-600', texto: 'no enviado' },
+  FALLIDO: { icono: '!', color: 'text-red-600', texto: 'no enviado' },
 };
 
 /** Muestra el enlace del mensaje como vínculo que se puede abrir. */
@@ -53,7 +54,7 @@ export default function PaginaWhatsapp() {
     <main className="flex min-h-screen flex-col items-center bg-slate-200 p-4">
       <div className="mb-3 flex w-full max-w-md items-center gap-2">
         <Link href="/" className="font-bold">
-          🍗 Pollería
+          La Brasa Dorada
         </Link>
         <span className="text-slate-500">· WhatsApp de los clientes</span>
       </div>
@@ -78,7 +79,9 @@ export default function PaginaWhatsapp() {
               return (
                 <li key={c.destino}>
                   <button className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50" onClick={() => setAbierto(c.destino)}>
-                    <span className="grid h-11 w-11 place-items-center rounded-full bg-slate-300 text-xl">👤</span>
+                    <span className="grid h-11 w-11 place-items-center rounded-full bg-slate-300 text-xl text-slate-600">
+                    <Ico n="persona" />
+                  </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex justify-between">
                         <b>+51 {c.destino}</b>
@@ -93,7 +96,7 @@ export default function PaginaWhatsapp() {
           </ul>
         ) : (
           <div className="flex-1 space-y-2 overflow-y-auto p-3">
-            <div className="mx-auto w-fit rounded-lg bg-[#fff5c4] px-3 py-1 text-center text-xs text-slate-700">🔒 Mensajes de la cuenta de empresa de la pollería</div>
+            <div className="mx-auto w-fit rounded-lg bg-[#fff5c4] px-3 py-1 text-center text-xs text-slate-700"><Ico n="candado" /> Mensajes de la cuenta de empresa de la pollería</div>
             {chat.mensajes.map((m) => (
               <div key={m.id} className="max-w-[85%] rounded-lg bg-white px-3 py-2 text-sm shadow">
                 <div className="whitespace-pre-wrap break-words">

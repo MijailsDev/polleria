@@ -1,4 +1,5 @@
 'use client';
+import { Ico, NombreIcono } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Rol, useSesion } from '@/lib/sesion';
@@ -12,17 +13,17 @@ import { Seguridad } from '@/components/admin/Seguridad';
 
 type Pestana = 'usuarios' | 'seguridad' | 'carta' | 'mesas' | 'config' | 'turnos' | 'sunat' | 'reclamos' | 'sistema' | 'bitacora';
 type Avisar = (a: { texto: string; tipo?: 'error' | 'ok' }) => void;
-const PESTANAS: [Pestana, string][] = [
-  ['usuarios', '👥 Usuarios'],
-  ['seguridad', '🔒 Equipos y seguridad'],
-  ['carta', '🍗 Carta y precios'],
-  ['mesas', '🪑 Mesas'],
-  ['config', '⚙ Configuración'],
-  ['turnos', '💵 Turnos'],
-  ['sunat', '🧾 SUNAT'],
-  ['reclamos', '📕 Reclamos'],
-  ['sistema', '🩺 Sistema'],
-  ['bitacora', '📜 Bitácora'],
+const PESTANAS: [Pestana, string, NombreIcono][] = [
+  ['usuarios', 'Usuarios', 'usuarios'],
+  ['seguridad', 'Equipos y seguridad', 'escudo'],
+  ['carta', 'Carta y precios', 'llama'],
+  ['mesas', 'Mesas', 'mesa'],
+  ['config', 'Configuración', 'ajustes'],
+  ['turnos', 'Turnos', 'billete'],
+  ['sunat', 'SUNAT', 'recibo'],
+  ['reclamos', 'Reclamos', 'libro'],
+  ['sistema', 'Sistema', 'pulso'],
+  ['bitacora', 'Bitácora', 'historial'],
 ];
 const ROLES: Rol[] = ['MOZO', 'CAJERO', 'REPARTIDOR', 'ADMINISTRADOR'];
 
@@ -32,15 +33,15 @@ export default function PaginaAdmin() {
   const [pestana, setPestana] = useState<Pestana>('usuarios');
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'error' | 'ok' } | null>(null);
   // Alertas de seguridad en vivo (PIN bloqueados, intentos desde equipos no vinculados…)
-  useEventos({ 'seguridad:alerta': (a: { texto: string }) => setAviso({ texto: `🚨 ${a.texto}`, tipo: 'error' }) });
+  useEventos({ 'seguridad:alerta': (a: { texto: string }) => setAviso({ texto: a.texto, tipo: 'error' }) });
   if (!sesion) return null;
   return (
     <div className="min-h-screen">
       <Encabezado titulo="Administración" sesion={sesion} />
       <div className="no-imprimir flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2">
-        {PESTANAS.map(([k, t]) => (
-          <button key={k} className={pestana === k ? 'chip-on whitespace-nowrap' : 'chip-off whitespace-nowrap'} onClick={() => setPestana(k)}>
-            {t}
+        {PESTANAS.map(([k, t, ic]) => (
+          <button key={k} aria-current={pestana === k ? 'page' : undefined} className={pestana === k ? 'pestana-on' : 'pestana'} onClick={() => setPestana(k)}>
+            <Ico n={ic} /> {t}
           </button>
         ))}
       </div>
@@ -227,7 +228,7 @@ function Configuracion({ alAviso }: { alAviso: Avisar }) {
           <p className="mb-2 text-sm text-slate-500">{c.descripcion}</p>
           {typeof c.valor === 'boolean' ? (
             <button className={c.valor ? 'btn-rojo' : 'btn-secundario'} onClick={() => guardar(c.clave, !c.valor)}>
-              {c.valor ? '🔌 Sin internet (modo local) · tocar para reconectar' : '🌐 Con internet · tocar para simular caída'}
+              <Ico n={c.valor ? 'sinWifi' : 'globo'} /> {c.valor ? 'Sin internet (modo local) · tocar para reconectar' : 'Con internet · tocar para simular caída'}
             </button>
           ) : typeof c.valor === 'string' ? (
             <input

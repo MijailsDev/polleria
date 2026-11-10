@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useState } from 'react';
 
 /**
@@ -49,7 +50,9 @@ export function PedirPin({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={alCerrar}>
       <div className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-2xl animar-entrada sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-1 flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-amber-100 text-lg">🔐</span>
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-amber-100 text-lg text-amber-900">
+            <Ico n="escudo" />
+          </span>
           <h3 className="text-lg font-bold">{titulo}</h3>
         </div>
         {descripcion && <p className="mb-3 text-sm text-slate-600">{descripcion}</p>}

@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { soles } from '@/lib/util';
@@ -270,7 +271,7 @@ function FilaProducto({ p, todos, abierto, alAbrir, guardar }: { p: ProductoA; t
                         defaultValue={o.recargo.toFixed(2)}
                         onBlur={(e) => Number(e.target.value) !== o.recargo && guardar(() => api('PATCH', `/admin/opciones/${o.id}`, { recargo: Number(e.target.value) }), 'Recargo actualizado')}
                       />
-                      {o.efecto && <span title="Descuenta del inventario" className="text-xs text-slate-500">🍗</span>}
+                      {o.efecto && <span title="Descuenta del inventario" className="text-xs text-brasa-700"><Ico n="llama" /></span>}
                     </div>
                   ))}
                   <div className="mt-2 flex gap-2">

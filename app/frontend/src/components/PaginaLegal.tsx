@@ -1,4 +1,5 @@
 'use client';
+import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -14,7 +15,7 @@ export function PaginaLegal({ titulo, actualizado, children }: { titulo: string;
   return (
     <main className="mx-auto min-h-screen max-w-3xl p-4">
       <Link href="/" className="font-bold">
-        🍗 Pollería
+        <Logo compacto />
       </Link>
       <article className="tarjeta mt-3 space-y-3 p-6 leading-relaxed [&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-bold [&_li]:ml-5 [&_li]:list-disc">
         <h1 className="text-2xl font-extrabold">{titulo}</h1>

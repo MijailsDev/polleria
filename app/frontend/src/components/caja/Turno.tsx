@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { hora, soles } from '@/lib/util';
@@ -90,7 +91,7 @@ export function TurnoPanel({ turno, alAviso, alCerrar }: { turno: TurnoAbierto; 
           Registrar
         </button>
         <button className="btn-secundario mt-4 w-full" onClick={() => setGaveta(true)}>
-          🗄 Abrir gaveta sin venta
+          <Ico n="gaveta" /> Abrir gaveta sin venta
         </button>
       </section>
 
@@ -102,7 +103,7 @@ export function TurnoPanel({ turno, alAviso, alCerrar }: { turno: TurnoAbierto; 
             <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {DENOMINACIONES.map((d) => (
                 <label key={d} className="rounded-xl bg-slate-50 p-2 text-xs font-semibold">
-                  {d >= 10 ? '💵' : '🪙'} S/ {d < 1 ? d.toFixed(2) : d}
+                  <Ico n={d >= 10 ? 'billete' : 'moneda'} /> S/ {d < 1 ? d.toFixed(2) : d}
                   <input className="campo mt-1 min-h-10 text-center" inputMode="numeric" placeholder="0" value={conteo[d] ?? ''} onChange={(e) => setConteo({ ...conteo, [d]: e.target.value.replace(/\D/g, '') })} />
                 </label>
               ))}
@@ -206,7 +207,7 @@ export function ReporteZ({ r, alSalir, titulo = 'REPORTE Z · CIERRE DE TURNO' }
       </div>
       <div className="no-imprimir mt-3 grid grid-cols-2 gap-2">
         <button className="btn-secundario" onClick={() => window.print()}>
-          🖨 Imprimir
+          <Ico n="impresora" /> Imprimir
         </button>
         <button className="btn-primario" onClick={alSalir}>
           Listo

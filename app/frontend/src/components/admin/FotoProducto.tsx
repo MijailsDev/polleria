@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useState } from 'react';
 import { api, urlServidor } from '@/lib/api';
 
@@ -37,7 +38,7 @@ export function FotoYDescripcion({
         )}
         <div className="flex flex-1 flex-col gap-2">
           <label className={`btn-secundario min-h-9 cursor-pointer px-3 text-sm ${subiendo ? 'pointer-events-none opacity-50' : ''}`}>
-            {subiendo ? 'Subiendo…' : p.fotoUrl ? '📷 Cambiar foto' : '📷 Subir foto'}
+            <Ico n="camara" /> {subiendo ? 'Subiendo…' : p.fotoUrl ? 'Cambiar foto' : 'Subir foto'}
             <input
               type="file"
               accept="image/*"

@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useEventos } from '@/lib/util';
@@ -63,7 +64,7 @@ export function Inventario({ alAviso }: { alAviso: Avisar }) {
         {tarjeta('Cuartos de pecho con ala', r.stock.pecho, `se agota bajo ${r.umbralPresas}`, r.stock.pecho < r.umbralPresas)}
         {tarjeta('Cuartos de pierna con encuentro', r.stock.pierna, `se agota bajo ${r.umbralPresas}`, r.stock.pierna < r.umbralPresas)}
       </div>
-      {r.alertas.length > 0 && <div className="rounded-xl bg-red-600 p-3 font-semibold text-white">⚠ {r.alertas.join(' · ')}</div>}
+      {r.alertas.length > 0 && <div className="rounded-xl bg-red-600 p-3 font-semibold text-white"><Ico n="alerta" /> {r.alertas.join(' · ')}</div>}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="tarjeta p-5">

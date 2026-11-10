@@ -1,4 +1,6 @@
 'use client';
+import { Logo } from '@/components/Logo';
+import { Ico } from '@/components/Ico';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -68,11 +70,13 @@ export default function PaginaReclamaciones() {
   const etiqueta = 'mb-1 block text-sm font-semibold';
   return (
     <main className="mx-auto min-h-screen max-w-3xl p-4">
-      <Link href="/" className="font-bold">
-        🍗 Pollería
+      <Link href="/" className="inline-block">
+        <Logo compacto />
       </Link>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <span className="text-4xl">📕</span>
+        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brasa-100 text-3xl text-brasa-800">
+          <Ico n="libro" />
+        </span>
         <div>
           <h1 className="text-2xl font-extrabold">Libro de Reclamaciones</h1>
           <p className="text-sm text-slate-600">
@@ -103,7 +107,7 @@ export default function PaginaReclamaciones() {
           <HojaReclamacion h={hoja} />
           <div className="no-imprimir flex gap-2">
             <button className="btn-secundario" onClick={() => window.print()}>
-              ⬇ Guardar copia (PDF)
+              <Ico n="descarga" /> Guardar copia (PDF)
             </button>
             <button className="btn-primario" onClick={() => setHoja(null)}>
               Listo

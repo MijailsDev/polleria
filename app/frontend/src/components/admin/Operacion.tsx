@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { hora, soles, useEventos } from '@/lib/util';
@@ -46,7 +47,7 @@ export function Sunat({ alAviso }: { alAviso: Avisar }) {
           <h2 className="text-lg font-bold">Comprobantes por enviar o rechazados</h2>
           <div className="flex-1" />
           <button className="btn-secundario min-h-10 px-3 text-sm" disabled={trabajando} onClick={() => accion(async () => `${(await api<{ enviados: number }>('POST', '/sunat/reenviar')).enviados} comprobante(s) aceptados`)}>
-            ↻ Reenviar cola
+            <Ico n="repetir" /> Reenviar cola
           </button>
         </div>
         <p className="mb-3 text-sm text-slate-500">Sin internet, los comprobantes se guardan con su número y se envían solos cada 20 segundos al volver la conexión.</p>
@@ -266,7 +267,7 @@ export function Sistema() {
     return () => clearInterval(t);
   }, [cargar]);
 
-  if (error) return <p className="rounded-xl bg-red-100 p-4 font-semibold text-red-800">⚠ El servidor no responde: {error}</p>;
+  if (error) return <p className="rounded-xl bg-red-100 p-4 font-semibold text-red-800"><Ico n="alerta" /> El servidor no responde: {error}</p>;
   if (!d) return <p className="text-slate-500">Cargando…</p>;
   const horas = Math.floor((Date.now() - new Date(d.activoDesde).getTime()) / 3_600_000);
   return (
@@ -304,7 +305,7 @@ export function Sistema() {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="tarjeta p-5">
-          <h2 className="text-lg font-bold">☁ Lo que ya está en la nube</h2>
+          <h2 className="text-lg font-bold"><Ico n="nube" /> Lo que ya está en la nube</h2>
           <p className="mb-3 text-sm text-slate-500">
             El dueño ve estas ventas aunque no esté en el local. {nube ? `${nube.eventos} eventos recibidos · última recepción ${nube.ultimaRecepcion ? fechaHora(nube.ultimaRecepcion) : 'ninguna'}.` : ''}
           </p>

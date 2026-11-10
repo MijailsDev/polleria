@@ -1,45 +1,92 @@
 @import "tailwindcss";
 
-/* Colores del sistema: naranja brasa como en los bocetos */
+/* =============================================================================
+   Sistema de diseño «La Brasa Dorada»
+   · Principal: naranja brasa (700 para botones y enlaces: contraste 5.2:1 con blanco).
+   · Acento: dorado (ámbar) para estrellas, avisos suaves y detalles sobre fondos oscuros.
+   · Neutros cálidos (tono piedra) en lugar de grises azulados: combinan con la comida.
+   · Fondo crema y tarjetas blancas. Estados: verde = listo o libre, ámbar = atención,
+     rojo = error o urgente, azul = información. Siempre con texto, nunca solo color.
+   ============================================================================= */
 @theme {
   --color-brasa-50: #fff7ed;
   --color-brasa-100: #ffedd5;
   --color-brasa-200: #fed7aa;
+  --color-brasa-300: #fdba74;
+  --color-brasa-400: #fb923c;
   --color-brasa-500: #f97316;
   --color-brasa-600: #ea580c;
   --color-brasa-700: #c2410c;
   --color-brasa-800: #9a3412;
   --color-brasa-900: #7c2d12;
-  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  --color-brasa-950: #431407;
+  --color-crema: #fbf7f2;
+  /* Neutros cálidos: todas las pantallas que usan «slate» pasan a este tono */
+  --color-slate-50: #faf8f5;
+  --color-slate-100: #f4f1ec;
+  --color-slate-200: #e7e2da;
+  --color-slate-300: #d5cec4;
+  --color-slate-400: #a39b90;
+  --color-slate-500: #776f65;
+  --color-slate-600: #595148;
+  --color-slate-700: #433d36;
+  --color-slate-800: #2a2520;
+  --color-slate-900: #1c1814;
+  --color-slate-950: #0f0d0a;
 }
 
 /* Tipografía de la marca (Google Fonts, servida por Next.js): títulos en Anton y textos en Poppins */
 @theme inline {
   --font-titulo: var(--fuente-titulo), Impact, "Arial Narrow", sans-serif;
   --font-marca: var(--fuente-marca), "Segoe UI", system-ui, sans-serif;
+  /* Poppins en todo el sistema, con las fuentes del equipo como respaldo */
+  --font-sans: var(--fuente-marca), "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
 }
 
 html,
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-crema);
+  color: var(--color-slate-900);
+}
+/* Las pantallas que pedían el gris claro como fondo usan el crema */
+.bg-slate-50 {
+  background-color: var(--color-crema);
+}
+/* Números alineados en tablas, totales y relojes */
+table,
+.cifras {
+  font-variant-numeric: tabular-nums;
+}
+/* Tablas del personal: filas con aire y separadores suaves */
+table th {
+  padding: 0.5rem 0.625rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+table td {
+  padding: 0.5rem 0.625rem;
+  border-top: 1px solid var(--color-slate-100);
+  vertical-align: middle;
+}
+::selection {
+  background: var(--color-brasa-200);
 }
 
 /* Botones táctiles de al menos 48 px (REQ-MOZ-01) */
 @utility btn {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-center font-semibold leading-tight transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primario {
-  @apply btn bg-brasa-700 text-white hover:bg-brasa-800;
+  @apply btn bg-brasa-700 text-white shadow-sm shadow-brasa-900/20 hover:bg-brasa-800;
 }
 @utility btn-secundario {
-  @apply btn border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+  @apply btn border border-slate-300 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50;
 }
 @utility btn-verde {
-  @apply btn bg-green-700 text-white hover:bg-green-800;
+  @apply btn bg-green-700 text-white shadow-sm hover:bg-green-800;
 }
 @utility btn-rojo {
-  @apply btn bg-red-600 text-white hover:bg-red-700;
+  @apply btn bg-red-700 text-white shadow-sm hover:bg-red-800;
 }
 @utility chip {
   @apply min-h-10 rounded-full border px-4 text-sm font-semibold transition;
@@ -51,14 +98,25 @@ body {
   @apply chip border-slate-300 bg-white text-slate-700 hover:border-brasa-500;
 }
 @utility tarjeta {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(67,20,7,0.04),0_4px_16px_rgba(67,20,7,0.05)];
+}
+/* Pestañas de las pantallas del personal */
+@utility pestana {
+  @apply inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900;
+}
+@utility pestana-on {
+  @apply inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-brasa-700 px-4 text-sm font-semibold text-white shadow-sm;
+}
+/* Etiqueta de estado: siempre con texto, el color solo acompaña */
+@utility etiqueta {
+  @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold;
 }
 /* Tarjeta de plato de la carta: foto arriba, sombra suave como en las webs de pollerías */
 @utility tarjeta-plato {
   @apply rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99];
 }
 @utility campo {
-  @apply min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base outline-none focus:border-brasa-600 focus:ring-2 focus:ring-brasa-200;
+  @apply min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base outline-none transition placeholder:text-slate-400 focus:border-brasa-600 focus:ring-4 focus:ring-brasa-100;
 }
 
 @keyframes entrar {
@@ -122,10 +180,6 @@ html {
 html.comensal {
   font-size: calc(100% * var(--escala, 1));
 }
-/* Páginas del comensal con la tipografía de la marca */
-html.comensal body {
-  font-family: var(--font-marca);
-}
 /* Nada menor de 14 px y grises legibles sobre blanco */
 html.comensal .text-xs {
   font-size: 0.875rem;
@@ -181,7 +235,7 @@ html.alto-contraste a {
 
 /* Foco visible al navegar con teclado o lector de pantalla */
 :focus-visible {
-  outline: 3px solid #1d4ed8;
+  outline: 3px solid var(--color-brasa-600);
   outline-offset: 2px;
 }
 

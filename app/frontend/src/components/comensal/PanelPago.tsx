@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -87,7 +88,7 @@ export function PanelPago({
     return (
       <div>
         <button className="btn-verde w-full rounded-full text-lg" disabled={bloqueado || disponible <= 0} onClick={() => setAbierto(true)}>
-          💳 Pagar desde mi celular
+          <Ico n="tarjeta" /> Pagar desde mi celular
         </button>
         <p className="mt-2 text-center text-xs text-slate-500">
           {bloqueado

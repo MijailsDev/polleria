@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { CANAL, Comanda } from '@/lib/tipos';
@@ -12,11 +13,11 @@ interface Grupo { repartidorId: string; repartidor: string; cobrar: number; vuel
 interface Cliente { nombre: string; documento: string | null; direcciones: { direccion: string; referencia: string | null }[] }
 
 const COLUMNAS = [
-  { clave: 'programado', titulo: '⏰ Programados' },
-  { clave: 'cocina', titulo: '🔥 En cocina' },
-  { clave: 'listo', titulo: '✅ Listos' },
-  { clave: 'ruta', titulo: '🛵 En ruta' },
-  { clave: 'fin', titulo: '🏁 Entregados hoy' },
+  { clave: 'programado', titulo: 'Programados', icono: 'reloj' },
+  { clave: 'cocina', titulo: 'En cocina', icono: 'llama' },
+  { clave: 'listo', titulo: 'Listos', icono: 'checkCirculo' },
+  { clave: 'ruta', titulo: 'En ruta', icono: 'moto' },
+  { clave: 'fin', titulo: 'Entregados hoy', icono: 'bandera' },
 ] as const;
 
 function columna(p: PedidoTablero) {
@@ -68,7 +69,7 @@ export function Despacho({ alAviso, alCobrar }: { alAviso: Avisar; alCobrar: (cu
         <h2 className="mr-2 text-xl font-bold">Llevar, delivery y apps</h2>
         {(['LLEVAR', 'DELIVERY', 'APP_EXTERNA'] as const).map((c) => (
           <button key={c} className="btn-primario" onClick={() => setNuevo(c)}>
-            + {CANAL[c].icono} {CANAL[c].texto}
+            + <Ico n={CANAL[c].icono} /> {CANAL[c].texto}
           </button>
         ))}
       </div>
@@ -79,14 +80,17 @@ export function Despacho({ alAviso, alCobrar }: { alAviso: Avisar; alCobrar: (cu
           return (
             <section key={col.clave} className="rounded-2xl bg-slate-100 p-3">
               <h3 className="mb-2 flex justify-between font-bold">
-                {col.titulo} <span className="text-slate-500">{lista.length}</span>
+                <span className="flex items-center gap-1.5">
+                  <Ico n={col.icono} /> {col.titulo}
+                </span>
+                <span className="rounded-full bg-white px-2 text-sm text-slate-600">{lista.length}</span>
               </h3>
               <div className="space-y-2">
                 {lista.map((p) => (
                   <article key={p.id} className="tarjeta p-3 text-sm animar-entrada">
                     <div className="flex items-start justify-between gap-2">
                       <b className="leading-tight">{p.origen}</b>
-                      <span className={`shrink-0 rounded px-1.5 text-xs font-bold ${CANAL[p.canal].color}`}>{CANAL[p.canal].icono}</span>
+                      <span className={`shrink-0 rounded px-1.5 text-xs font-bold ${CANAL[p.canal].color}`}><Ico n={CANAL[p.canal].icono} /></span>
                     </div>
                     {p.delivery && (
                       <div className="text-xs text-slate-600">
@@ -102,7 +106,7 @@ export function Despacho({ alAviso, alCobrar }: { alAviso: Avisar; alCobrar: (cu
                         {p.estadoCuenta === 'ANULADA' ? 'anulado' : p.saldo > 0 ? `debe ${soles(p.saldo)}` : 'pagado'}
                       </b>
                     </div>
-                    {p.delivery?.repartidor && <div className="text-xs text-slate-600">🛵 {p.delivery.repartidor}</div>}
+                    {p.delivery?.repartidor && <div className="text-xs text-slate-600"><Ico n="moto" /> {p.delivery.repartidor}</div>}
                     <div className="mt-2 flex flex-wrap gap-1">
                       {p.saldo > 0 && p.estadoCuenta === 'ABIERTA' && p.canal !== 'DELIVERY' && (
                         <button className="btn-verde min-h-9 px-2 text-xs" onClick={() => alCobrar(p.cuentaId)}>
@@ -176,7 +180,7 @@ export function Despacho({ alAviso, alCobrar }: { alAviso: Avisar; alCobrar: (cu
           {liquidar.map((g) => (
             <div key={g.repartidorId} className="rounded-xl border border-slate-200 p-4">
               <div className="flex justify-between font-bold">
-                <span>🛵 {g.repartidor}</span>
+                <span><Ico n="moto" /> {g.repartidor}</span>
                 <span>Debe rendir {soles(g.cobrar)}</span>
               </div>
               {g.pedidos.map((p) => (
@@ -268,7 +272,7 @@ function NuevoPedido({ canal, alCerrar, alTerminar }: { canal: 'LLEVAR' | 'DELIV
   const panel = (
     <div className="space-y-2 text-sm">
       <h3 className="text-lg font-bold">
-        {CANAL[canal].icono} {CANAL[canal].texto}
+        <Ico n={CANAL[canal].icono} /> {CANAL[canal].texto}
       </h3>
       {canal === 'DELIVERY' && (
         <>
@@ -363,7 +367,7 @@ function HojaDeRuta({ p, alCerrar }: { p: PedidoTablero; alCerrar: () => void })
         </div>
         <div className="no-imprimir mt-3 grid grid-cols-2 gap-2">
           <button className="btn-secundario" onClick={() => window.print()}>
-            🖨 Imprimir
+            <Ico n="impresora" /> Imprimir
           </button>
           <button className="btn-primario" onClick={alCerrar}>
             Listo

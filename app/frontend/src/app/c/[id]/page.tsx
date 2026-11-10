@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { use } from 'react';
 import { TicketComprobante, useComprobante } from '@/components/ComprobanteImpreso';
 
@@ -8,13 +9,13 @@ export default function PaginaComprobante({ params }: { params: Promise<{ id: st
   const { c, qr, error } = useComprobante(id, true);
   return (
     <main className="flex min-h-screen flex-col items-center gap-4 bg-slate-100 p-4">
-      <h1 className="no-imprimir mt-4 text-xl font-extrabold">🍗 Tu comprobante</h1>
+      <h1 className="no-imprimir mt-4 text-xl font-extrabold">Tu comprobante</h1>
       {error && <p className="font-semibold text-red-600">{error}</p>}
       {!c && !error && <p>Cargando…</p>}
       {c && <TicketComprobante c={c} qr={qr} />}
       {c && (
         <button className="btn-primario no-imprimir" onClick={() => window.print()}>
-          ⬇ Guardar como PDF
+          <Ico n="descarga" /> Guardar como PDF
         </button>
       )}
     </main>

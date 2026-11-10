@@ -1,3 +1,4 @@
+import type { NombreIcono } from '@/components/Ico';
 export interface Opcion { id: string; nombre: string; recargo: number; agotado: boolean }
 export interface Grupo { id: string; nombre: string; obligatorio: boolean; minimo: number; maximo: number; opciones: Opcion[] }
 export interface Producto {
@@ -109,19 +110,19 @@ export interface CuentaDetalle {
 
 export const precioItem = (i: ItemCarrito) => (i.producto.precio + i.opciones.reduce((s, o) => s + o.recargo, 0)) * i.cantidad;
 
-export const ESTADO_MESA: Record<Mesa['estado'], { texto: string; icono: string; caja: string; punto: string }> = {
-  LIBRE: { texto: 'Libre', icono: '✓', caja: 'border-green-600 bg-green-50 text-green-800', punto: 'bg-green-600' },
-  POR_CONFIRMAR: { texto: 'Por confirmar', icono: '⏳', caja: 'border-amber-500 bg-amber-50 text-amber-800', punto: 'bg-amber-500' },
-  OCUPADA: { texto: 'Ocupada', icono: '●', caja: 'border-red-600 bg-red-50 text-red-800', punto: 'bg-red-600' },
-  CUENTA_SOLICITADA: { texto: 'Pidió la cuenta', icono: '🧾', caja: 'border-blue-600 bg-blue-50 text-blue-800', punto: 'bg-blue-600' },
-  POR_LIMPIAR: { texto: 'Por limpiar', icono: '🧹', caja: 'border-slate-500 bg-slate-100 text-slate-700', punto: 'bg-slate-500' },
+export const ESTADO_MESA: Record<Mesa['estado'], { texto: string; icono: NombreIcono; caja: string; punto: string }> = {
+  LIBRE: { texto: 'Libre', icono: 'check', caja: 'border-green-300 bg-green-50 text-green-800', punto: 'bg-green-600' },
+  POR_CONFIRMAR: { texto: 'Por confirmar', icono: 'reloj', caja: 'border-amber-400 bg-amber-50 text-amber-900', punto: 'bg-amber-500' },
+  OCUPADA: { texto: 'Ocupada', icono: 'usuarios', caja: 'border-red-300 bg-red-50 text-red-800', punto: 'bg-red-600' },
+  CUENTA_SOLICITADA: { texto: 'Pidió la cuenta', icono: 'recibo', caja: 'border-blue-300 bg-blue-50 text-blue-800', punto: 'bg-blue-600' },
+  POR_LIMPIAR: { texto: 'Por limpiar', icono: 'repetir', caja: 'border-slate-300 bg-slate-100 text-slate-700', punto: 'bg-slate-500' },
 };
 
-export const CANAL: Record<Comanda['canal'], { texto: string; icono: string; color: string }> = {
-  SALON: { texto: 'Salón', icono: '🍽', color: 'bg-red-100 text-red-800' },
-  LLEVAR: { texto: 'Para llevar', icono: '🛍', color: 'bg-amber-100 text-amber-800' },
-  DELIVERY: { texto: 'Delivery', icono: '🛵', color: 'bg-blue-100 text-blue-800' },
-  APP_EXTERNA: { texto: 'App externa', icono: '📲', color: 'bg-purple-100 text-purple-800' },
+export const CANAL: Record<Comanda['canal'], { texto: string; icono: NombreIcono; color: string }> = {
+  SALON: { texto: 'Salón', icono: 'mesa', color: 'bg-red-100 text-red-800' },
+  LLEVAR: { texto: 'Para llevar', icono: 'bolsa', color: 'bg-amber-100 text-amber-800' },
+  DELIVERY: { texto: 'Delivery', icono: 'moto', color: 'bg-blue-100 text-blue-800' },
+  APP_EXTERNA: { texto: 'App externa', icono: 'celular', color: 'bg-purple-100 text-purple-800' },
 };
 
 export const MEDIO: Record<string, string> = {

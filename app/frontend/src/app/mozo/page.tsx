@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useSesion } from '@/lib/sesion';
@@ -103,11 +104,11 @@ export default function PaginaMozo() {
       <div className="grid gap-4 p-4 xl:grid-cols-[1fr_380px]">
         <div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xl font-bold">Plano del salón</h2>
+            <h2 className="font-titulo text-3xl uppercase tracking-wide">Plano del salón</h2>
             <div className="flex flex-wrap gap-3 text-sm text-slate-600">
               {Object.entries(ESTADO_MESA).map(([k, v]) => (
                 <span key={k} className="flex items-center gap-1">
-                  <span className={`h-3 w-3 rounded ${v.punto}`} />
+                  <span className={`h-3 w-3 rounded-full ${v.punto}`} />
                   {v.texto}
                 </span>
               ))}
@@ -120,19 +121,20 @@ export default function PaginaMozo() {
                 <button
                   key={m.id}
                   onClick={() => setSel(m)}
-                  className={`min-h-36 rounded-2xl border-2 p-4 text-left transition ${e.caja} ${sel?.id === m.id ? 'ring-4 ring-slate-900/70' : ''} ${m.estado === 'POR_CONFIRMAR' ? 'parpadeo' : ''}`}
+                  aria-pressed={sel?.id === m.id}
+                  className={`min-h-36 rounded-2xl border-2 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] ${e.caja} ${sel?.id === m.id ? 'ring-4 ring-brasa-700' : ''} ${m.estado === 'POR_CONFIRMAR' ? 'parpadeo' : ''}`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-extrabold text-slate-900">{m.numero}</span>
+                    <span className="font-titulo text-3xl tracking-wide text-slate-900">{m.numero}</span>
                     <span className={`h-3 w-3 rounded-full ${e.punto}`} />
                   </div>
                   <div className="mt-2 text-sm font-bold">
-                    {e.icono} {e.texto}
+                    <Ico n={e.icono} /> {e.texto}
                   </div>
                   <div className="text-xs text-slate-600">{m.apertura && m.estado !== 'LIBRE' ? `${minutosDesde(m.apertura)} en mesa` : `${m.capacidad} sillas`}</div>
-                  {m.editandoPor && m.editandoPor.usuarioId !== sesion.usuario.id && <div className="mt-1 text-xs font-bold text-amber-800">✏️ {m.editandoPor.nombre} tomando pedido</div>}
-                  {m.unidaA && <div className="mt-1 text-xs font-bold text-slate-700">🔗 Unida a {m.unidaA}</div>}
-                  {m.unidas.length > 0 && <div className="mt-1 text-xs font-bold text-slate-700">🔗 + {m.unidas.join(', ')}</div>}
+                  {m.editandoPor && m.editandoPor.usuarioId !== sesion.usuario.id && <div className="mt-1 text-xs font-bold text-amber-800"><Ico n="lapiz" /> {m.editandoPor.nombre} tomando pedido</div>}
+                  {m.unidaA && <div className="mt-1 text-xs font-bold text-slate-700"><Ico n="enlace" /> Unida a {m.unidaA}</div>}
+                  {m.unidas.length > 0 && <div className="mt-1 text-xs font-bold text-slate-700"><Ico n="enlace" /> + {m.unidas.join(', ')}</div>}
                   {m.total > 0 && !m.unidaA && <div className="mt-2 text-lg font-bold text-slate-900">{soles(m.total)}</div>}
                 </button>
               );
@@ -144,7 +146,7 @@ export default function PaginaMozo() {
               <div className="flex flex-wrap items-center gap-3">
                 <h3 className="text-2xl font-extrabold">Mesa {cuenta?.mesa ?? sel.numero}</h3>
                 <span className={`rounded-full border px-3 py-1 text-sm font-bold ${ESTADO_MESA[sel.estado].caja}`}>{ESTADO_MESA[sel.estado].texto}</span>
-                {cuenta?.pagoEnLinea && <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-800">💳 Pagando en línea…</span>}
+                {cuenta?.pagoEnLinea && <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-800"><Ico n="tarjeta" /> Pagando en línea…</span>}
                 <div className="flex-1" />
                 {cuenta && <span className="text-xl font-bold">Total {soles(cuenta.total)}</span>}
               </div>
@@ -161,7 +163,7 @@ export default function PaginaMozo() {
                 )}
                 {cuenta && cuenta.total > 0 && (
                   <button className="btn-secundario" onClick={() => setPrecuenta(true)}>
-                    🧾 Precuenta
+                    <Ico n="recibo" /> Precuenta
                   </button>
                 )}
                 {enUso && !sel.unidaA && sel.unidas.length === 0 && (
@@ -171,7 +173,7 @@ export default function PaginaMozo() {
                 )}
                 {enUso && !sel.unidaA && (
                   <button className="btn-secundario" onClick={() => setModo((v) => (v === 'unir' ? null : 'unir'))}>
-                    🔗 Unir otra mesa
+                    <Ico n="enlace" /> Unir otra mesa
                   </button>
                 )}
                 {sel.unidaA && sel.estado !== 'POR_LIMPIAR' && (

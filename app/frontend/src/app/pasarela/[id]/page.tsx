@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { Suspense, use, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -86,7 +87,7 @@ function Pasarela({ id }: { id: string }) {
 
           {resultado ? (
             <div className="p-6 text-center">
-              <div className="text-6xl">{resultado.estado === 'APROBADO' ? '✅' : '❌'}</div>
+              <Ico n={resultado.estado === 'APROBADO' ? 'checkCirculo' : 'xCirculo'} className={`text-7xl ${resultado.estado === 'APROBADO' ? 'text-green-600' : 'text-red-600'}`} />
               <h1 className="mt-2 text-xl font-bold">{resultado.estado === 'APROBADO' ? 'Pago aprobado' : 'Pago rechazado'}</h1>
               {resultado.motivo && <p className="text-slate-500">{resultado.motivo}</p>}
               <a href={volver} className="btn-primario mt-5 w-full bg-indigo-700 hover:bg-indigo-800">
@@ -165,7 +166,7 @@ function Pasarela({ id }: { id: string }) {
             </div>
           )}
         </div>
-        <p className="mt-4 text-center text-xs text-slate-400">🔒 El sistema no guarda tu tarjeta ni tu código de aprobación.</p>
+        <p className="mt-4 text-center text-xs text-slate-400"><Ico n="candado" /> El sistema no guarda tu tarjeta ni tu código de aprobación.</p>
       </div>
     </main>
   );

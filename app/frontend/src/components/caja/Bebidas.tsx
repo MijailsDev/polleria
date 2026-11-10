@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { CANAL, Comanda } from '@/lib/tipos';
@@ -48,7 +49,7 @@ export function Bebidas({ pedidos, alCambio, alAviso }: { pedidos: Comanda[]; al
         <p className="text-sm text-slate-500">Las bebidas no van al pollero: salen de la refrigeradora de caja. La ticketera de caja imprime cada pedido con un pitido.</p>
       </div>
       {pedidos.length === 0 ? (
-        <div className="tarjeta grid place-items-center p-10 text-slate-500">No hay bebidas pendientes. 🥤</div>
+        <div className="tarjeta grid place-items-center p-10 text-slate-500">No hay bebidas pendientes.</div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {pedidos.map((p) => {
@@ -63,7 +64,7 @@ export function Bebidas({ pedidos, alCambio, alAviso }: { pedidos: Comanda[]; al
                     </div>
                   </div>
                   <span className={`rounded px-1.5 text-xs font-bold ${CANAL[p.canal].color}`}>
-                    {CANAL[p.canal].icono} {CANAL[p.canal].texto}
+                    <Ico n={CANAL[p.canal].icono} /> {CANAL[p.canal].texto}
                   </span>
                 </div>
                 <ul className="my-3 flex-1 space-y-1">
@@ -97,7 +98,7 @@ export function Bebidas({ pedidos, alCambio, alAviso }: { pedidos: Comanda[]; al
                   ))}
                 </ul>
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-sm font-semibold ${espera >= 5 ? 'text-red-600' : 'text-slate-500'}`}>⏱ {minutosDesde(p.impresoEn ?? p.creadoEn)}</span>
+                  <span className={`text-sm font-semibold ${espera >= 5 ? 'text-red-600' : 'text-slate-500'}`}><Ico n="reloj" /> {minutosDesde(p.impresoEn ?? p.creadoEn)}</span>
                   <button className="btn-primario min-h-12 px-5" onClick={() => entregar(p)}>
                     Entregado ✓
                   </button>

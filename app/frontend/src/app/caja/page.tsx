@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useSesion } from '@/lib/sesion';
@@ -69,14 +70,14 @@ export default function PaginaCaja() {
         cargarListas();
         cargarCuenta(sel);
       },
-      'gaveta:abrir': (d) => setAviso({ texto: `🗄 Gaveta abierta (${d?.motivo ?? 'cobro'})`, tipo: 'ok' }),
+      'gaveta:abrir': (d) => setAviso({ texto: `Gaveta abierta (${d?.motivo ?? 'cobro'})`, tipo: 'ok' }),
       alerta: (a) => {
         if (['PAGO_EN_LINEA', 'STOCK', 'DELIVERY', 'SUNAT', 'IMPRESORA'].includes(a.tipo)) {
           pitido(2, 1000);
           setAviso({ texto: a.mensaje, tipo: a.tipo === 'PAGO_EN_LINEA' ? 'ok' : 'error' });
         }
       },
-      'inventario:alerta': (a) => setAviso({ texto: `⚠ ${a.mensaje}`, tipo: 'error' }),
+      'inventario:alerta': (a) => setAviso({ texto: a.mensaje, tipo: 'error' }),
     },
     [sel],
   );
@@ -91,9 +92,9 @@ export default function PaginaCaja() {
         titulo="Caja"
         sesion={sesion}
         extra={
-          <nav className="flex flex-wrap gap-1">
+          <nav aria-label="Secciones de caja" className="order-last flex w-full gap-1 overflow-x-auto whitespace-nowrap lg:order-none lg:w-auto">
             {PESTANAS.map((p) => (
-              <button key={p.clave} className={`rounded-lg px-3 py-2 text-sm font-semibold ${pestana === p.clave ? 'bg-brasa-700' : 'hover:bg-slate-800'}`} onClick={() => setPestana(p.clave)}>
+              <button key={p.clave} aria-current={pestana === p.clave ? 'page' : undefined} className={`min-h-10 rounded-lg px-3 text-sm font-semibold transition ${pestana === p.clave ? 'bg-brasa-600 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white'}`} onClick={() => setPestana(p.clave)}>
                 {p.texto}
                 {p.clave === 'bebidas' && bebidas.pedidos.length > 0 && <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 text-xs font-extrabold text-slate-900">{bebidas.pedidos.length}</span>}
               </button>
@@ -147,7 +148,7 @@ export default function PaginaCaja() {
                     <span>
                       <span className="font-bold">{c.origen}</span>
                       <span className={`mt-1 block w-fit rounded px-1.5 text-xs font-bold ${CANAL[c.canal].color}`}>
-                        {CANAL[c.canal].icono} {CANAL[c.canal].texto}
+                        <Ico n={CANAL[c.canal].icono} /> {CANAL[c.canal].texto}
                         {c.despacho ? ` · ${c.despacho.toLowerCase().replace('_', ' ')}` : ''}
                       </span>
                     </span>

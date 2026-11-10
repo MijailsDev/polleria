@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { CuentaDetalle, ItemComanda } from '@/lib/tipos';
@@ -49,7 +50,7 @@ export function DetalleCuenta({
             <div className="flex-1" />
             {!compacto && p.estado !== 'POR_CONFIRMAR' && p.estado !== 'PROGRAMADO' && (
               <button className="rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-white" onClick={() => ejecutar(() => api('POST', `/pedidos/${p.id}/reimprimir`), 'Comanda reimpresa en cocina')}>
-                🖨 Reimprimir
+                <Ico n="impresora" /> Reimprimir
               </button>
             )}
             {p.estado === 'EN_PREPARACION' && (
@@ -159,7 +160,7 @@ export function PrecuentaImpresa({ cuenta, alCerrar }: { cuenta: CuentaDetalle; 
         </div>
         <div className="no-imprimir mt-3 grid grid-cols-2 gap-2">
           <button className="btn-secundario" onClick={() => window.print()}>
-            🖨 Imprimir
+            <Ico n="impresora" /> Imprimir
           </button>
           <button className="btn-primario" onClick={alCerrar}>
             Listo

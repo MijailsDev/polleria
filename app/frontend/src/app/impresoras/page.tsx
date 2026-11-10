@@ -1,4 +1,6 @@
 'use client';
+import { Emblema } from '@/components/Logo';
+import { Ico } from '@/components/Ico';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -44,7 +46,7 @@ export default function PaginaImpresoras() {
     <main className="min-h-screen bg-stone-800 text-stone-900">
       <header className="flex flex-wrap items-center gap-3 bg-stone-950 px-4 py-3 text-white">
         <Link href="/" className="text-lg font-bold">
-          🍗 <span className="text-brasa-200">Pollería</span>
+          <Emblema className="inline h-7 w-7" /> <span className="text-brasa-200">Brasa Dorada</span>
         </Link>
         <h1 className="text-lg font-semibold">Impresoras térmicas</h1>
         <div className="flex-1" />
@@ -83,7 +85,7 @@ export default function PaginaImpresoras() {
                       {l.t || ' '}
                     </div>
                   ))}
-                  {t.tipo !== 'GAVETA' && <div className="mt-3 border-t border-dashed border-stone-400 pt-1 text-center text-[10px] text-stone-400">✂ corte</div>}
+                  {t.tipo !== 'GAVETA' && <div className="mt-3 border-t border-dashed border-stone-400 pt-1 text-center text-[10px] text-stone-400"><Ico n="tijera" /> corte</div>}
                 </article>
               ))}
             </div>

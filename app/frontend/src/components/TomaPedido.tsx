@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useEffect, useState } from 'react';
 import { api, ErrorApi } from '@/lib/api';
 import { Categoria, ItemCarrito, precioItem, Producto } from '@/lib/tipos';
@@ -140,7 +141,7 @@ export function TomaPedido({
             </div>
           ))}
         </div>
-        {ocupadaPor && <p className="mx-4 mb-2 rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900">🔒 {ocupadaPor}</p>}
+        {ocupadaPor && <p className="mx-4 mb-2 rounded-xl bg-amber-100 p-3 text-sm font-semibold text-amber-900"><Ico n="candado" /> {ocupadaPor}</p>}
         {error && <p className="px-4 pb-2 text-sm font-semibold text-red-600">{error}</p>}
         <div className="border-t border-slate-100 p-4">
           <button className="btn-primario w-full text-lg" disabled={!carrito.length || enviando || !!ocupadaPor} onClick={comandar}>

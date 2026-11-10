@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { CuentaDetalle, MEDIO } from '@/lib/tipos';
@@ -99,7 +100,7 @@ export function Cobro({
           <div className="flex-1" />
           {cuenta.total > 0 && (
             <button className="btn-secundario min-h-10 px-3 text-sm" onClick={() => setPrecuenta(true)}>
-              🧾 Precuenta
+              <Ico n="recibo" /> Precuenta
             </button>
           )}
           {cuenta.estado === 'ABIERTA' && cuenta.pagos.length === 0 && cuenta.total > 0 && (
@@ -114,7 +115,7 @@ export function Cobro({
         {(cuenta.bolsas > 0 || (cuenta.estado === 'ABIERTA' && cuenta.pagos.length === 0 && cuenta.total > 0)) && (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 p-2 text-sm">
             <span className="flex-1">
-              🛍 Bolsas plásticas <span className="text-slate-500">(ICBPER S/ 0.50 c/u)</span>
+              <Ico n="bolsa" /> Bolsas plásticas <span className="text-slate-500">(ICBPER S/ 0.50 c/u)</span>
             </span>
             {cuenta.pagos.length === 0 && cuenta.estado === 'ABIERTA' && (
               <button className="btn-secundario min-h-9 w-9 p-0" aria-label="Quitar bolsa" disabled={cuenta.bolsas === 0} onClick={() => bolsas(cuenta.bolsas - 1)}>
@@ -145,7 +146,7 @@ export function Cobro({
             {cuenta.comprobantes.map((c) => (
               <div key={c.id} className="flex items-center gap-2 text-sm">
                 <button className="chip-off" onClick={() => alVerComprobante(c.id)}>
-                  {c.tipo === 'NOTA_CREDITO' ? '↩' : '🧾'} {c.numero}
+                  <Ico n={c.tipo === 'NOTA_CREDITO' ? 'deshacer' : 'recibo'} /> {c.numero}
                 </button>
                 <span className={c.anulado ? 'text-slate-400 line-through' : ''}>{soles(c.total)}</span>
                 {c.estadoSunat === 'PENDIENTE' && <span className="rounded bg-amber-100 px-2 text-xs font-bold text-amber-800">en cola</span>}
@@ -165,14 +166,14 @@ export function Cobro({
       {cuenta.estado === 'ANULADA' ? (
         <section className="tarjeta grid place-items-center p-8 text-center">
           <div>
-            <div className="text-5xl">🚫</div>
+            <Ico n="prohibido" className="text-6xl text-slate-500" />
             <h3 className="mt-2 text-xl font-bold">Cuenta anulada</h3>
           </div>
         </section>
       ) : cuenta.saldo <= 0 ? (
         <section className="tarjeta grid place-items-center p-8 text-center">
           <div>
-            <div className="text-5xl">✅</div>
+            <Ico n="checkCirculo" className="text-6xl text-green-600" />
             <h3 className="mt-2 text-xl font-bold">Cuenta pagada</h3>
             <p className="text-slate-500">{cuenta.mesaId ? 'La mesa pasó a «Por limpiar». El mozo la marcará como libre.' : 'Entrega el pedido cuando esté listo.'}</p>
           </div>
@@ -180,7 +181,7 @@ export function Cobro({
       ) : cuenta.pagoEnLinea ? (
         <section className="tarjeta grid place-items-center p-8 text-center">
           <div>
-            <div className="text-5xl">💳</div>
+            <Ico n="tarjeta" className="text-6xl text-brasa-700" />
             <h3 className="mt-2 text-xl font-bold">El comensal está pagando desde su celular</h3>
             <p className="text-slate-500">La cuenta queda bloqueada hasta 10 minutos mientras se confirma el pago.</p>
           </div>

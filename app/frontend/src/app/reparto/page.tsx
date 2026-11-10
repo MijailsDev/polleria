@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useSesion } from '@/lib/sesion';
@@ -69,10 +70,10 @@ export default function PaginaReparto() {
               </div>
               <div className="font-semibold">{d.cliente}</div>
               <a className="text-blue-700 underline" href={`tel:${d.celular}`}>
-                📞 {d.celular}
+                <Ico n="telefono" /> {d.celular}
               </a>
               <div className="mt-1">
-                📍 <b>{d.direccion}</b>
+                <Ico n="ubicacion" /> <b>{d.direccion}</b>
                 {d.referencia && <span className="text-slate-600"> · {d.referencia}</span>}
               </div>
               <a className="text-sm text-blue-700 underline" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/${encodeURIComponent(d.direccion + ', Puerto Maldonado')}`}>

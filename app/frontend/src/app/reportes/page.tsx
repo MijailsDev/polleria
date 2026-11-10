@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import { api, descargarArchivo } from '@/lib/api';
 import { useSesion } from '@/lib/sesion';
@@ -64,7 +65,7 @@ function Seccion({ titulo, csv, filas, children }: { titulo: string; csv?: strin
         <h3 className="font-bold">{titulo}</h3>
         {csv && filas && filas.length > 0 && (
           <button className="no-imprimir ml-auto rounded-lg px-2 py-1 text-xs font-semibold text-brasa-700 hover:bg-brasa-50" onClick={() => descargarCsv(csv, filas)}>
-            ⬇ CSV
+            <Ico n="descarga" /> CSV
           </button>
         )}
       </div>
@@ -122,10 +123,10 @@ export default function PaginaReportes() {
           className="btn-verde"
           onClick={() => descargarArchivo(`/reportes/excel?desde=${desde}&hasta=${hasta}`, `reporte_${desde}${hasta !== desde ? '_' + hasta : ''}.xlsx`).catch((e) => setAviso({ texto: e.message, tipo: 'error' }))}
         >
-          ⬇ Excel (.xlsx)
+          <Ico n="descarga" /> Excel (.xlsx)
         </button>
         <button className="btn-secundario" onClick={() => window.print()}>
-          🖨 Imprimir o guardar PDF
+          <Ico n="impresora" /> Imprimir o guardar PDF
         </button>
       </div>
       {r && (
@@ -143,7 +144,7 @@ export default function PaginaReportes() {
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <section className="tarjeta p-4">
-              <h3 className="font-bold">⭐ Calificación de los comensales</h3>
+              <h3 className="font-bold"><Ico n="estrella" llena className="text-amber-500" /> Calificación de los comensales</h3>
               {r.calificaciones.cantidad === 0 ? (
                 <p className="text-sm text-slate-500">Aún no hay calificaciones en este periodo.</p>
               ) : (
@@ -188,7 +189,7 @@ export default function PaginaReportes() {
               <Barras filas={r.porMedio.map((m) => ({ ...m, medio: MEDIO[m.medio] ?? m.medio }))} etiqueta="medio" valor="total" />
             </Seccion>
             <Seccion titulo="Por canal" csv="ventas_por_canal" filas={r.porCanal}>
-              <Barras filas={r.porCanal.map((c) => ({ ...c, canal: `${CANAL[c.canal]?.icono ?? ''} ${CANAL[c.canal]?.texto ?? c.canal}` }))} etiqueta="canal" valor="total" />
+              <Barras filas={r.porCanal.map((c) => ({ ...c, canal: CANAL[c.canal]?.texto ?? c.canal }))} etiqueta="canal" valor="total" />
             </Seccion>
             <Seccion titulo="Por cajero" csv="ventas_por_cajero" filas={r.porCajero}>
               <Barras filas={r.porCajero} etiqueta="cajero" valor="total" />

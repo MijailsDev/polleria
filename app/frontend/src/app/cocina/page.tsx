@@ -1,4 +1,6 @@
 'use client';
+import { Emblema } from '@/components/Logo';
+import { Ico } from '@/components/Ico';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -111,27 +113,29 @@ export default function PaginaCocina() {
   const visibles = comandas.filter((c) => c.items.some((i) => i.cocina ?? i.destino !== 'CAJA'));
 
   return (
-    <div className="min-h-screen bg-stone-800 text-stone-900">
-      <header className="flex flex-wrap items-center gap-3 bg-stone-950 px-4 py-3 text-white">
-        <Link href="/" className="text-lg font-bold">
-          🔥 Estación del pollero
+    <div className="min-h-screen bg-slate-900 text-stone-900">
+      <header className="sticky top-0 z-20 flex flex-wrap items-center gap-3 border-b border-white/10 bg-slate-950 px-4 py-3 text-white" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
+        <Link href="/" className="inline-flex items-center gap-2.5">
+          <Emblema className="h-10 w-10" />
+          <span className="font-titulo text-2xl uppercase tracking-wide">Cocina</span>
         </Link>
-        <span className="text-sm text-stone-400">Simulación de la ticketera con buzzer · el botón «Listo» es solo para la demo</span>
-        <span className={`rounded-full px-3 py-1 text-xs font-bold ${carga.demora ? 'bg-red-500' : 'bg-stone-700'}`}>
+        <span className="hidden text-sm text-slate-400 lg:inline">Estación del pollero · el botón «Listo» es solo para la demo</span>
+        <span className={`etiqueta text-sm ${carga.demora ? 'bg-red-600 text-white' : 'bg-white/10 text-white'}`}>
+          <Ico n="llama" />
           {carga.pendientes} en cola{carga.demora ? ' · la carta avisa demora' : ''}
         </span>
         <div className="flex-1" />
-        <span className={`rounded-full px-3 py-1 text-xs font-bold ${conectado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {conectado ? '● En línea' : '● Sin conexión'}
+        <span role="status" className={`etiqueta ${conectado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <span className={`h-2 w-2 rounded-full ${conectado ? 'bg-green-600' : 'bg-red-600'}`} /> {conectado ? 'En línea' : 'Sin conexión'}
         </span>
         <button
-          className={`rounded-lg px-4 py-2 font-bold ${sonido ? 'bg-green-600' : 'bg-amber-500 text-black'}`}
+          className={`inline-flex min-h-12 items-center gap-2 rounded-xl px-4 font-bold transition ${sonido ? 'bg-green-700 text-white' : 'bg-amber-400 text-slate-950 parpadeo'}`}
           onClick={() => {
             setSonido((s) => !s);
             if (!sonido) pitido(1);
           }}
         >
-          {sonido ? '🔊 Alarma activada' : '🔇 Toca para activar la alarma'}
+          <Ico n={sonido ? 'sonido' : 'silencio'} /> {sonido ? 'Alarma activada' : 'Toca para activar la alarma'}
         </button>
       </header>
       <main className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -143,22 +147,26 @@ export default function PaginaCocina() {
             </button>
           </article>
         ))}
-        {visibles.length === 0 && especiales.length === 0 && <p className="col-span-full mt-20 text-center text-xl text-stone-300">Sin comandas pendientes 👍</p>}
+        {visibles.length === 0 && especiales.length === 0 && <div className="col-span-full mt-24 text-center text-slate-300">
+            <Ico n="checkCirculo" className="text-6xl text-green-500" />
+            <p className="mt-3 text-2xl font-semibold">Sin comandas pendientes</p>
+            <p className="text-slate-400">Las nuevas aparecerán aquí y sonará la alarma.</p>
+          </div>}
         {visibles.map((c) => {
           const min = Math.floor((Date.now() - new Date(c.impresoEn ?? c.creadoEn).getTime()) / 60000);
           return (
             <article key={c.id} className={`bg-white p-4 font-mono shadow-lg ${nuevas.has(c.id) ? 'parpadeo' : ''}`} style={{ clipPath: SIERRA }}>
               <Ticket c={c} marca={c.reposicion ? 'REPOSICIÓN – SIN COSTO' : c.horaProgramada ? 'PROGRAMADO' : undefined} />
               <div className={`mt-1 border-t-2 border-dashed border-stone-400 pt-2 text-center text-sm font-bold ${min >= 15 ? 'text-red-600' : 'text-stone-500'}`}>
-                {min >= 15 ? `⚠ ${minutosDesde(c.impresoEn)} esperando` : `hace ${minutosDesde(c.impresoEn)}`}
+                {min >= 15 ? `ATENCIÓN: ${minutosDesde(c.impresoEn)} esperando` : `hace ${minutosDesde(c.impresoEn)}`}
               </div>
               {/* Solo para la demo: la ticketera real no tiene botones; en el local el mozo marca «Servido» desde su tablet */}
               <button
-                className="mt-2 w-full rounded border-2 border-dashed border-green-700 bg-green-50 py-2 font-sans font-bold text-green-800"
+                className="mt-2 min-h-12 w-full rounded-lg bg-green-700 py-2 font-sans text-lg font-bold text-white hover:bg-green-800"
                 title="En el local real la ticketera no tiene botones: el mozo marca el pedido como servido desde su tablet."
                 onClick={() => api('POST', `/cocina/${c.id}/listo`).then(cargar).catch(() => {})}
               >
-                ✓ Listo <span className="text-xs font-semibold">(simulación)</span>
+                <Ico n="check" /> Listo <span className="text-xs font-medium">(simulación)</span>
               </button>
             </article>
           );

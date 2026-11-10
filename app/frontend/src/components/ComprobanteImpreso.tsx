@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { urlComensal } from '@/lib/modo';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
@@ -143,7 +144,7 @@ export function ComprobanteImpreso({ id, vuelto, alCerrar }: { id: string; vuelt
           {c ? <TicketComprobante c={c} qr={qr} /> : <div className="w-[320px] bg-white p-5">Cargando…</div>}
           <div className="no-imprimir mt-3 grid grid-cols-2 gap-2">
             <button className="btn-secundario" onClick={() => window.print()}>
-              🖨 Imprimir
+              <Ico n="impresora" /> Imprimir
             </button>
             <button className="btn-primario" onClick={alCerrar}>
               Listo

@@ -1,4 +1,5 @@
 'use client';
+import { Ico } from '@/components/Ico';
 import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { api } from '@/lib/api';
@@ -50,7 +51,7 @@ function VentanaCodigo({ c, alCerrar }: { c: Codigo; alCerrar: () => void }) {
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={alCerrar}>
       <div className="tarjeta w-full max-w-sm p-6 text-center animar-entrada" onClick={(e) => e.stopPropagation()}>
         <div className="text-sm font-semibold text-slate-600">
-          {tipoEquipo(c.tipo).icono} {c.nombre}
+          <Ico n={tipoEquipo(c.tipo).icono} /> {c.nombre}
         </div>
         <h2 className="mt-1 text-lg font-bold">Código de vinculación</h2>
         <div className="my-3 rounded-xl bg-slate-900 py-3 font-mono text-4xl font-black tracking-widest text-white">{c.codigo}</div>
@@ -109,7 +110,7 @@ function DosPasos({ alAviso }: { alAviso: Avisar }) {
 
   return (
     <section className="tarjeta p-5">
-      <h2 className="text-lg font-bold">🔐 Verificación en dos pasos (tu cuenta)</h2>
+      <h2 className="text-lg font-bold"><Ico n="escudo" /> Verificación en dos pasos (tu cuenta)</h2>
       <p className="mt-1 text-sm text-slate-600">
         Además de tu contraseña y PIN, al ingresar te pedirá el código de 6 dígitos de una app autenticadora gratuita (Google Authenticator o Microsoft Authenticator). Si alguien roba tu contraseña, igual no puede entrar sin tu celular.
       </p>
@@ -194,10 +195,10 @@ export function Seguridad({ alAviso }: { alAviso: Avisar }) {
       <div className="space-y-4">
         <section className={`rounded-2xl border p-4 ${exige ? 'border-green-300 bg-green-50' : 'border-amber-300 bg-amber-50'}`}>
           {exige ? (
-            <p className="font-semibold text-green-900">🔒 Solo los equipos vinculados ven al personal e ingresan con PIN. Desde cualquier otro equipo solo entra el administrador, con contraseña.</p>
+            <p className="font-semibold text-green-900"><Ico n="candado" /> Solo los equipos vinculados ven al personal e ingresan con PIN. Desde cualquier otro equipo solo entra el administrador, con contraseña.</p>
           ) : (
             <>
-              <p className="font-semibold text-amber-900">⚠ Modo abierto: cualquier equipo puede ver la lista del personal e intentar un PIN.</p>
+              <p className="font-semibold text-amber-900"><Ico n="alerta" /> Modo abierto: cualquier equipo puede ver la lista del personal e intentar un PIN.</p>
               <p className="mt-1 text-sm text-amber-900">
                 En la nube (producción) siempre se exige. Vincula primero este equipo y los demás, y luego actívalo.
                 {vinculados === 0 && ' Aún no hay equipos vinculados.'}
@@ -213,7 +214,7 @@ export function Seguridad({ alAviso }: { alAviso: Avisar }) {
         </section>
 
         <section className="tarjeta p-5">
-          <h2 className="text-lg font-bold">🔗 Equipos vinculados</h2>
+          <h2 className="text-lg font-bold"><Ico n="enlace" /> Equipos vinculados</h2>
           <p className="mt-1 text-sm text-slate-600">Cada tablet, caja, pantalla de cocina o celular de reparto se autoriza una vez con un código de un solo uso. Si se pierde o lo roban, desvincúlalo y sus sesiones se cierran al instante.</p>
           <div className="mt-4 flex flex-wrap items-end gap-2">
             <label className="min-w-48 flex-1">
@@ -225,7 +226,7 @@ export function Seguridad({ alAviso }: { alAviso: Avisar }) {
               <select className="campo" value={nuevo.tipo} onChange={(e) => setNuevo({ ...nuevo, tipo: e.target.value as TipoEquipo })}>
                 {TIPOS_EQUIPO.map((t) => (
                   <option key={t.tipo} value={t.tipo}>
-                    {t.icono} {t.nombre} · {t.quien}
+                    {t.nombre} · {t.quien}
                   </option>
                 ))}
               </select>
@@ -243,7 +244,9 @@ export function Seguridad({ alAviso }: { alAviso: Avisar }) {
             {equipos.length === 0 && <p className="text-slate-500">Todavía no hay equipos.</p>}
             {equipos.map((e) => (
               <div key={e.id} className={`flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 p-3 ${e.activo ? '' : 'opacity-60'}`}>
-                <div className="text-2xl">{tipoEquipo(e.tipo).icono}</div>
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brasa-100 text-xl text-brasa-800">
+                  <Ico n={tipoEquipo(e.tipo).icono} />
+                </div>
                 <div className="min-w-40 flex-1">
                   <div className="font-bold">
                     {e.nombre} {esteEquipo === e.id && <span className="ml-1 rounded-full bg-slate-900 px-2 py-0.5 text-xs text-white">este equipo</span>}
@@ -274,7 +277,7 @@ export function Seguridad({ alAviso }: { alAviso: Avisar }) {
       <div className="space-y-4">
         <DosPasos alAviso={alAviso} />
         <section className="tarjeta p-5">
-          <h2 className="text-lg font-bold">🚨 Intentos sospechosos (últimos 10 min)</h2>
+          <h2 className="text-lg font-bold"><Ico n="alerta" /> Intentos sospechosos (últimos 10 min)</h2>
           <p className="mt-1 text-sm text-slate-600">Al pasar el límite te llega un WhatsApp al celular del dueño (Configuración → celular_dueno) y queda en la bitácora.</p>
           <table className="mt-3 w-full text-sm">
             <tbody>
