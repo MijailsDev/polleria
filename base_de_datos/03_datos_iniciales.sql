@@ -84,10 +84,13 @@ BEGIN
 END;
 $$;
 
--- RN-01: presa obligatoria en octavos y cuartos (un 1/8 consume medio cuarto)
+-- RN-01: presa obligatoria en octavos y cuartos. El octavo es medio cuarto:
+-- el cuarto de pecho da Pecho y Ala; el de pierna, Pierna y Encuentro (ver 09_octavos.sql)
 CALL pg_temp.agregar_grupo(ARRAY['1/8 Pollo a la brasa', 'Mostrito 1/8'], 'Presa', true, 1, 1,
-  '[["Pecho con ala", 0, {"cuartos_pecho": 0.5}],
-    ["Pierna con encuentro", 0, {"cuartos_pierna": 0.5}]]');
+  '[["Pecho", 0, {"cuartos_pecho": 0.5}],
+    ["Ala", 0, {"cuartos_pecho": 0.5}],
+    ["Pierna", 0, {"cuartos_pierna": 0.5}],
+    ["Encuentro", 0, {"cuartos_pierna": 0.5}]]');
 
 CALL pg_temp.agregar_grupo(ARRAY['1/4 Pollo a la brasa', 'Mostrito 1/4'], 'Presa', true, 1, 1,
   '[["Pecho con ala", 0, {"cuartos_pecho": 1}],

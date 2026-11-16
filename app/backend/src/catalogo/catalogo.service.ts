@@ -21,7 +21,7 @@ export class CatalogoService {
             componentes: { include: { componente: { select: { nombre: true, agotado: true, activo: true } } } },
             grupo_modificador: {
               orderBy: [{ obligatorio: 'desc' }, { nombre: 'asc' }],
-              include: { opcion_modificador: { orderBy: { recargo: 'asc' } } },
+              include: { opcion_modificador: { orderBy: [{ recargo: 'asc' }, { nombre: 'asc' }] } },
             },
           },
         },

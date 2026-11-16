@@ -92,7 +92,7 @@ export class AdminService {
         producto: {
           orderBy: [{ activo: 'desc' }, { precio: 'asc' }],
           include: {
-            grupo_modificador: { orderBy: { nombre: 'asc' }, include: { opcion_modificador: { orderBy: { recargo: 'asc' } } } },
+            grupo_modificador: { orderBy: { nombre: 'asc' }, include: { opcion_modificador: { orderBy: [{ recargo: 'asc' }, { nombre: 'asc' }] } } },
             precio_canal: true,
             producto_foto: { select: { actualizado_en: true } },
             componentes: { include: { componente: { select: { nombre: true } } } },
