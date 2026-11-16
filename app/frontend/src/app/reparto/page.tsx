@@ -6,8 +6,13 @@ import { useSesion } from '@/lib/sesion';
 import { Comanda } from '@/lib/tipos';
 import { hora, pitido, soles, useEventos } from '@/lib/util';
 import { Aviso, Encabezado } from '@/components/Encabezado';
+import { urlComensal } from '@/lib/modo';
 
-interface Pedido extends Comanda { total: number; saldo: number }
+interface Pedido extends Comanda {
+  total: number;
+  saldo: number;
+  comprobantes?: { tipo: 'BOLETA' | 'FACTURA'; numero: string }[];
+}
 
 /** Celular del repartidor (REQ-DEL-05): sus pedidos, cuánto cobrar, vuelto y cambio de estado. */
 export default function PaginaReparto() {
@@ -36,8 +41,13 @@ export default function PaginaReparto() {
 
   async function estado(p: Pedido, e: 'ENTREGADO' | 'FALLIDO') {
     try {
-      await api('POST', `/despacho/${p.id}/estado`, { estado: e });
-      setAviso({ texto: e === 'ENTREGADO' ? 'Entrega registrada ✓' : 'Entrega fallida registrada', tipo: e === 'ENTREGADO' ? 'ok' : 'error' });
+      // Al entregar, el sistema le envía al cliente su boleta por WhatsApp con este enlace
+      await api('POST', `/despacho/${p.id}/estado`, { estado: e, enlaceBase: urlComensal() });
+      const conBoleta = e === 'ENTREGADO' && (p.comprobantes?.length ?? 0) > 0;
+      setAviso({
+        texto: e === 'ENTREGADO' ? (conBoleta ? 'Entrega registrada ✓ · boleta enviada al WhatsApp del cliente' : 'Entrega registrada ✓') : 'Entrega fallida registrada',
+        tipo: e === 'ENTREGADO' ? 'ok' : 'error',
+      });
       cargar();
     } catch (err: any) {
       setAviso({ texto: err.message, tipo: 'error' });
@@ -80,9 +90,39 @@ export default function PaginaReparto() {
                 Abrir en el mapa
               </a>
               <div className="mt-2 text-sm text-slate-600">{p.items.map((i) => `${i.cantidad}× ${i.producto}`).join(', ')}</div>
-              <div className="mt-3 rounded-xl bg-slate-900 p-3 text-center text-lg font-black text-white">
-                {p.saldo > 0 ? `COBRAR ${soles(p.saldo)}${vuelto > 0 ? ` · VUELTO ${soles(vuelto)}` : ''}` : 'PAGADO · NO COBRAR'}
-              </div>
+              {p.saldo > 0 ? (
+                <div className="mt-3 overflow-hidden rounded-xl bg-slate-900 text-white">
+                  <div className="p-3 text-center">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-white/60">Cobrar</div>
+                    <div className="text-3xl font-black">{soles(p.saldo)}</div>
+                  </div>
+                  <div className="grid grid-cols-2 divide-x divide-white/15 border-t border-white/15 text-center">
+                    <div className="p-2.5">
+                      <div className="text-xs text-white/60">Paga con</div>
+                      <div className="inline-flex items-center gap-1.5 text-lg font-bold text-amber-200">
+                        <Ico n="billete" /> {d.pagaCon ? soles(d.pagaCon) : 'Exacto'}
+                      </div>
+                    </div>
+                    <div className="p-2.5">
+                      <div className="text-xs text-white/60">Llevar de vuelto</div>
+                      <div className="text-lg font-bold">{vuelto > 0 ? soles(vuelto) : '—'}</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-xl bg-green-700 p-3 text-center text-lg font-black text-white">PAGADO · NO COBRAR</div>
+              )}
+              {(p.comprobantes?.length ?? 0) > 0 && (
+                <div className="mt-2 flex items-start gap-2 rounded-xl bg-brasa-50 p-2.5 text-sm text-brasa-900">
+                  <Ico n="recibo" className="mt-0.5 shrink-0" />
+                  <span>
+                    <b>
+                      {p.comprobantes!.map((c) => `${c.tipo === 'FACTURA' ? 'Factura' : 'Boleta'} ${c.numero}`).join(', ')}
+                    </b>{' '}
+                    va en la bolsa. Al marcar «Entregado» también le llega al cliente por WhatsApp.
+                  </span>
+                </div>
+              )}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button className="btn-verde" onClick={() => estado(p, 'ENTREGADO')}>
                   ✓ Entregado

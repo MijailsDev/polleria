@@ -136,7 +136,7 @@ export function Despacho({ alAviso, alCobrar }: { alAviso: Avisar; alCobrar: (cu
                           <button
                             className="btn-primario min-h-9 px-2 text-xs"
                             disabled={!asignar[p.id]}
-                            onClick={() => accion(() => api('POST', `/despacho/${p.id}/estado`, { estado: 'EN_RUTA', repartidorId: asignar[p.id] }), 'Pedido en ruta').then(() => setHoja(p))}
+                            onClick={() => accion(() => api('POST', `/despacho/${p.id}/estado`, { estado: 'EN_RUTA', repartidorId: asignar[p.id] }), 'Pedido en ruta · su boleta se imprimió para ir en la bolsa').then(() => setHoja(p))}
                           >
                             Salir a ruta
                           </button>

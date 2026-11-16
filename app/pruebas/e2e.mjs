@@ -134,16 +134,22 @@ check('Cliente de delivery se autocompleta', cli?.nombre === 'Lucía Torres' && 
 const enRutaAntes = await req('POST', `/despacho/${del.body.id}/estado`, { estado: 'EN_RUTA', repartidorId: id('REPARTIDOR') }, caja);
 check('No sale a ruta si cocina no termina', enRutaAntes.status === 400);
 await req('POST', `/cocina/${del.body.id}/listo`);
-check('Sale a ruta con repartidor', (await req('POST', `/despacho/${del.body.id}/estado`, { estado: 'EN_RUTA', repartidorId: id('REPARTIDOR') }, caja)).status === 201);
+const salida = await req('POST', `/despacho/${del.body.id}/estado`, { estado: 'EN_RUTA', repartidorId: id('REPARTIDOR') }, caja);
+check('Sale a ruta con repartidor', salida.status === 201);
+check('Al salir se emite la boleta que va en la bolsa', salida.body.comprobantes?.length === 1, JSON.stringify(salida.body));
 const mis = (await req('GET', '/reparto/mis-pedidos', null, repa)).body;
-check('El repartidor ve su pedido', mis.some((p) => p.id === del.body.id));
-check('El repartidor marca entregado', (await req('POST', `/despacho/${del.body.id}/estado`, { estado: 'ENTREGADO' }, repa)).status === 201);
+const miDel = mis.find((p) => p.id === del.body.id);
+check('El repartidor ve su pedido, con cuánto paga y su boleta', miDel?.delivery?.pagaCon === 50 && miDel.comprobantes?.[0]?.numero?.startsWith('B001-'), JSON.stringify(miDel?.comprobantes));
+check('El repartidor marca entregado', (await req('POST', `/despacho/${del.body.id}/estado`, { estado: 'ENTREGADO', enlaceBase: 'http://localhost:3000' }, repa)).status === 201);
 const pl = (await req('GET', '/repartidores/por-liquidar', null, caja)).body;
 const g = pl.find((x) => x.repartidorId === id('REPARTIDOR'));
 // El 1/4 de pollo cuesta S/ 26.00 en delivery (precio por canal de 06_produccion.sql) + gaseosa 4.50
 check('Liquidación: cobrar 30.50 y vuelto 19.50 (precio de delivery)', g?.cobrar === 30.5 && g.pedidos.some((p) => p.vuelto === 19.5), JSON.stringify(g));
 const liq = await req('POST', `/repartidores/${id('REPARTIDOR')}/liquidar`, { rendido: 30.5 }, caja);
 check('Liquidar repartidor', liq.status === 201 && liq.body.diferencia === 0, JSON.stringify(liq.body));
+check('La liquidación no duplica la boleta', liq.body.comprobantes?.length === 0, JSON.stringify(liq.body.comprobantes));
+const cDel = (await req('GET', `/cuentas/${del.body.cuentaId}`, null, caja)).body;
+check('Cuenta del delivery pagada con una sola boleta', cDel.estado === 'PAGADA', cDel.estado);
 
 const del2 = await req('POST', '/despacho/pedidos', { canal: 'DELIVERY', celular: '912345678', nombreCliente: 'Pedro', direccion: 'Av. Fitzcarrald 120', items: [itemCuarto()] }, caja);
 await req('POST', `/cocina/${del2.body.id}/listo`);
@@ -151,6 +157,8 @@ await req('POST', `/despacho/${del2.body.id}/estado`, { estado: 'EN_RUTA', repar
 await req('POST', `/despacho/${del2.body.id}/estado`, { estado: 'FALLIDO' }, repa);
 const resF = await req('POST', `/despacho/${del2.body.id}/fallido`, { destino: 'MERMA', pinAdmin: PIN }, caja);
 check('Entrega fallida resuelta como merma', resF.status === 201, JSON.stringify(resF.body));
+const cF = (await req('GET', `/cuentas/${del2.body.cuentaId}`, null, caja)).body;
+check('La boleta del delivery fallido se anula con nota de crédito', cF.estado === 'ANULADA' && (cF.comprobantes ?? []).some((c) => c.tipo === 'NOTA_CREDITO'), JSON.stringify(cF.comprobantes));
 
 const app = await req('POST', '/despacho/pedidos', { canal: 'APP_EXTERNA', codigoPlataforma: 'PY-' + (Date.now() % 100000), items: [itemCuarto()] }, caja);
 check('Pedido de app externa prepagado', app.body.origen?.startsWith('APP #PY-'));

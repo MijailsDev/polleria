@@ -34,8 +34,8 @@ export class DespachoController {
 
   @Post('despacho/:id/estado')
   @Roles('CAJERO', 'REPARTIDOR')
-  estado(@Param('id') id: string, @Body() body: { estado: string; repartidorId?: string }, @Req() req) {
-    return this.despacho.estado(id, body.estado, body.repartidorId, req.usuario);
+  estado(@Param('id') id: string, @Body() body: { estado: string; repartidorId?: string; enlaceBase?: string }, @Req() req) {
+    return this.despacho.estado(id, body.estado, body.repartidorId, req.usuario, body.enlaceBase);
   }
 
   @Post('despacho/:id/fallido')

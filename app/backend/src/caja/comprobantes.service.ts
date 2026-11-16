@@ -132,6 +132,59 @@ export class ComprobantesService implements OnModuleInit, OnModuleDestroy {
     return c;
   }
 
+  /** Boletas y facturas de la cuenta que no fueron anuladas con nota de crédito. */
+  vigentes(tx: Tx, cuentaId: string) {
+    return tx.comprobante.findMany({
+      where: { cuenta_id: cuentaId, tipo: { not: 'NOTA_CREDITO' }, other_comprobante: { none: {} } },
+      orderBy: { emitido_en: 'asc' },
+    });
+  }
+
+  /** Céntimos de la cuenta que aún no tienen comprobante (evita emitir dos boletas por la misma venta). */
+  async porComprobar(tx: Tx, cuentaId: string) {
+    const cuenta = await tx.cuenta.findUniqueOrThrow({ where: { id: cuentaId }, select: { total: true } });
+    const emitido = (await this.vigentes(tx, cuentaId)).reduce((s, c) => s + aCentimos(c.total), 0);
+    return Math.max(0, aCentimos(cuenta.total) - emitido);
+  }
+
+  /**
+   * El delivery sale del local: emite la boleta (o factura si el cliente dio RUC) por lo que falta
+   * comprobar, la envía a SUNAT y la imprime en caja para que viaje en la bolsa con el pedido.
+   * El cobro en efectivo se registra después, en la liquidación del repartidor.
+   */
+  async paraDelivery(cuentaId: string, cliente: { documento: string | null; nombre: string }) {
+    const r = await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(4242)`;
+      const pendiente = await this.porComprobar(tx, cuentaId);
+      let nuevo: string | null = null;
+      if (pendiente > 0) {
+        const documento = cliente.documento && (RE_DNI.test(cliente.documento) || RE_RUC.test(cliente.documento)) ? cliente.documento : null;
+        const tipo = documento && RE_RUC.test(documento) && rucValido(documento) ? 'FACTURA' : 'BOLETA';
+        this.validarCliente(tipo, pendiente, documento);
+        nuevo = (await this.emitir(tx, { cuentaId, tipo, total: pendiente, documento, nombre: cliente.nombre })).id;
+      }
+      return { nuevo, todos: (await this.vigentes(tx, cuentaId)).map((c) => c.id) };
+    });
+    if (r.nuevo) await this.enviarAhora([r.nuevo]);
+    for (const id of r.todos) await this.imprimir(id).catch((e) => this.log.warn(`No se imprimió el comprobante del delivery: ${e.message}`));
+    if (r.nuevo) this.eventos.emitir('estado:cambio', await this.estado());
+    return r.todos;
+  }
+
+  /** Envía por WhatsApp el enlace del comprobante al celular del cliente (REQ-FAC-06). */
+  async porWhatsapp(comprobanteId: string, celular: string, enlace: string) {
+    const c = await this.prisma.comprobante.findUnique({ where: { id: comprobanteId } });
+    if (!c) throw new NotFoundException('Comprobante no encontrado');
+    if (!/^https?:\/\/\S+$/.test(enlace ?? '')) throw new BadRequestException('Enlace inválido.');
+    const nombre = c.tipo === 'FACTURA' ? 'factura' : c.tipo === 'BOLETA' ? 'boleta' : 'nota de crédito';
+    return this.whatsapp.encolar(
+      celular,
+      'COMPROBANTE',
+      `${this.config.texto('razon_social')}: gracias por su compra. Su ${nombre} ${numeroComprobante(c.serie, c.correlativo)} por S/ ${Number(c.total).toFixed(2)} está aquí:`,
+      enlace,
+    );
+  }
+
   /** Envía uno o varios comprobantes al OSE esperando como máximo unos segundos (el resto sigue en cola). */
   async enviarAhora(ids: string[], maxMs = 4000) {
     await Promise.race([Promise.all(ids.map((id) => this.enviar(id).catch(() => undefined))), new Promise((r) => setTimeout(r, maxMs))]);

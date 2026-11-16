@@ -1,13 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../comun/prisma.service';
 import { BitacoraService } from '../comun/bitacora.service';
-import { recalcularCuenta } from '../comun/cuentas';
+import { numeroComprobante, recalcularCuenta } from '../comun/cuentas';
 import { aCentimos, aSoles } from '../comun/dinero';
 import { EventosGateway } from '../eventos/eventos.gateway';
 import { AuthService } from '../auth/auth.service';
 import { INCLUIR_COMANDA, ItemEntrada, PedidosService } from '../pedidos/pedidos.service';
 import { WhatsappService } from '../perifericos/whatsapp.service';
 import { ConfigService } from '../comun/config.service';
+import { ComprobantesService } from '../caja/comprobantes.service';
 
 export interface PedidoDespachoEntrada {
   canal: 'LLEVAR' | 'DELIVERY' | 'APP_EXTERNA';
@@ -35,6 +36,7 @@ export class DespachoService {
     private auth: AuthService,
     private whatsapp: WhatsappService,
     private config: ConfigService,
+    private comprobantes: ComprobantesService,
   ) {}
 
   /** Autocompleta al cliente de delivery por su celular (REQ-DEL-03). */
@@ -137,8 +139,12 @@ export class DespachoService {
     }));
   }
 
-  /** Asignar repartidor y cambiar el estado de despacho, desde la caja o el celular del repartidor. */
-  async estado(pedidoId: string, estado: string, repartidorId: string | undefined, usuario: { sub: string; rol: string }) {
+  /**
+   * Asignar repartidor y cambiar el estado de despacho, desde la caja o el celular del repartidor.
+   * Al salir el pedido se emite e imprime su boleta (va en la bolsa); al entregarlo, la boleta
+   * también le llega al cliente por WhatsApp. `enlaceBase` es la dirección del sitio del comensal.
+   */
+  async estado(pedidoId: string, estado: string, repartidorId: string | undefined, usuario: { sub: string; rol: string }, enlaceBase?: string) {
     if (!['PENDIENTE', 'EN_RUTA', 'ENTREGADO', 'FALLIDO'].includes(estado)) throw new BadRequestException('Estado no válido.');
     const d = await this.prisma.pedido_delivery.findUnique({ where: { pedido_id: pedidoId }, include: { pedido: { include: { cuenta: true } }, cliente: true } });
     if (!d) throw new NotFoundException('Pedido de delivery no encontrado');
@@ -165,20 +171,37 @@ export class DespachoService {
     }
     if (estado === 'ENTREGADO') {
       await this.whatsapp.encolar(d.cliente.celular, 'DELIVERY_ENTREGADO', `${local}: tu pedido ${codigo} fue entregado. ¡Gracias por tu preferencia! 🍗`).catch(() => undefined);
+      // Copia digital de la boleta que viajó en la bolsa
+      const base = enlaceBase?.trim().replace(/\/$/, '');
+      if (base && /^https?:\/\/\S+$/.test(base)) {
+        const vigentes = await this.prisma.$transaction((tx) => this.comprobantes.vigentes(tx, d.pedido.cuenta_id));
+        for (const c of vigentes) await this.comprobantes.porWhatsapp(c.id, d.cliente.celular, `${base}/c/${c.id}`).catch(() => undefined);
+      }
+    }
+    let boleta: string[] = [];
+    if (estado === 'EN_RUTA' && d.estado_despacho !== 'EN_RUTA') {
+      try {
+        boleta = await this.comprobantes.paraDelivery(d.pedido.cuenta_id, { documento: d.cliente.documento, nombre: d.cliente.nombre });
+      } catch (e) {
+        // No se detiene el despacho: la boleta se emite al liquidar y la caja ve el aviso
+        this.eventos.emitir('alerta', { tipo: 'DELIVERY', mensaje: `No se emitió la boleta del delivery ${codigo}: ${(e as Error).message}`, hora: new Date() });
+      }
     }
     this.eventos.emitir('despacho:cambio');
     if (estado === 'FALLIDO') this.eventos.emitir('alerta', { tipo: 'DELIVERY', mensaje: `Entrega fallida: delivery #D-${String(d.pedido.numero).padStart(2, '0')}`, hora: new Date() });
-    return { ok: true };
+    return { ok: true, comprobantes: boleta };
   }
 
   /**
    * Entrega fallida (REQ-DEL-08): la caja decide el destino del producto con PIN del administrador.
    * REINGRESO devuelve el pollo al stock; CONSUMO (personal) y MERMA lo registran como merma.
-   * Si la cuenta no estaba pagada se anula; si estaba pagada, corresponde una nota de crédito.
+   * Si la cuenta no estaba pagada se anula, y la boleta que salió en la bolsa se anula con nota de crédito.
+   * Si estaba pagada, la nota de crédito (con devolución) la decide la caja.
    */
   async resolverFallido(pedidoId: string, destino: 'REINGRESO' | 'CONSUMO' | 'MERMA', pinAdmin: string, usuarioId: string) {
     if (!['REINGRESO', 'CONSUMO', 'MERMA'].includes(destino)) throw new BadRequestException('Destino no válido.');
     const autorizadoPor = await this.auth.autorizarAdmin(pinAdmin);
+    const notas: string[] = [];
     await this.prisma.$transaction(async (tx) => {
       const d = await tx.pedido_delivery.findUnique({ where: { pedido_id: pedidoId }, include: { pedido: { include: { cuenta: { include: { pago: true } }, movimiento_inventario: true } } } });
       if (!d || d.estado_despacho !== 'FALLIDO') throw new BadRequestException('El pedido no está marcado como entrega fallida.');
@@ -197,10 +220,25 @@ export class DespachoService {
       }
       if (!d.pedido.cuenta.pago.length) {
         await tx.cuenta.update({ where: { id: d.pedido.cuenta_id }, data: { estado: 'ANULADA', motivo_anulacion: motivo.slice(0, 150) } });
+        for (const c of await this.comprobantes.vigentes(tx, d.pedido.cuenta_id)) {
+          const nc = await this.comprobantes.emitir(tx, {
+            cuentaId: c.cuenta_id,
+            tipo: 'NOTA_CREDITO',
+            total: aCentimos(c.total),
+            icbper: aCentimos(c.icbper),
+            documento: c.documento_cliente,
+            nombre: c.nombre_cliente,
+            referenciaId: c.id,
+            serieRef: c.serie,
+            motivo: `Entrega fallida #D-${d.pedido.numero}`,
+          });
+          notas.push(nc.id);
+        }
       }
       await tx.pedido_delivery.update({ where: { pedido_id: pedidoId }, data: { destino_fallido: destino, liquidado: true } });
       await this.bitacora.registrar('RESOLVER_FALLIDO', 'pedido', pedidoId, usuarioId, { destino, autorizadoPor, pagado: d.pedido.cuenta.pago.length > 0 }, tx);
     });
+    if (notas.length) await this.comprobantes.enviarAhora(notas);
     this.eventos.emitir('despacho:cambio');
     await this.pedidos.controlarStock(true);
     return { ok: true };
@@ -213,10 +251,17 @@ export class DespachoService {
       include: INCLUIR_COMANDA,
       orderBy: { creado_en: 'asc' },
     });
-    const cuentas = await this.prisma.cuenta.findMany({ where: { id: { in: ps.map((p) => p.cuenta_id) } } });
+    const ids = ps.map((p) => p.cuenta_id);
+    const cuentas = await this.prisma.cuenta.findMany({ where: { id: { in: ids } } });
+    // Boletas que viajan en la bolsa (sin anular)
+    const comps = await this.prisma.comprobante.findMany({
+      where: { cuenta_id: { in: ids }, tipo: { not: 'NOTA_CREDITO' }, other_comprobante: { none: {} } },
+      orderBy: { emitido_en: 'asc' },
+    });
     return ps.map((p) => {
       const c = cuentas.find((x) => x.id === p.cuenta_id)!;
-      return { ...this.pedidos.formatoComanda(p), total: Number(c.total), saldo: Number(c.saldo) };
+      const comprobantes = comps.filter((x) => x.cuenta_id === p.cuenta_id).map((x) => ({ tipo: x.tipo, numero: numeroComprobante(x.serie, x.correlativo) }));
+      return { ...this.pedidos.formatoComanda(p), total: Number(c.total), saldo: Number(c.saldo), comprobantes };
     });
   }
 }

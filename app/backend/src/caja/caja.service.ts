@@ -381,7 +381,12 @@ export class CajaService {
             },
           });
         }
-        const comprobante = await this.comprobantes.emitir(tx, { cuentaId: cuenta.id, tipo, total, documento, nombre: comp?.nombre });
+        // Si la venta ya tiene comprobante (delivery: la boleta salió en la bolsa), solo se registra el pago
+        const pendiente = await this.comprobantes.porComprobar(tx, cuenta.id);
+        const comprobante =
+          pendiente > 0
+            ? await this.comprobantes.emitir(tx, { cuentaId: cuenta.id, tipo, total: Math.min(total, pendiente), documento, nombre: comp?.nombre })
+            : (await this.comprobantes.vigentes(tx, cuenta.id)).at(-1)!;
         const c = await recalcularCuenta(tx, cuenta.id);
         const mesaId = cuenta.sesion_mesa?.mesa_id ?? null;
         if (c.estado === 'PAGADA' && mesaId) await this.salon.estadoMesa(tx, mesaId, 'POR_LIMPIAR');
@@ -474,7 +479,8 @@ export class CajaService {
   }
 
   /**
-   * Cobra en efectivo los deliveries entregados del repartidor (boleta por cada uno) y los marca liquidados.
+   * Cobra en efectivo los deliveries entregados del repartidor y los marca liquidados. La boleta ya
+   * se emitió al despachar (viajó en la bolsa); solo se emite aquí si faltara.
    * El repartidor declara lo que rinde; la diferencia queda en la bitácora.
    */
   async liquidar(repartidorId: string, rendido: number, usuarioId: string) {
@@ -492,8 +498,12 @@ export class CajaService {
         const saldo = aCentimos(d.pedido.cuenta.saldo);
         if (saldo > 0) {
           await tx.pago.create({ data: { cuenta_id: d.pedido.cuenta_id, turno_id: turno.id, medio: 'EFECTIVO', monto: aSoles(saldo), recibido: aSoles(saldo) } });
-          const c = await this.comprobantes.emitir(tx, { cuentaId: d.pedido.cuenta_id, tipo: 'BOLETA', total: saldo, documento: d.cliente.documento?.length === 8 ? d.cliente.documento : null, nombre: d.cliente.nombre });
-          comprobantes.push(c.id);
+          // La boleta normalmente ya salió con el pedido; solo se emite si falta (pedidos antiguos)
+          const pendiente = await this.comprobantes.porComprobar(tx, d.pedido.cuenta_id);
+          if (pendiente > 0) {
+            const c = await this.comprobantes.emitir(tx, { cuentaId: d.pedido.cuenta_id, tipo: 'BOLETA', total: Math.min(saldo, pendiente), documento: d.cliente.documento?.length === 8 ? d.cliente.documento : null, nombre: d.cliente.nombre });
+            comprobantes.push(c.id);
+          }
           await recalcularCuenta(tx, d.pedido.cuenta_id);
         }
         await tx.pedido_delivery.update({ where: { pedido_id: d.pedido_id }, data: { liquidado: true } });
@@ -521,7 +531,7 @@ export class CajaService {
     const mesaId = await this.prisma.$transaction(async (tx) => {
       const cuenta = await tx.cuenta.findUnique({ where: { id: cuentaId }, include: { pago: true, sesion_mesa: true } });
       if (!cuenta || cuenta.estado !== 'ABIERTA') throw new BadRequestException('La cuenta no está abierta.');
-      if (cuenta.pago.length) throw new BadRequestException('Registra las bolsas antes del primer cobro.');
+      if (cuenta.pago.length || (await this.comprobantes.vigentes(tx, cuentaId)).length) throw new BadRequestException('Registra las bolsas antes del primer cobro o de emitir la boleta.');
       await tx.cuenta.update({ where: { id: cuentaId }, data: { bolsas: n } });
       await recalcularCuenta(tx, cuentaId);
       await this.bitacora.cambio('BOLSAS', 'cuenta', cuentaId, usuarioId, { bolsas: cuenta.bolsas }, { bolsas: n }, tx);
@@ -533,16 +543,7 @@ export class CajaService {
   }
 
   /** Envía el enlace del comprobante por WhatsApp al celular del cliente (REQ-FAC-06). */
-  async whatsappComprobante(comprobanteId: string, celular: string, enlace: string) {
-    const c = await this.prisma.comprobante.findUnique({ where: { id: comprobanteId } });
-    if (!c) throw new NotFoundException('Comprobante no encontrado');
-    if (!/^https?:\/\/\S+$/.test(enlace ?? '')) throw new BadRequestException('Enlace inválido.');
-    const nombre = c.tipo === 'FACTURA' ? 'factura' : c.tipo === 'BOLETA' ? 'boleta' : 'nota de crédito';
-    return this.whatsapp.encolar(
-      celular,
-      'COMPROBANTE',
-      `${this.config.texto('razon_social')}: gracias por su compra. Su ${nombre} ${numeroComprobante(c.serie, c.correlativo)} por S/ ${Number(c.total).toFixed(2)} está aquí:`,
-      enlace,
-    );
+  whatsappComprobante(comprobanteId: string, celular: string, enlace: string) {
+    return this.comprobantes.porWhatsapp(comprobanteId, celular, enlace);
   }
 }
