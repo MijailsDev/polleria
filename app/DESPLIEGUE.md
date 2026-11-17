@@ -7,7 +7,7 @@ El sistema usa **tres servicios gratuitos** y **dos direcciones web** hechas con
 | Base de datos | Supabase (o Neon) | — | Solo la API |
 | API | Render | `https://polleria-api-0ukm.onrender.com` | Las dos webs |
 | Web del comensal | Vercel (proyecto 1) | `https://polleria-carta.vercel.app` | Clientes: carta QR, pago, comprobante, reclamos |
-| Web del personal | Vercel (proyecto 2) | `https://polleria-gestion.vercel.app` | Mozos, caja, cocina, reparto y dueño |
+| Web del personal | Vercel (proyecto 2) | `https://polleria-gestion-five.vercel.app` | Mozos, caja, cocina, reparto y dueño |
 
 Si alguien borra el final del enlace del QR, llega a la **portada del local**, no a las pantallas del personal. Escribir `/caja` o `/admin` en el dominio del comensal responde «Página no encontrada».
 
@@ -61,7 +61,7 @@ Variables de entorno (Environment):
 | `DATABASE_URL` | La cadena del Session pooler |
 | `JWT_SECRET` | 48 caracteres aleatorios. Genera uno con `node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"` |
 | `PASARELA_SECRETO` y `SYNC_SECRET` | Otros dos valores aleatorios, generados igual |
-| `CORS_ORIGIN` | Las dos webs, separadas por coma, por ejemplo `https://polleria-carta.vercel.app,https://polleria-gestion.vercel.app` |
+| `CORS_ORIGIN` | Las dos webs, separadas por coma, por ejemplo `https://polleria-carta.vercel.app,https://polleria-gestion-five.vercel.app` |
 | `TASA_IMPUESTO` | `0.105` |
 | `SIMULADORES` | `true` para la demostración (impresora virtual y WhatsApp simulado) |
 
