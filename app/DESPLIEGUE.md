@@ -5,7 +5,7 @@ El sistema usa **tres servicios gratuitos** y **dos direcciones web** hechas con
 | Pieza | Servicio | Ejemplo de dirección | Quién la usa |
 | :--- | :--- | :--- | :--- |
 | Base de datos | Supabase (o Neon) | — | Solo la API |
-| API | Render | `https://polleria-api.onrender.com` | Las dos webs |
+| API | Render | `https://polleria-api-0ukm.onrender.com` | Las dos webs |
 | Web del comensal | Vercel (proyecto 1) | `https://polleria-carta.vercel.app` | Clientes: carta QR, pago, comprobante, reclamos |
 | Web del personal | Vercel (proyecto 2) | `https://polleria-gestion.vercel.app` | Mozos, caja, cocina, reparto y dueño |
 
@@ -67,7 +67,7 @@ Variables de entorno (Environment):
 
 El servidor **se niega a arrancar** si encuentra PIN de prueba, la contraseña de prueba, `CORS_ORIGIN=*` o claves débiles. El registro (Logs) dice qué corregir.
 
-> Render gratis se duerme a los 15 minutos sin visitas. El flujo `.github/workflows/mantener-api-despierta.yml` lo despierta cada 10 minutos. Para activarlo, en GitHub ve a Settings → Secrets and variables → Actions → Variables y crea `API_URL` = `https://polleria-api.onrender.com/api`.
+> Render gratis se duerme a los 15 minutos sin visitas. El flujo `.github/workflows/mantener-api-despierta.yml` lo despierta cada 10 minutos. Para activarlo, en GitHub ve a Settings → Secrets and variables → Actions → Variables y crea `API_URL` = `https://polleria-api-0ukm.onrender.com/api`.
 
 ## Paso 3 · Las dos webs en Vercel
 
@@ -75,7 +75,7 @@ Importa el **mismo repositorio dos veces**. En ambos proyectos, Root Directory e
 
 | Variable | Proyecto `polleria-carta` | Proyecto `polleria-gestion` |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_API_URL` | `https://polleria-api.onrender.com` | `https://polleria-api.onrender.com` |
+| `NEXT_PUBLIC_API_URL` | `https://polleria-api-0ukm.onrender.com` | `https://polleria-api-0ukm.onrender.com` |
 | `NEXT_PUBLIC_MODO` | `comensal` | `personal` |
 | `NEXT_PUBLIC_URL_COMENSAL` | (no hace falta) | `https://polleria-carta.vercel.app` |
 
