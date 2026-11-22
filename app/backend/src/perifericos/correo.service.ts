@@ -40,14 +40,47 @@ class CorreoResend implements ProveedorCorreo {
   }
 }
 
+/** «La Brasa Dorada <hola@gmail.com>» → nombre y correo por separado. */
+function remitente(texto: string) {
+  const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(texto);
+  return m ? { name: m[1] || undefined, email: m[2].trim() } : { email: texto.trim() };
+}
+
+/**
+ * Brevo (https://www.brevo.com): gratis hasta 300 correos al día y no exige dominio propio;
+ * basta verificar el correo remitente. Se activa con BREVO_API_KEY y CORREO_REMITENTE.
+ */
+class CorreoBrevo implements ProveedorCorreo {
+  readonly nombre = 'Brevo';
+  readonly simulado = false;
+  constructor(private llave: string, private de: string) {}
+  async enviar(destino: string, asunto: string, texto: string) {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': this.llave, 'Content-Type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ sender: remitente(this.de), to: [{ email: destino }], subject: asunto, textContent: texto }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const j = (await r.json().catch(() => ({}))) as { messageId?: string; message?: string };
+    if (!r.ok || !j.messageId) throw new Error(j.message ?? `HTTP ${r.status}`);
+    return j.messageId;
+  }
+}
+
+function crearProveedorCorreo(): ProveedorCorreo {
+  const de = process.env.CORREO_REMITENTE?.trim();
+  if (de && process.env.BREVO_API_KEY) return new CorreoBrevo(process.env.BREVO_API_KEY, de);
+  if (de && process.env.RESEND_API_KEY) return new CorreoResend(process.env.RESEND_API_KEY, de);
+  return new CorreoSimulado();
+}
+
 /** Bandeja de salida de correos: códigos de verificación y promociones del programa de clientes frecuentes. */
 @Injectable()
 export class CorreoService implements OnModuleInit, OnModuleDestroy {
   private readonly log = new Logger('Correo');
   private reloj?: NodeJS.Timeout;
   private trabajando = false;
-  readonly proveedor: ProveedorCorreo =
-    process.env.RESEND_API_KEY && process.env.CORREO_REMITENTE ? new CorreoResend(process.env.RESEND_API_KEY, process.env.CORREO_REMITENTE) : new CorreoSimulado();
+  readonly proveedor: ProveedorCorreo = crearProveedorCorreo();
 
   constructor(private prisma: PrismaService, private config: ConfigService, private eventos: EventosGateway) {}
 

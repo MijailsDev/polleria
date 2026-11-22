@@ -64,7 +64,8 @@ Variables de entorno (Environment):
 | `CORS_ORIGIN` | Las dos webs, separadas por coma, por ejemplo `https://polleria-carta.vercel.app,https://polleria-gestion-five.vercel.app` |
 | `TASA_IMPUESTO` | `0.105` |
 | `SIMULADORES` | `true` para la demostración (impresora virtual, WhatsApp y correo simulados) |
-| `RESEND_API_KEY` y `CORREO_REMITENTE` | Opcionales. Para enviar de verdad los correos de los clientes frecuentes con Resend (por ejemplo `La Brasa Dorada <hola@tudominio.pe>`). Sin ellas, los correos llegan a la bandeja simulada `/correo`. |
+| `BREVO_API_KEY` y `CORREO_REMITENTE` | Correos reales (códigos y avisos de clientes frecuentes). Ver «Paso 5». Sin ellas, los correos llegan a la bandeja simulada `/correo`. |
+| `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` y `WHATSAPP_PLANTILLA_CODIGO` | WhatsApp real (Meta). Ver «Paso 5». Sin ellas, los mensajes llegan al celular simulado `/whatsapp`. |
 
 El servidor **se niega a arrancar** si encuentra PIN de prueba, la contraseña de prueba, `CORS_ORIGIN=*` o claves débiles. El registro (Logs) dice qué corregir.
 
@@ -103,6 +104,40 @@ Si pierdes una tablet o te la roban, desvincúlala en **Equipos y seguridad**: s
 ```sql
 UPDATE usuario SET totp_activo = false, totp_secreto = NULL WHERE nombre = 'Tu nombre';
 ```
+
+## Paso 5 · Correos y WhatsApp reales
+
+Sin estas variables, el sistema usa los simuladores (`/correo` y `/whatsapp`), ideales para la demostración. Para que los códigos de los clientes frecuentes lleguen de verdad:
+
+### Correo con Brevo (gratis, 300 correos al día, sin dominio propio)
+
+1. Crea una cuenta en brevo.com.
+2. En **Senders, domains & dedicated IPs → Senders**, agrega el correo que enviará los mensajes (por ejemplo, el Gmail de la pollería) y confírmalo con el enlace que te llega.
+3. En **SMTP & API → API keys**, crea una llave.
+4. En Render → Environment agrega:
+   * `BREVO_API_KEY` = la llave.
+   * `CORREO_REMITENTE` = `La Brasa Dorada <tucorreo@gmail.com>` (el correo confirmado en el punto 2).
+
+> Si el remitente es un Gmail, algunos correos pueden caer en *Spam* porque no hay dominio propio. Con un dominio (por ejemplo `labrasadorada.pe`) verificado en Brevo, llegan a la bandeja principal.
+
+### WhatsApp con Meta (WhatsApp Business Cloud API)
+
+1. En developers.facebook.com crea una app de tipo **Business** y agrégale el producto **WhatsApp**.
+2. Meta te da un **número de prueba** gratis: en **API Setup** agrega hasta 5 celulares que recibirán mensajes (te llega un código a cada uno). Para atender a cualquier cliente hay que registrar un número propio y un método de pago en el administrador de WhatsApp Business.
+3. En **WhatsApp Manager → Plantillas de mensajes**, crea una plantilla de categoría **Autenticación**, idioma **Español**, con el botón **Copiar código**. Usa un nombre como `codigo_verificacion` y espera a que Meta la apruebe.
+4. Crea un **usuario del sistema** en la configuración del negocio, dale acceso a la app y genera un **token permanente** con los permisos `whatsapp_business_messaging` y `whatsapp_business_management`.
+5. En Render → Environment agrega:
+   * `WHATSAPP_TOKEN` = el token permanente.
+   * `WHATSAPP_PHONE_ID` = el *Phone number ID* que aparece en **API Setup**.
+   * `WHATSAPP_PLANTILLA_CODIGO` = `codigo_verificacion` (el nombre de la plantilla).
+   * `WHATSAPP_IDIOMA` = `es` (o el código de idioma con que creaste la plantilla, por ejemplo `es_PE`).
+
+> Meta solo permite texto libre dentro de las 24 h siguientes a un mensaje del cliente. Los códigos usan la plantilla de autenticación y llegan siempre; los demás avisos (comprobantes, delivery) también necesitan plantillas aprobadas para llegar fuera de esa ventana.
+
+### Después de configurar
+
+* Al guardar las variables, Render reinicia la API. En **Administración → Sistema** aparece el proveedor activo (Brevo / WhatsApp Business).
+* Cambia `SIMULADORES` a `false` cuando ya no necesites las pantallas `/correo` y `/whatsapp`.
 
 ## Antes de cada demostración
 

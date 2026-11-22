@@ -11,7 +11,7 @@ const RE_CELULAR = /^9[0-9]{8}$/;
 interface ProveedorWhatsapp {
   readonly nombre: string;
   readonly simulado: boolean;
-  enviar(destino: string, texto: string): Promise<string>; // devuelve el id del mensaje
+  enviar(destino: string, texto: string, plantilla?: string): Promise<string>; // devuelve el id del mensaje
 }
 
 /** Simulación con el mismo ciclo de estados que la API de Meta: enviado → entregado → leído. */
@@ -26,18 +26,42 @@ class WhatsappSimulado implements ProveedorWhatsapp {
 
 /**
  * WhatsApp Business Cloud API de Meta. Se activa con WHATSAPP_TOKEN y WHATSAPP_PHONE_ID.
- * Fuera de la ventana de 24 h Meta exige plantillas aprobadas; aquí se envía texto
- * (válido dentro de la ventana) y la plantilla se registra para el seguimiento.
+ * Meta solo deja enviar texto libre dentro de las 24 h siguientes a un mensaje del cliente;
+ * fuera de esa ventana exige plantillas aprobadas. Los códigos de verificación de los clientes
+ * frecuentes van siempre con la plantilla de autenticación WHATSAPP_PLANTILLA_CODIGO
+ * (categoría «Autenticación», con botón «Copiar código»).
  */
 class WhatsappMeta implements ProveedorWhatsapp {
   readonly nombre = 'WhatsApp Business (Meta)';
   readonly simulado = false;
+  private readonly plantillaCodigo = process.env.WHATSAPP_PLANTILLA_CODIGO?.trim();
+  private readonly idioma = process.env.WHATSAPP_IDIOMA?.trim() || 'es';
   constructor(private token: string, private telefonoId: string) {}
-  async enviar(destino: string, texto: string) {
+
+  private cuerpo(destino: string, texto: string, plantilla?: string) {
+    const codigo = plantilla === 'CODIGO_CLIENTE' ? texto.match(/\b(\d{6})\b/)?.[1] : undefined;
+    if (codigo && this.plantillaCodigo)
+      return {
+        messaging_product: 'whatsapp',
+        to: `51${destino}`,
+        type: 'template',
+        template: {
+          name: this.plantillaCodigo,
+          language: { code: this.idioma },
+          components: [
+            { type: 'body', parameters: [{ type: 'text', text: codigo }] },
+            { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: codigo }] },
+          ],
+        },
+      };
+    return { messaging_product: 'whatsapp', to: `51${destino}`, type: 'text', text: { body: texto, preview_url: true } };
+  }
+
+  async enviar(destino: string, texto: string, plantilla?: string) {
     const r = await fetch(`https://graph.facebook.com/v21.0/${this.telefonoId}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', to: `51${destino}`, type: 'text', text: { body: texto, preview_url: true } }),
+      body: JSON.stringify(this.cuerpo(destino, texto, plantilla)),
       signal: AbortSignal.timeout(8000),
     });
     const j = (await r.json().catch(() => ({}))) as { messages?: { id: string }[]; error?: { message: string } };
@@ -84,7 +108,7 @@ export class WhatsappService implements OnModuleInit, OnModuleDestroy {
         const cola = await this.prisma.mensaje_saliente.findMany({ where: { estado: 'EN_COLA', intentos: { lt: 5 } }, orderBy: { creado_en: 'asc' }, take: 20 });
         for (const m of cola) {
           try {
-            const id = await this.proveedor.enviar(m.destino, m.texto);
+            const id = await this.proveedor.enviar(m.destino, m.texto, m.plantilla);
             await this.prisma.mensaje_saliente.update({ where: { id: m.id }, data: { estado: 'ENVIADO', id_externo: id, enviado_en: new Date(), intentos: { increment: 1 }, error: null } });
           } catch (e) {
             const intentos = m.intentos + 1;
