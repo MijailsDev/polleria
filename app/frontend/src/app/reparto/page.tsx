@@ -63,8 +63,8 @@ export default function PaginaReparto() {
     <div className="min-h-screen">
       <Encabezado titulo="Reparto" sesion={sesion} />
       <main className="mx-auto max-w-lg space-y-3 p-4">
-        <div className="tarjeta flex items-center justify-between p-4">
-          <span className="font-semibold">Efectivo por rendir en caja</span>
+        <div className="tarjeta flex items-center justify-between gap-3 p-4">
+          <span className="font-semibold leading-tight">Efectivo por rendir en caja</span>
           <b className="text-2xl">{soles(rendir)}</b>
         </div>
         <h2 className="text-lg font-bold">En ruta ({enRuta.length})</h2>
