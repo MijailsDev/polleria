@@ -45,7 +45,7 @@ export class AdminController {
   }
 
   @Patch('productos/:id')
-  editarProducto(@Param('id') id: string, @Body() b: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string }, @Req() req) {
+  editarProducto(@Param('id') id: string, @Body() b: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string; soloFrecuentes?: boolean }, @Req() req) {
     return this.admin.editarProducto(id, b, req.usuario.sub);
   }
 

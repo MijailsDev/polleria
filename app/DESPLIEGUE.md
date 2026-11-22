@@ -63,7 +63,8 @@ Variables de entorno (Environment):
 | `PASARELA_SECRETO` y `SYNC_SECRET` | Otros dos valores aleatorios, generados igual |
 | `CORS_ORIGIN` | Las dos webs, separadas por coma, por ejemplo `https://polleria-carta.vercel.app,https://polleria-gestion-five.vercel.app` |
 | `TASA_IMPUESTO` | `0.105` |
-| `SIMULADORES` | `true` para la demostración (impresora virtual y WhatsApp simulado) |
+| `SIMULADORES` | `true` para la demostración (impresora virtual, WhatsApp y correo simulados) |
+| `RESEND_API_KEY` y `CORREO_REMITENTE` | Opcionales. Para enviar de verdad los correos de los clientes frecuentes con Resend (por ejemplo `La Brasa Dorada <hola@tudominio.pe>`). Sin ellas, los correos llegan a la bandeja simulada `/correo`. |
 
 El servidor **se niega a arrancar** si encuentra PIN de prueba, la contraseña de prueba, `CORS_ORIGIN=*` o claves débiles. El registro (Logs) dice qué corregir.
 

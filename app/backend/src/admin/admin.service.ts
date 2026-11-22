@@ -112,6 +112,7 @@ export class AdminService {
         destino: p.destino_impresion,
         activo: p.activo,
         agotado: p.agotado,
+        soloFrecuentes: p.solo_frecuentes,
         descripcion: p.descripcion,
         tieneFoto: !!p.producto_foto,
         fotoUrl: p.producto_foto ? `/api/productos/${p.id}/foto?v=${+p.producto_foto.actualizado_en}` : null,
@@ -142,7 +143,7 @@ export class AdminService {
     return { id: c.id };
   }
 
-  private datosProducto(d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string }, nuevo: boolean) {
+  private datosProducto(d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string; soloFrecuentes?: boolean }, nuevo: boolean) {
     if (nuevo && !d.nombre?.trim()) throw new BadRequestException('Escribe el nombre del producto.');
     if (d.precio !== undefined && !(Number(d.precio) >= 0)) throw new BadRequestException('El precio debe ser un número mayor o igual a cero.');
     if (d.fraccionPollo !== undefined && !FRACCIONES.includes(Number(d.fraccionPollo))) throw new BadRequestException('La fracción de pollo debe ser 0, 1/8, 1/4, 1/2 o 1.');
@@ -155,6 +156,7 @@ export class AdminService {
       destino_impresion: d.destino,
       activo: d.activo,
       descripcion: d.descripcion === undefined ? undefined : d.descripcion.trim().slice(0, 200) || null,
+      solo_frecuentes: d.soloFrecuentes === undefined ? undefined : !!d.soloFrecuentes,
     };
   }
 
@@ -171,7 +173,7 @@ export class AdminService {
   }
 
   /** Al cambiar un precio, los pedidos anteriores conservan el suyo y el cambio queda en la bitácora (REQ-CAT-07). */
-  async editarProducto(id: string, d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string }, adminId: string) {
+  async editarProducto(id: string, d: { nombre?: string; precio?: number; categoriaId?: string; fraccionPollo?: number; destino?: string; activo?: boolean; descripcion?: string; soloFrecuentes?: boolean }, adminId: string) {
     const antes = await this.prisma.producto.findUnique({ where: { id } });
     if (!antes) throw new NotFoundException('Producto no encontrado');
     const datos = this.datosProducto(d, false);
@@ -182,8 +184,8 @@ export class AdminService {
       'producto',
       id,
       adminId,
-      { nombre: antes.nombre, precio: Number(antes.precio), activo: antes.activo, fraccion: Number(antes.fraccion_pollo), destino: antes.destino_impresion },
-      { nombre: p.nombre, precio: Number(p.precio), activo: p.activo, fraccion: Number(p.fraccion_pollo), destino: p.destino_impresion },
+      { nombre: antes.nombre, precio: Number(antes.precio), activo: antes.activo, fraccion: Number(antes.fraccion_pollo), destino: antes.destino_impresion, soloFrecuentes: antes.solo_frecuentes },
+      { nombre: p.nombre, precio: Number(p.precio), activo: p.activo, fraccion: Number(p.fraccion_pollo), destino: p.destino_impresion, soloFrecuentes: p.solo_frecuentes },
     );
     this.avisarCarta();
     return { ok: true };

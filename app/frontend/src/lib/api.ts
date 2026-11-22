@@ -2,15 +2,18 @@
 // así funciona tanto en la laptop (localhost) como en celulares y tablets de la red local.
 import { leerSesion, cerrarSesion } from './sesion';
 import { leerEquipo } from './equipo';
+import { leerCliente } from './cliente';
 
-/** Cabeceras de cada solicitud: sesión del personal y llave del equipo vinculado. */
+/** Cabeceras de cada solicitud: sesión del personal, llave del equipo vinculado y cliente frecuente. */
 function cabeceras(json: boolean) {
   const token = leerSesion()?.token;
   const equipo = leerEquipo()?.llave;
+  const cliente = leerCliente();
   return {
     ...(json ? { 'Content-Type': 'application/json' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(equipo ? { 'X-Equipo': equipo } : {}),
+    ...(cliente ? { 'X-Cliente': cliente } : {}),
   };
 }
 

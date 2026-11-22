@@ -4,14 +4,15 @@ import { AuthGuard, EquipoGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Impresora, ImpresionService } from './impresion.service';
 import { WhatsappService } from './whatsapp.service';
+import { CorreoService } from './correo.service';
 import { SincronizacionService } from './sincronizacion.service';
 
-/** Los simuladores (impresora virtual y celular de WhatsApp) se apagan con SIMULADORES=false. */
+/** Los simuladores (impresora virtual, celular de WhatsApp y bandeja de correo) se apagan con SIMULADORES=false. */
 const simuladores = () => process.env.SIMULADORES !== 'false';
 
 @Controller()
 export class PerifericosController {
-  constructor(private impresion: ImpresionService, private whatsapp: WhatsappService, private sync: SincronizacionService) {}
+  constructor(private impresion: ImpresionService, private whatsapp: WhatsappService, private correo: CorreoService, private sync: SincronizacionService) {}
 
   /** Rollo de papel de la impresora virtual (pantalla /impresoras). */
   @Get('impresoras/:impresora')
@@ -36,6 +37,14 @@ export class PerifericosController {
   chats() {
     if (!simuladores()) throw new ForbiddenException('Simuladores desactivados.');
     return this.whatsapp.chats();
+  }
+
+  /** Bandeja simulada de correo (pantalla /correo). */
+  @Get('correo/bandeja')
+  @UseGuards(EquipoGuard)
+  bandeja() {
+    if (!simuladores()) throw new ForbiddenException('Simuladores desactivados.');
+    return this.correo.bandeja();
   }
 
   /** Receptor del servidor en la nube: recibe los lotes firmados del local. */

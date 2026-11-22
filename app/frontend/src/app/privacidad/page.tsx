@@ -23,6 +23,9 @@ export default function PaginaPrivacidad() {
               <b>Envío del comprobante:</b> tu celular, solo si pides recibirlo por WhatsApp.
             </li>
             <li>
+              <b>Clientes frecuentes (opcional):</b> tu celular o tu correo, tu nombre si lo das y tus compras pagadas, para contar tus visitas y mostrarte combos exclusivos. Te enviamos promociones solo si marcas que las aceptas, y puedes retirar ese permiso desde la carta cuando quieras.
+            </li>
+            <li>
               <b>Libro de Reclamaciones:</b> los datos de la hoja, para atender tu reclamo dentro del plazo legal.
             </li>
             <li>
@@ -30,9 +33,9 @@ export default function PaginaPrivacidad() {
             </li>
           </ul>
           <h2>Con quién los compartimos</h2>
-          <p>Solo con quien es necesario: SUNAT y nuestro proveedor de facturación electrónica (comprobantes), la pasarela de pagos (pago en línea) y WhatsApp (mensajes que pediste). No vendemos ni cedemos tus datos.</p>
+          <p>Solo con quien es necesario: SUNAT y nuestro proveedor de facturación electrónica (comprobantes), la pasarela de pagos (pago en línea), WhatsApp y nuestro servicio de correo (mensajes que pediste). No vendemos ni cedemos tus datos.</p>
           <h2>Cuánto tiempo los guardamos</h2>
-          <p>Los datos de los comprobantes, el tiempo que exigen las normas tributarias. Los de delivery, mientras sigas pidiendo; puedes pedir que los borremos. Las hojas de reclamación, al menos dos años desde su registro.</p>
+          <p>Los datos de los comprobantes, el tiempo que exigen las normas tributarias. Los de delivery y del programa de clientes frecuentes, mientras sigas viniendo; puedes pedir que los borremos. Las hojas de reclamación, al menos dos años desde su registro.</p>
           <h2>Tus derechos</h2>
           <p>
             Puedes pedir acceder a tus datos, corregirlos, cancelarlos u oponerte a su uso (derechos ARCO) en el local o por el{' '}

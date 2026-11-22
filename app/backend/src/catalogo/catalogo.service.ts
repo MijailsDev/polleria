@@ -8,12 +8,12 @@ export class CatalogoService {
   constructor(private prisma: PrismaService, private eventos: EventosGateway, private bitacora: BitacoraService) {}
 
   /** Carta completa: categorías con productos activos, sus grupos y opciones, con el precio del canal (REQ-CAT-06). */
-  async carta(canal = 'SALON') {
+  async carta(canal = 'SALON', frecuente = false) {
     const categorias = await this.prisma.categoria.findMany({
       orderBy: { orden: 'asc' },
       include: {
         producto: {
-          where: { activo: true },
+          where: { activo: true, ...(frecuente ? {} : { solo_frecuentes: false }) },
           orderBy: { precio: 'asc' },
           include: {
             precio_canal: { where: { canal } },
@@ -27,7 +27,9 @@ export class CatalogoService {
         },
       },
     });
-    return categorias.map((c) => ({
+    return categorias
+      .filter((c) => c.producto.length)
+      .map((c) => ({
       id: c.id,
       nombre: c.nombre,
       productos: c.producto.map((p) => ({
@@ -41,6 +43,7 @@ export class CatalogoService {
         fotoUrl: p.producto_foto ? `/api/productos/${p.id}/foto?v=${+p.producto_foto.actualizado_en}` : p.foto_url,
         // Un combo se muestra agotado si falta alguno de sus componentes
         agotado: p.agotado || p.componentes.some((c) => c.componente.agotado || !c.componente.activo),
+        soloFrecuentes: p.solo_frecuentes,
         componentes: p.componentes.map((c) => `${c.cantidad} ${c.componente.nombre}`),
         grupos: p.grupo_modificador.map((g) => ({
           id: g.id,

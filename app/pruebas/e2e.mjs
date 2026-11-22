@@ -337,7 +337,21 @@ const hojaBase = { tipo: 'RECLAMO', nombre: 'Rosa Quispe', tipoDocumento: 'DNI',
 check('Reclamo sin aceptar el uso de datos rechazado', (await req('POST', '/reclamos', hojaBase)).status === 400);
 const rec = await req('POST', '/reclamos', { ...hojaBase, aceptaDatos: true });
 check('Registrar reclamo con código LR-AAAA-NNNNNN', rec.status === 201 && /^LR-\d{4}-\d{6}$/.test(rec.body.codigo), rec.body.codigo);
-check('Plazo de respuesta de 15 días hábiles', new Date(rec.body.plazo) - new Date(rec.body.fecha) >= 19 * 86400000);
+// Se cuentan los días de lunes a viernes entre el registro y el plazo (vale cualquier día de la semana)
+const diasHabiles = (desde, hasta) => {
+  let n = 0;
+  // El plazo se guarda como fecha (medianoche UTC): se cuenta en UTC
+  const d = new Date(desde);
+  d.setUTCHours(0, 0, 0, 0);
+  const fin = new Date(hasta);
+  fin.setUTCHours(0, 0, 0, 0);
+  while (d < fin) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) n++;
+  }
+  return n;
+};
+check('Plazo de respuesta de 15 días hábiles', diasHabiles(rec.body.fecha, rec.body.plazo) === 15, `${rec.body.fecha} → ${rec.body.plazo}`);
 check('El consumidor consulta su hoja', (await req('GET', `/reclamos/consulta?codigo=${rec.body.codigo}&documento=41234567`)).status === 200);
 check('Con otro documento no la ve', (await req('GET', `/reclamos/consulta?codigo=${rec.body.codigo}&documento=40000000`)).status === 404);
 const resp = await req('POST', `/reclamos/${rec.body.id}/responder`, { respuesta: 'Lamentamos lo ocurrido. Le reponemos el pedido sin costo.' }, admin);
@@ -498,6 +512,86 @@ for (let i = 0; i < 6 && !aviso; i++) {
 check('El dueño recibe por WhatsApp el aviso del equipo vinculado', !!aviso);
 const bitEq = (await req('GET', '/admin/bitacora?accion=EQUIPO_VINCULADO', null, admin)).body;
 check('La vinculación queda en la bitácora', Array.isArray(bitEq) && bitEq.length > 0);
+
+// ---------------------------------------------------------------- Clientes frecuentes (celular o correo)
+{
+  // Sesiones nuevas: las anteriores se cerraron al probar los equipos vinculados
+  const mozoF = (await req('POST', '/auth/login', { usuarioId: id('MOZO'), pin: '1111' })).body.token;
+  const cajaF = (await req('POST', '/auth/login', { usuarioId: id('CAJERO'), pin: '2222' })).body.token;
+  const admF = (await req('POST', '/auth/login', { usuarioId: id('ADMINISTRADOR'), pin: PIN, password: 'Admin2026!' })).body.token;
+  const celF = '9' + String(Date.now()).slice(-8);
+  const correoF = `prueba${Date.now()}@correo.pe`;
+  const exclusivosDe = (c) => c.flatMap((x) => x.productos).filter((p) => p.soloFrecuentes).map((p) => p.nombre);
+  check('La carta pública no muestra los combos exclusivos', exclusivosDe((await req('GET', '/carta')).body).length === 0);
+
+  // Código por WhatsApp
+  check('Contacto inválido rechazado', (await req('POST', '/frecuentes/codigo', { contacto: '12345' })).status === 400);
+  const cod = await req('POST', '/frecuentes/codigo', { contacto: celF });
+  check('Pide código por WhatsApp', cod.status === 201 && cod.body.canal === 'WHATSAPP' && cod.body.destino.includes('***'), JSON.stringify(cod.body));
+  check('No se puede pedir otro código antes de un minuto', (await req('POST', '/frecuentes/codigo', { contacto: celF })).status === 429);
+  const msj = (await req('GET', '/whatsapp/chats')).body.chats.find((c) => c.destino === celF)?.mensajes.at(-1)?.texto ?? '';
+  const codigoW = msj.match(/(\d{6})/)?.[1];
+  check('El código llega al WhatsApp del cliente', !!codigoW, msj);
+  check('Código incorrecto rechazado', (await req('POST', '/frecuentes/verificar', { contacto: celF, codigo: codigoW === '000000' ? '111111' : '000000' })).status === 400);
+  const ver = await req('POST', '/frecuentes/verificar', { contacto: celF, codigo: codigoW, nombre: 'Carlos Prueba', aceptaPromociones: true });
+  check('Confirma el celular y recibe su sesión', !!ver.body.token && ver.body.cliente?.compras === 0 && ver.body.cliente?.frecuente === false, JSON.stringify(ver.body));
+  check('El mismo código no sirve dos veces', (await req('POST', '/frecuentes/verificar', { contacto: celF, codigo: codigoW })).status === 400);
+  const X = { 'X-Cliente': ver.body.token };
+  check('Sesión falsificada rechazada', (await req('GET', '/frecuentes/yo', null, null, { 'X-Cliente': ver.body.token.slice(0, -3) + 'abc' })).status === 401);
+
+  // Regla de prueba: 1 compra basta para ser frecuente
+  await req('PATCH', '/admin/config/frecuente_compras', { valor: 1 }, admF);
+  mesas = (await req('GET', '/mesas', null, mozoF)).body;
+  const mF = mesas.find((m) => m.estado === 'LIBRE');
+  const qrF = (await req('GET', `/qr/${mF.numero}`)).body;
+  check('Antes de comprar aún no ve los combos exclusivos', exclusivosDe((await req('GET', '/carta', null, null, X)).body).length === 0);
+  const exclusivo = (await req('GET', '/admin/carta', null, admF)).body.flatMap((c) => c.productos).find((p) => p.soloFrecuentes && p.activo);
+  const itemCombo = { productoId: exclusivo.id, cantidad: 1, opciones: exclusivo.grupos.map((g) => g.opciones[0].id) };
+  check('Un combo exclusivo no se puede pedir sin ser frecuente', (await req('POST', '/qr/pedidos', { token: qrF.token, items: [itemCombo] }, null, X)).status === 400);
+
+  // Compra pagada desde el celular identificado
+  const pF = await req('POST', '/qr/pedidos', { token: qrF.token, items: [itemCuarto()] }, null, X);
+  await req('POST', `/pedidos/${pF.body.pedidoId}/confirmar`, null, mozoF);
+  const iniF = await req('POST', '/qr/pago/iniciar', { token: qrF.token }, null, X);
+  await req('POST', `/pasarela/${iniF.body.intentoId}/pagar`, { medio: 'YAPE', celular: celF, aprobacion: '123456' });
+  const yo = (await req('GET', '/frecuentes/yo', null, null, X)).body;
+  check('La compra pagada suma y ya es cliente frecuente', yo.compras === 1 && yo.frecuente === true, JSON.stringify(yo));
+  check('Ahora ve los combos exclusivos en la carta', exclusivosDe((await req('GET', '/carta', null, null, X)).body).length >= 1);
+  let bienvenida;
+  for (let i = 0; i < 5 && !bienvenida; i++) {
+    await espera(1000);
+    bienvenida = (await req('GET', '/whatsapp/chats')).body.chats.find((c) => c.destino === celF)?.mensajes.find((m) => m.plantilla === 'CLIENTE_FRECUENTE');
+  }
+  check('Recibe la bienvenida de cliente frecuente (aceptó promociones)', !!bienvenida);
+  const otraMesa = (await req('GET', '/mesas', null, mozoF)).body.find((m) => m.estado === 'LIBRE' && m.id !== mF.id);
+  const qrF2 = (await req('GET', `/qr/${otraMesa.numero}`)).body;
+  const pCombo = await req('POST', '/qr/pedidos', { token: qrF2.token, items: [itemCombo] }, null, X);
+  check('El cliente frecuente pide su combo exclusivo', pCombo.status === 201, JSON.stringify(pCombo.body));
+  const off = await req('PATCH', '/frecuentes/yo/promociones', { acepta: false }, null, X);
+  check('Retira su permiso de promociones', off.body.aceptaPromociones === false);
+
+  // Código por correo y compra en caja dictando el correo
+  const codC = await req('POST', '/frecuentes/codigo', { contacto: correoF.toUpperCase() });
+  check('Pide código por correo', codC.status === 201 && codC.body.canal === 'CORREO', JSON.stringify(codC.body));
+  let correo;
+  for (let i = 0; i < 4 && !correo; i++) {
+    correo = (await req('GET', '/correo/bandeja')).body.correos.find((c) => c.destino === correoF);
+    if (!correo) await espera(500);
+  }
+  const codigoC = correo?.texto.match(/(\d{6})/)?.[1];
+  check('El código llega a la bandeja de correo', !!codigoC);
+  const verC = await req('POST', '/frecuentes/verificar', { contacto: correoF, codigo: codigoC });
+  check('Confirma el correo (sin promociones)', !!verC.body.token && verC.body.cliente?.canal === 'CORREO' && verC.body.cliente?.aceptaPromociones === false, JSON.stringify(verC.body));
+  const llevarF = await req('POST', '/despacho/pedidos', { canal: 'LLEVAR', nombreCliente: 'Correo', items: [itemCuarto()] }, cajaF);
+  const cobF = await req('POST', `/cuentas/${llevarF.body.cuentaId}/cobrar`, { pagos: [{ medio: 'EFECTIVO', monto: 24, recibido: 50 }], comprobante: { tipo: 'BOLETA', clienteFrecuente: correoF } }, cajaF);
+  check('Cobro en caja con el correo del cliente', cobF.status === 201, JSON.stringify(cobF.body));
+  check('La compra en caja suma a su programa', (await req('GET', '/frecuentes/yo', null, null, { 'X-Cliente': verC.body.token })).body.compras === 1);
+
+  const res = (await req('GET', '/admin/clientes-frecuentes', null, admF)).body;
+  check('Reporte del administrador', res.registrados >= 2 && res.frecuentes >= 1, JSON.stringify({ r: res.registrados, f: res.frecuentes }));
+  check('El mozo no ve el reporte de clientes', (await req('GET', '/admin/clientes-frecuentes', null, mozoF)).status === 403);
+  await req('PATCH', '/admin/config/frecuente_compras', { valor: 5 }, admF);
+}
 
 // ---------------------------------------------------------------- Programado liberado por el reloj
 let liberado = false;

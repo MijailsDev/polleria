@@ -20,6 +20,9 @@ const POR_DEFECTO: Record<string, unknown> = {
   impresora_caja: '',
   celular_dueno: '',
   exigir_equipo_vinculado: false,
+  frecuente_compras: 5,
+  frecuente_dias: 60,
+  frecuente_monto_minimo: 10,
 };
 
 /** Parámetros del local que el administrador cambia sin programar (tabla configuracion). */
@@ -59,6 +62,8 @@ export class ConfigService implements OnModuleInit {
     if (clave.startsWith('impresora_') && v && !/^[0-9]{1,3}(\.[0-9]{1,3}){3}(:[0-9]{2,5})?$/.test(String(v))) throw new Error('Escribe la IP de la impresora, por ejemplo 192.168.1.50 o 192.168.1.50:9100.');
     if (clave === 'celular_dueno' && v && !/^9[0-9]{8}$/.test(String(v))) throw new Error('El celular debe tener 9 dígitos y empezar con 9.');
     if (clave === 'ruc_emisor' && !/^(10|20)[0-9]{9}$/.test(String(v))) throw new Error('RUC inválido.');
+    if ((clave === 'frecuente_compras' || clave === 'frecuente_dias') && !(Number.isInteger(v) && Number(v) >= 1 && Number(v) <= 365))
+      throw new Error('Escribe un número entero entre 1 y 365.');
     await this.prisma.configuracion.upsert({
       where: { clave },
       update: { valor: v as Prisma.InputJsonValue, actualizado_en: new Date() },

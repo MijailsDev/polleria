@@ -10,13 +10,15 @@ import { PedirPin } from '@/components/PedirPin';
 import { Reporte, ReporteZ } from '@/components/caja/Turno';
 import { Reclamos, Sistema, Sunat } from '@/components/admin/Operacion';
 import { Seguridad } from '@/components/admin/Seguridad';
+import { ClientesFrecuentes } from '@/components/admin/ClientesFrecuentes';
 
-type Pestana = 'usuarios' | 'seguridad' | 'carta' | 'mesas' | 'config' | 'turnos' | 'sunat' | 'reclamos' | 'sistema' | 'bitacora';
+type Pestana = 'usuarios' | 'seguridad' | 'carta' | 'clientes' | 'mesas' | 'config' | 'turnos' | 'sunat' | 'reclamos' | 'sistema' | 'bitacora';
 type Avisar = (a: { texto: string; tipo?: 'error' | 'ok' }) => void;
 const PESTANAS: [Pestana, string, NombreIcono][] = [
   ['usuarios', 'Usuarios', 'usuarios'],
   ['seguridad', 'Equipos y seguridad', 'escudo'],
   ['carta', 'Carta y precios', 'llama'],
+  ['clientes', 'Clientes frecuentes', 'estrella'],
   ['mesas', 'Mesas', 'mesa'],
   ['config', 'Configuración', 'ajustes'],
   ['turnos', 'Turnos', 'billete'],
@@ -49,6 +51,7 @@ export default function PaginaAdmin() {
         {pestana === 'usuarios' && <Usuarios alAviso={setAviso} miId={sesion.usuario.id} />}
         {pestana === 'seguridad' && <Seguridad alAviso={setAviso} />}
         {pestana === 'carta' && <CartaAdmin alAviso={setAviso} />}
+        {pestana === 'clientes' && <ClientesFrecuentes alAviso={setAviso} />}
         {pestana === 'mesas' && <Mesas alAviso={setAviso} />}
         {pestana === 'config' && <Configuracion alAviso={setAviso} />}
         {pestana === 'turnos' && <Turnos alAviso={setAviso} />}
@@ -208,6 +211,10 @@ const ETIQUETA: Record<string, string> = {
   impresora_cocina: 'Ticketera del pollero (IP)',
   impresora_caja: 'Ticketera de caja (IP)',
   celular_dueno: 'Celular del dueño (alertas por WhatsApp)',
+  exigir_equipo_vinculado: 'Exigir equipo vinculado',
+  frecuente_compras: 'Cliente frecuente: compras necesarias',
+  frecuente_dias: 'Cliente frecuente: días que se cuentan',
+  frecuente_monto_minimo: 'Cliente frecuente: compra mínima (S/)',
 };
 
 function Configuracion({ alAviso }: { alAviso: Avisar }) {

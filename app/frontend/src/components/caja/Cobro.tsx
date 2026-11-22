@@ -35,6 +35,7 @@ export function Cobro({
   const [tipo, setTipo] = useState<'BOLETA' | 'FACTURA'>('BOLETA');
   const [documento, setDocumento] = useState('');
   const [nombre, setNombre] = useState('');
+  const [frecuente, setFrecuente] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [precuenta, setPrecuenta] = useState(false);
   const [descuento, setDescuento] = useState(false);
@@ -82,7 +83,7 @@ export function Cobro({
           recibido: p.medio === 'EFECTIVO' && p.recibido ? Number(p.recibido) : undefined,
           numeroOperacion: p.medio !== 'EFECTIVO' ? p.numeroOperacion : undefined,
         })),
-        comprobante: { tipo, documento: documento.trim() || undefined, nombre: nombre.trim() || undefined },
+        comprobante: { tipo, documento: documento.trim() || undefined, nombre: nombre.trim() || undefined, clienteFrecuente: frecuente.trim() || undefined },
       });
       alCobrar(r);
     } catch (e: any) {
@@ -282,6 +283,14 @@ export function Cobro({
               </button>
             </div>
             <input className="campo mt-2" placeholder="Nombre o razón social" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-bold">
+              <Ico n="estrella" className="text-amber-500" /> Cliente frecuente (opcional)
+            </h3>
+            <input className="campo" placeholder="Celular o correo con que se registró" value={frecuente} onChange={(e) => setFrecuente(e.target.value)} />
+            <p className="mt-1 text-xs text-slate-500">Si el cliente está en el programa, esta compra le suma. En delivery se usa su celular automáticamente.</p>
           </div>
 
           <button className="btn-verde w-full text-lg" disabled={falta !== 0 || objetivo <= 0 || enviando} onClick={cobrar}>

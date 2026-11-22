@@ -30,6 +30,8 @@ export interface DatosPedido {
   nombreCliente?: string | null;
   codigoPlataforma?: string | null;
   horaProgramada?: Date | null;
+  /** false = el pedido no puede llevar combos exclusivos (comensal sin identificarse como frecuente). */
+  exclusivos?: boolean;
 }
 
 export const INCLUIR_COMANDA = {
@@ -125,7 +127,7 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
    * Valida los ítems contra la carta (RN-01: modificadores obligatorios, agotados)
    * y calcula el precio de cada uno con sus recargos.
    */
-  private async prepararItems(items: ItemEntrada[], tx: Tx, canal = 'SALON') {
+  private async prepararItems(items: ItemEntrada[], tx: Tx, canal = 'SALON', exclusivos = true) {
     if (!Array.isArray(items) || items.length === 0) throw new BadRequestException('El pedido no tiene productos.');
     const ids = [...new Set(items.map((i) => i.productoId))];
     const productos = await tx.producto.findMany({
@@ -140,6 +142,7 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
       const p = productos.find((x) => x.id === it.productoId);
       if (!p || !p.activo) throw new BadRequestException('Uno de los productos ya no está en la carta.');
       if (p.agotado) throw new BadRequestException(`El producto «${p.nombre}» se agotó hace un momento. Por favor elige otra opción.`);
+      if (p.solo_frecuentes && !exclusivos) throw new BadRequestException(`«${p.nombre}» es solo para clientes frecuentes. Identifícate en la carta para pedirlo.`);
       const faltante = p.componentes.find((c) => c.componente.agotado || !c.componente.activo);
       if (faltante) throw new BadRequestException(`«${p.nombre}» no está disponible: se agotó ${faltante.componente.nombre}.`);
       const cantidad = Math.trunc(Number(it.cantidad));
@@ -181,7 +184,7 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
       const previo = await tx.pedido.findUnique({ where: { clave_idempotencia: datos.clave } });
       if (previo) return { pedido: previo, repetido: true };
     }
-    const items = await this.prepararItems(datos.items, tx, datos.canal);
+    const items = await this.prepararItems(datos.items, tx, datos.canal, datos.exclusivos !== false);
     const pedido = await tx.pedido.create({
       data: {
         cuenta_id: datos.cuentaId,
@@ -655,14 +658,14 @@ export class PedidosService implements OnModuleInit, OnModuleDestroy {
 
   // ---------------------------------------------------------------- Comensal (QR)
 
-  async crearDesdeQR(token: string, items: ItemEntrada[], clave?: string) {
+  async crearDesdeQR(token: string, items: ItemEntrada[], clave?: string, exclusivos = false) {
     const { mesa, sesion, maestra } = await this.salon.validarToken(token);
     if (maestra.estado === 'POR_LIMPIAR') throw new BadRequestException('La cuenta de esta mesa ya se cerró. Pide ayuda al mozo para un nuevo pedido.');
     const r = await this.prisma.$transaction(async (tx) => {
       const { cuenta } = await this.salon.sesionAbierta(mesa.id, tx);
       if (cuenta.sesion_mesa_id !== sesion.id) throw new BadRequestException('La atención de esta mesa cambió. Vuelve a escanear el QR.');
       await this.verificarSinPagoEnCurso(tx, cuenta.id);
-      const res = await this.registrar(tx, { cuentaId: cuenta.id, canal: 'SALON', estado: 'POR_CONFIRMAR', registradoPor: null, items, clave });
+      const res = await this.registrar(tx, { cuentaId: cuenta.id, canal: 'SALON', estado: 'POR_CONFIRMAR', registradoPor: null, items, clave, exclusivos });
       if (!res.repetido) await this.recalcularEstadoMesa(tx, mesa.id);
       return res;
     });

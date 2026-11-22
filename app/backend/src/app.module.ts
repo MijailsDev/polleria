@@ -16,6 +16,7 @@ import { ReportesModule } from './reportes/reportes.module';
 import { PerifericosModule } from './perifericos/perifericos.module';
 import { ReclamosModule } from './reclamos/reclamos.module';
 import { SistemaModule } from './sistema/sistema.module';
+import { ClientesModule } from './clientes/clientes.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { SistemaModule } from './sistema/sistema.module';
     ReportesModule,
     ReclamosModule,
     SistemaModule,
+    ClientesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

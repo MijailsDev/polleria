@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards, Headers } from '@nestjs/common';
 import { ItemEntrada, PedidosService } from './pedidos.service';
 import { AuthGuard, EquipoGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { ClientesService } from '../clientes/clientes.service';
 
 @Controller()
 export class PedidosController {
-  constructor(private pedidos: PedidosService) {}
+  constructor(private pedidos: PedidosService, private clientes: ClientesService) {}
 
   @Post('pedidos')
   @UseGuards(AuthGuard)
@@ -100,8 +101,8 @@ export class PedidosController {
 
   // Públicos: celular del comensal
   @Post('qr/pedidos')
-  crearQR(@Body() body: { token: string; items: ItemEntrada[]; clave?: string }) {
-    return this.pedidos.crearDesdeQR(body.token, body.items, body.clave);
+  async crearQR(@Body() body: { token: string; items: ItemEntrada[]; clave?: string }, @Headers('x-cliente') cliente?: string) {
+    return this.pedidos.crearDesdeQR(body.token, body.items, body.clave, await this.clientes.esFrecuentePorToken(cliente));
   }
 
   @Post('qr/pedidos/:id/cancelar')

@@ -9,6 +9,7 @@ import { EventosGateway } from '../eventos/eventos.gateway';
 import { SalonService } from '../salon/salon.service';
 import { ComprobantesService, RE_DNI, RE_RUC } from '../caja/comprobantes.service';
 import { WhatsappService } from '../perifericos/whatsapp.service';
+import { ClientesService } from '../clientes/clientes.service';
 
 export interface EventoPasarela {
   intentoId: string;
@@ -63,6 +64,7 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
     private eventos: EventosGateway,
     private bitacora: BitacoraService,
     private whatsapp: WhatsappService,
+    private clientes: ClientesService,
   ) {}
 
   onModuleInit() {
@@ -88,7 +90,7 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
    * El comensal pulsa «Pagar» en la carta QR: elige su parte (cuenta dividida), el comprobante
    * con su DNI o RUC, la propina y el celular donde recibirá la boleta (F-09).
    */
-  async iniciar(o: OpcionesPago) {
+  async iniciar(o: OpcionesPago, tokenCliente?: string) {
     if (this.config.booleano('sin_internet')) throw new ServiceUnavailableException('El pago en línea no está disponible ahora. Pide la cuenta y paga en caja.');
     await this.expirar();
     const { sesion, maestra } = await this.salon.validarToken(o.token);
@@ -121,6 +123,8 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
         nombre_cliente: nombre,
         celular,
         enlace_base: enlaceBase,
+        // Programa de clientes frecuentes: la compra se suma cuando el pago se aprueba
+        cliente_frecuente_id: await this.clientes.idValido(tokenCliente),
         expira_en: new Date(Date.now() + 10 * 60_000),
       },
     });
@@ -219,6 +223,7 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
       await tx.pago.create({ data: { cuenta_id: cuenta.id, medio: ev.medio, monto: aSoles(monto), propina: aSoles(aCentimos(ev.propina ?? 0)), id_transaccion: ev.idTransaccion } });
       const comp = await this.comprobantes.emitir(tx, { cuentaId: cuenta.id, tipo: i.tipo_comprobante === 'FACTURA' ? 'FACTURA' : 'BOLETA', total: monto, documento: i.documento, nombre: i.nombre_cliente });
       await tx.pago_en_linea.update({ where: { id: i.id }, data: { comprobante_id: comp.id } });
+      if (i.cliente_frecuente_id) await this.clientes.registrarCompra(tx, i.cliente_frecuente_id, cuenta.id, monto);
       const c = await recalcularCuenta(tx, cuenta.id);
       const mesa = cuenta.sesion_mesa?.mesa;
       if (c.estado === 'PAGADA' && mesa) await this.salon.estadoMesa(tx, mesa.id, 'POR_LIMPIAR');
@@ -227,6 +232,7 @@ export class PagosService implements OnModuleInit, OnModuleDestroy {
     });
     if (r) {
       await this.comprobantes.enviarAhora([r.comprobanteId]);
+      await this.clientes.despuesDeCompra(i.cliente_frecuente_id).catch(() => undefined);
       // REQ-FAC-06: la boleta llega al WhatsApp del comensal si dejó su celular
       if (i.celular && i.enlace_base) {
         const nombreComp = i.tipo_comprobante === 'FACTURA' ? 'factura' : 'boleta';

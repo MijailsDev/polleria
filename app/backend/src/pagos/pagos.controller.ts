@@ -10,8 +10,8 @@ export class PagosController {
   constructor(private pagos: PagosService, private comprobantes: ComprobantesService, private salon: SalonService) {}
 
   @Post('qr/pago/iniciar')
-  iniciar(@Body() body: OpcionesPago) {
-    return this.pagos.iniciar(body);
+  iniciar(@Body() body: OpcionesPago, @Headers('x-cliente') cliente?: string) {
+    return this.pagos.iniciar(body, cliente);
   }
 
   /** El comensal busca su nombre con su DNI o RUC para el comprobante (solo con el token de su mesa). */

@@ -76,23 +76,24 @@ model comprobante {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model cuenta {
-  id                                       String          @id(map: "pk_cuenta") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sesion_mesa_id                           String?         @db.Uuid
-  total                                    Decimal         @default(0) @db.Decimal(10, 2)
-  saldo                                    Decimal         @default(0) @db.Decimal(10, 2)
-  estado                                   String          @default("ABIERTA") @db.VarChar(20)
-  creada_en                                DateTime        @default(now()) @db.Timestamptz(6)
-  descuento                                Decimal         @default(0) @db.Decimal(10, 2)
-  motivo_descuento                         String?         @db.VarChar(150)
-  motivo_anulacion                         String?         @db.VarChar(150)
-  bolsas                                   Int             @default(0) @db.SmallInt
+  id                                       String           @id(map: "pk_cuenta") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesion_mesa_id                           String?          @db.Uuid
+  total                                    Decimal          @default(0) @db.Decimal(10, 2)
+  saldo                                    Decimal          @default(0) @db.Decimal(10, 2)
+  estado                                   String           @default("ABIERTA") @db.VarChar(20)
+  creada_en                                DateTime         @default(now()) @db.Timestamptz(6)
+  descuento                                Decimal          @default(0) @db.Decimal(10, 2)
+  motivo_descuento                         String?          @db.VarChar(150)
+  motivo_anulacion                         String?          @db.VarChar(150)
+  bolsas                                   Int              @default(0) @db.SmallInt
   calificacion                             calificacion?
+  compra_cliente                           compra_cliente[]
   comprobante                              comprobante[]
-  sesion_mesa                              sesion_mesa?    @relation(fields: [sesion_mesa_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuenta_sesion_mesa_id")
+  sesion_mesa                              sesion_mesa?     @relation(fields: [sesion_mesa_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuenta_sesion_mesa_id")
   pago                                     pago[]
   pago_en_linea                            pago_en_linea[]
   pedido                                   pedido[]
-  pedido_pedido_cuenta_original_idTocuenta pedido[]        @relation("pedido_cuenta_original_idTocuenta")
+  pedido_pedido_cuenta_original_idTocuenta pedido[]         @relation("pedido_cuenta_original_idTocuenta")
 
   @@index([sesion_mesa_id], map: "ix_cuenta_sesion_mesa")
 }
@@ -293,6 +294,7 @@ model producto {
   activo                Boolean                 @default(true)
   agotado               Boolean                 @default(false)
   descripcion           String?                 @db.VarChar(200)
+  solo_frecuentes       Boolean                 @default(false)
   grupo_modificador     grupo_modificador[]
   item_pedido           item_pedido[]
   movimiento_inventario movimiento_inventario[]
@@ -349,9 +351,9 @@ model usuario {
   password_hash         String?                 @db.VarChar(100)
   intentos_fallidos     Int                     @default(0) @db.SmallInt
   activo                Boolean                 @default(true)
+  creado_en             DateTime                @default(now()) @db.Timestamptz(6)
   totp_secreto          String?                 @db.VarChar(64)
   totp_activo           Boolean                 @default(false)
-  creado_en             DateTime                @default(now()) @db.Timestamptz(6)
   bitacora              bitacora[]
   equipo                equipo[]
   movimiento_caja       movimiento_caja[]
@@ -373,23 +375,25 @@ model configuracion {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model pago_en_linea {
-  id               String       @id(map: "pk_pago_en_linea") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cuenta_id        String       @db.Uuid
-  monto            Decimal      @db.Decimal(10, 2)
-  medio            String?      @db.VarChar(20)
-  estado           String       @default("PENDIENTE") @db.VarChar(15)
-  id_transaccion   String?      @unique(map: "uq_pago_en_linea_transaccion") @db.VarChar(60)
-  creado_en        DateTime     @default(now()) @db.Timestamptz(6)
-  expira_en        DateTime     @default(dbgenerated("(now() + '00:10:00'::interval)")) @db.Timestamptz(6)
-  tipo_comprobante String       @default("BOLETA") @db.VarChar(10)
-  documento        String?      @db.VarChar(11)
-  nombre_cliente   String?      @db.VarChar(120)
-  propina          Decimal      @default(0) @db.Decimal(10, 2)
-  celular          String?      @db.VarChar(9)
-  enlace_base      String?      @db.VarChar(120)
-  comprobante_id   String?      @db.Uuid
-  comprobante      comprobante? @relation(fields: [comprobante_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_en_linea_comprobante")
-  cuenta           cuenta       @relation(fields: [cuenta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_en_linea_cuenta_id")
+  id                   String             @id(map: "pk_pago_en_linea") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cuenta_id            String             @db.Uuid
+  monto                Decimal            @db.Decimal(10, 2)
+  medio                String?            @db.VarChar(20)
+  estado               String             @default("PENDIENTE") @db.VarChar(15)
+  id_transaccion       String?            @unique(map: "uq_pago_en_linea_transaccion") @db.VarChar(60)
+  creado_en            DateTime           @default(now()) @db.Timestamptz(6)
+  expira_en            DateTime           @default(dbgenerated("(now() + '00:10:00'::interval)")) @db.Timestamptz(6)
+  tipo_comprobante     String             @default("BOLETA") @db.VarChar(10)
+  documento            String?            @db.VarChar(11)
+  nombre_cliente       String?            @db.VarChar(120)
+  propina              Decimal            @default(0) @db.Decimal(10, 2)
+  celular              String?            @db.VarChar(9)
+  enlace_base          String?            @db.VarChar(120)
+  comprobante_id       String?            @db.Uuid
+  cliente_frecuente_id String?            @db.Uuid
+  cliente_frecuente    cliente_frecuente? @relation(fields: [cliente_frecuente_id], references: [id], onUpdate: NoAction, map: "fk_pago_en_linea_cliente_frecuente_id")
+  comprobante          comprobante?       @relation(fields: [comprobante_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_en_linea_comprobante")
+  cuenta               cuenta             @relation(fields: [cuenta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_pago_en_linea_cuenta_id")
 
   @@index([cuenta_id], map: "ix_pago_en_linea_cuenta")
 }
@@ -571,4 +575,65 @@ model equipo {
   creado_por   String?   @db.Uuid
   creado_en    DateTime  @default(now()) @db.Timestamptz(6)
   usuario      usuario?  @relation(fields: [creado_por], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_equipo_usuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model cliente_frecuente {
+  id                    String           @id(map: "pk_cliente_frecuente") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  celular               String?          @unique(map: "uq_cliente_frecuente_celular") @db.VarChar(9)
+  correo                String?          @unique(map: "uq_cliente_frecuente_correo") @db.VarChar(120)
+  nombre                String?          @db.VarChar(80)
+  acepta_promociones    Boolean          @default(false)
+  acepta_promociones_en DateTime?        @db.Timestamptz(6)
+  frecuente_desde       DateTime?        @db.Timestamptz(6)
+  creado_en             DateTime         @default(now()) @db.Timestamptz(6)
+  ultimo_ingreso        DateTime?        @db.Timestamptz(6)
+  compra_cliente        compra_cliente[]
+  pago_en_linea         pago_en_linea[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model codigo_verificacion {
+  id          String    @id(map: "pk_codigo_verificacion") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  canal       String    @db.VarChar(10)
+  destino     String    @db.VarChar(120)
+  codigo_hash String    @db.Char(64)
+  vence_en    DateTime  @db.Timestamptz(6)
+  intentos    Int       @default(0) @db.SmallInt
+  usado_en    DateTime? @db.Timestamptz(6)
+  creado_en   DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([destino, creado_en], map: "ix_codigo_verificacion_destino")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model compra_cliente {
+  cliente_id        String            @db.Uuid
+  cuenta_id         String            @db.Uuid
+  monto             Decimal           @default(0) @db.Decimal(10, 2)
+  creado_en         DateTime          @default(now()) @db.Timestamptz(6)
+  cliente_frecuente cliente_frecuente @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_compra_cliente_cliente_id")
+  cuenta            cuenta            @relation(fields: [cuenta_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_compra_cliente_cuenta_id")
+
+  @@id([cliente_id, cuenta_id], map: "pk_compra_cliente")
+  @@index([cliente_id, creado_en], map: "ix_compra_cliente_fecha")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model correo_saliente {
+  id         String    @id(map: "pk_correo_saliente") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  destino    String    @db.VarChar(120)
+  plantilla  String    @db.VarChar(40)
+  asunto     String    @db.VarChar(150)
+  texto      String
+  estado     String    @default("EN_COLA") @db.VarChar(12)
+  id_externo String?   @db.VarChar(80)
+  error      String?   @db.VarChar(250)
+  intentos   Int       @default(0) @db.SmallInt
+  creado_en  DateTime  @default(now()) @db.Timestamptz(6)
+  enviado_en DateTime? @db.Timestamptz(6)
 }

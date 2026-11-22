@@ -16,6 +16,7 @@ interface ProductoA {
   destino: string;
   activo: boolean;
   agotado: boolean;
+  soloFrecuentes?: boolean;
   descripcion: string | null;
   fotoUrl: string | null;
   precios: Record<string, number>;
@@ -188,7 +189,7 @@ function FilaProducto({ p, todos, abierto, alAbrir, guardar }: { p: ProductoA; t
         </td>
         <td>
           <button className="rounded-lg px-2 py-1 text-xs font-semibold text-brasa-700 hover:bg-brasa-50" onClick={alAbrir}>
-            {abierto ? 'Cerrar' : `Opciones (${p.grupos.length})${p.componentes.length ? ' · combo' : ''}${Object.keys(p.precios).length ? ' · precios' : ''}`}
+            {abierto ? 'Cerrar' : `Opciones (${p.grupos.length})${p.componentes.length ? ' · combo' : ''}${Object.keys(p.precios).length ? ' · precios' : ''}${p.soloFrecuentes ? ' · exclusivo' : ''}`}
           </button>
         </td>
       </tr>
@@ -197,6 +198,18 @@ function FilaProducto({ p, todos, abierto, alAbrir, guardar }: { p: ProductoA; t
           <td colSpan={6} className="bg-slate-50 p-3">
             <div className="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <FotoYDescripcion p={p} guardar={guardar} />
+              <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-5 w-5"
+                  checked={!!p.soloFrecuentes}
+                  onChange={(e) => editar({ soloFrecuentes: e.target.checked }, e.target.checked ? `${p.nombre}: solo para clientes frecuentes` : `${p.nombre}: visible para todos`)}
+                />
+                <span>
+                  <b>Solo clientes frecuentes</b>
+                  <span className="block text-sm text-slate-600">En la carta QR solo lo ve y lo pide quien se identificó y cumple la regla del programa.</span>
+                </span>
+              </label>
               <div className="rounded-xl border border-slate-200 bg-white p-3">
                 <div className="font-bold">Precio por canal</div>
                 <p className="mb-2 text-xs text-slate-500">Vacío = el mismo precio del salón ({soles(p.precio)}). Los pedidos anteriores conservan su precio.</p>

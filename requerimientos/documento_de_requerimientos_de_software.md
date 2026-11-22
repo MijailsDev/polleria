@@ -98,6 +98,7 @@ Los objetivos del software se alinean con el objetivo del negocio de **aumentar 
 13. **F-13 Inventario de pollos, mermas y anulaciones:** kardex por fracción y por presa, mermas justificadas, reposiciones y anulaciones auditadas.
 14. **F-14 Reportes y auditoría:** ventas, productos, tiempos de atención, mermas, anulaciones y bitácora de acciones.
 15. **F-15 Operación sin internet y sincronización:** funcionamiento en red local, colas de envío y sincronización segura con la nube.
+16. **F-16 Programa de clientes frecuentes:** registro opcional del comensal con su celular o su correo (sin contraseña), conteo de compras y combos exclusivos para quien viene seguido.
 
 ## 4. Clases y características de usuarios
 
@@ -518,6 +519,28 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
   * Conflicto de sincronización (el mismo registro cambió en local y en la nube): prevalece el dato del servidor local para operaciones del local y se registra el conflicto para revisión del administrador.
   * Sin internet, la carta QR para celulares con datos móviles no está disponible; los comensales conectados al WiFi de clientes siguen accediendo a la carta servida por el servidor local.
 
+### 6.16. F-16 Programa de clientes frecuentes
+* **Descripción:** Permite reconocer al comensal que viene seguido y premiarlo con combos exclusivos, sin obligar a nadie a crear una cuenta. El registro es opcional y se hace con el celular o el correo, que el cliente confirma con un código de un solo uso.
+* **Prioridad:** Media.
+* **Acciones iniciadoras y comportamiento esperado:**
+  1. En la carta QR, el comensal toca *¿Vienes seguido?* y escribe su celular o su correo; puede agregar su nombre y marcar, si quiere, que acepta recibir promociones.
+  2. El sistema le envía un código de 6 dígitos por WhatsApp (celular) o por correo; al escribirlo, queda identificado en ese celular sin necesidad de contraseña.
+  3. Cada compra pagada suma: al pagar desde la carta, al dictar su celular o correo en caja, o automáticamente en sus deliverys.
+  4. Al llegar a la meta (por defecto, 5 compras de al menos S/ 10 en los últimos 60 días) pasa a *Cliente frecuente*: en la carta aparece la sección *Para clientes frecuentes* con combos a precio especial y, si aceptó promociones, recibe un mensaje de bienvenida.
+* **Requerimientos funcionales:**
+  * **REQ-FRE-01:** El sistema debe permitir que el comensal se identifique, de forma opcional, con su celular (9 dígitos) o su correo, confirmándolo con un código de 6 dígitos enviado por WhatsApp o por correo, que vence a los 10 minutos, sirve una sola vez y admite como máximo 5 intentos.
+  * **REQ-FRE-02:** El sistema no debe pedir contraseña al comensal: tras confirmar el código, su celular guarda una sesión firmada por el servidor, que vence a los 90 días y que puede cerrar con *No soy yo*.
+  * **REQ-FRE-03:** El sistema debe sumar una compra por cada cuenta pagada del cliente identificado (pago desde la carta QR, cobro en caja con su celular o correo, o delivery con su celular), contando una sola vez cada visita.
+  * **REQ-FRE-04:** El administrador debe poder configurar la regla del programa (compras necesarias, días que se cuentan y compra mínima) y marcar qué productos son *solo para clientes frecuentes*.
+  * **REQ-FRE-05:** La carta QR debe mostrar los combos exclusivos solo al cliente frecuente identificado, y el servidor debe rechazar el pedido de un combo exclusivo de quien no lo es.
+  * **REQ-FRE-06:** El sistema debe enviar promociones solo a quien marcó que las acepta, guardar la fecha de ese permiso y permitir retirarlo en cualquier momento desde la carta.
+  * **REQ-FRE-07:** El administrador debe ver un reporte con los clientes registrados, los frecuentes, los que aceptan promociones, los que más compran y los combos exclusivos vendidos, con los contactos mostrados a medias.
+* **Respuesta ante errores y entradas inválidas:**
+  * Celular o correo con formato inválido: se rechaza con un mensaje claro antes de enviar el código.
+  * Código incorrecto: se avisa cuántos intentos quedan; al quinto error o al vencer, se debe pedir un código nuevo.
+  * Pedir códigos seguidos: se permite uno por minuto y cinco por hora para el mismo celular o correo.
+  * Sesión alterada o vencida: el servidor la rechaza y el comensal vuelve a identificarse; la carta se sigue usando con normalidad.
+
 ## 7. Reglas de negocio
 
 | ID | Regla | Requerimientos que la hacen cumplir |
@@ -541,6 +564,8 @@ El servidor Edge es la fuente de verdad durante la operación del local; la nube
 | **RN-17** | **Continuidad local.** La atención en salón, la impresión en cocina y el cobro en caja no se detienen por fallas de internet. | REQ-CON-01 a 06 |
 | **RN-18** | **Entrega digital opcional.** El comprobante digital (WhatsApp o correo) tiene la misma validez que el impreso; el número o correo del cliente se usa solo para ese envío, salvo que autorice expresamente otro uso. | REQ-FAC-06 |
 | **RN-19** | **Pedidos programados.** Se liberan a cocina 15 minutos antes de la hora pactada (configurable) para que el pollo llegue caliente. | REQ-DEL-02 |
+| **RN-20** | **Cliente frecuente.** Es cliente frecuente quien tiene al menos 5 compras pagadas de S/ 10 o más en los últimos 60 días (valores configurables); si deja de cumplirlo, vuelve a ser cliente normal hasta completar la meta otra vez. | REQ-FRE-03, REQ-FRE-04 |
+| **RN-21** | **Registro y promociones voluntarios.** Nadie está obligado a registrarse para pedir o pagar; las promociones se envían solo con permiso expreso, que el cliente puede retirar cuando quiera (Ley 29733). | REQ-FRE-01, REQ-FRE-06 |
 
 ## 8. Requerimientos de interfaces externas
 

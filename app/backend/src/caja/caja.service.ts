@@ -12,6 +12,7 @@ import { ComprobantesService, RE_DNI, RE_RUC } from './comprobantes.service';
 import { aCentimos, aSoles } from '../comun/dinero';
 import { ImpresionService } from '../perifericos/impresion.service';
 import { WhatsappService } from '../perifericos/whatsapp.service';
+import { ClientesService, normalizarContacto } from '../clientes/clientes.service';
 import { SincronizacionService } from '../perifericos/sincronizacion.service';
 
 export interface PagoEntrada {
@@ -24,6 +25,8 @@ export interface ComprobanteEntrada {
   tipo: 'BOLETA' | 'FACTURA';
   documento?: string;
   nombre?: string;
+  /** Celular o correo del cliente frecuente (opcional): la compra suma a su programa. */
+  clienteFrecuente?: string;
 }
 
 const CANALES: Record<string, string> = { SALON: 'Salón', LLEVAR: 'Para llevar', DELIVERY: 'Delivery', APP_EXTERNA: 'Apps' };
@@ -42,6 +45,7 @@ export class CajaService {
     private impresion: ImpresionService,
     private whatsapp: WhatsappService,
     private sync: SincronizacionService,
+    private clientes: ClientesService,
   ) {}
 
   // ---------------------------------------------------------------- Turnos (F-11)
@@ -359,6 +363,7 @@ export class CajaService {
     const tipo = comp?.tipo === 'FACTURA' ? 'FACTURA' : 'BOLETA';
     const documento = comp?.documento?.trim() || null;
     this.comprobantes.validarCliente(tipo, total, documento);
+    if (comp?.clienteFrecuente?.trim()) normalizarContacto(comp.clienteFrecuente);
 
     try {
       const r = await this.prisma.$transaction(async (tx) => {
@@ -388,14 +393,18 @@ export class CajaService {
             ? await this.comprobantes.emitir(tx, { cuentaId: cuenta.id, tipo, total: Math.min(total, pendiente), documento, nombre: comp?.nombre })
             : (await this.comprobantes.vigentes(tx, cuenta.id)).at(-1)!;
         const c = await recalcularCuenta(tx, cuenta.id);
+        // Programa de clientes frecuentes: el contacto que dicta el cliente o el celular del delivery
+        const contacto = comp?.clienteFrecuente?.trim() || (await tx.pedido_delivery.findFirst({ where: { pedido: { cuenta_id: cuenta.id } }, include: { cliente: true } }))?.cliente.celular;
+        const clienteFrecuente = await this.clientes.registrarCompraPorContacto(tx, contacto, cuenta.id, total);
         const mesaId = cuenta.sesion_mesa?.mesa_id ?? null;
         if (c.estado === 'PAGADA' && mesaId) await this.salon.estadoMesa(tx, mesaId, 'POR_LIMPIAR');
         await this.bitacora.registrar('COBRO', 'cuenta', cuenta.id, usuarioId, { total: aSoles(total), comprobante: numeroComprobante(comprobante.serie, comprobante.correlativo) }, tx);
-        return { comprobanteId: comprobante.id, nuevoSaldo: c.saldo, mesaId };
+        return { comprobanteId: comprobante.id, nuevoSaldo: c.saldo, mesaId, clienteFrecuente };
       });
       const efectivo = lineas.filter((l) => l.medio === 'EFECTIVO');
       const vuelto = efectivo.reduce((s, l) => s + ((l.recibido ?? l.monto) - l.monto), 0);
       await this.comprobantes.enviarAhora([r.comprobanteId]);
+      await this.clientes.despuesDeCompra(r.clienteFrecuente).catch(() => undefined);
       await this.comprobantes.imprimir(r.comprobanteId);
       if (efectivo.length) await this.impresion.abrirGaveta('Cobro en efectivo'); // REQ-CAJ-06
       this.eventos.emitir('mesas:cambio');
@@ -493,6 +502,7 @@ export class CajaService {
     if (!ps.length) throw new BadRequestException('Este repartidor no tiene entregas por liquidar.');
     const esperado = ps.reduce((s, d) => s + aCentimos(d.pedido.cuenta.saldo), 0);
     const comprobantes: string[] = [];
+    const frecuentes: (string | null)[] = [];
     await this.prisma.$transaction(async (tx) => {
       for (const d of ps) {
         const saldo = aCentimos(d.pedido.cuenta.saldo);
@@ -505,6 +515,8 @@ export class CajaService {
             comprobantes.push(c.id);
           }
           await recalcularCuenta(tx, d.pedido.cuenta_id);
+          // El cliente del delivery suma la compra si está en el programa de clientes frecuentes
+          frecuentes.push(await this.clientes.registrarCompraPorContacto(tx, d.cliente.celular, d.pedido.cuenta_id, saldo));
         }
         await tx.pedido_delivery.update({ where: { pedido_id: d.pedido_id }, data: { liquidado: true } });
       }
@@ -517,6 +529,7 @@ export class CajaService {
       }, tx);
     });
     await this.comprobantes.enviarAhora(comprobantes);
+    for (const id of frecuentes) await this.clientes.despuesDeCompra(id).catch(() => undefined);
     await this.impresion.abrirGaveta('Liquidación de repartidor');
     this.eventos.emitir('despacho:cambio');
     return { pedidos: ps.length, esperado: aSoles(esperado), rendido: Number(rendido), diferencia: aSoles(aCentimos(rendido) - esperado), comprobantes };

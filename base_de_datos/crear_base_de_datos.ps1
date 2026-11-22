@@ -64,6 +64,7 @@ try {
   Ejecutar 'polleria_app' 'polleria' '07_comensal.sql'
   Ejecutar 'polleria_app' 'polleria' '08_seguridad.sql'
   Ejecutar 'polleria_app' 'polleria' '09_octavos.sql'
+  Ejecutar 'polleria_app' 'polleria' '10_clientes_frecuentes.sql'
   Ejecutar 'polleria_app' 'polleria' '04_verificar.sql'
 
   # Cadena de conexión para el backend (el archivo .env no se sube a GitHub)

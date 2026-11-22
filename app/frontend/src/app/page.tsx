@@ -19,6 +19,7 @@ const PANTALLAS = [
 const SIMULADORES = [
   { href: '/impresoras', img: FOTOS.pagoPos, titulo: 'Impresoras térmicas', texto: 'Lo que sale por la ticketera del pollero y la de caja (ESC/POS de 80 mm).' },
   { href: '/whatsapp', img: FOTOS.atencion, titulo: 'WhatsApp de los clientes', texto: 'Comprobantes, avisos de delivery y respuestas a reclamos que envía el sistema.' },
+  { href: '/correo', img: FOTOS.atencion, titulo: 'Correo de los clientes', texto: 'Códigos de verificación y avisos del programa de clientes frecuentes que llegan por correo.' },
   { href: '/reclamaciones', img: FOTOS.mesaFamiliar, titulo: 'Libro de Reclamaciones', texto: 'Formulario público para registrar un reclamo o queja y consultar la respuesta.' },
 ];
 

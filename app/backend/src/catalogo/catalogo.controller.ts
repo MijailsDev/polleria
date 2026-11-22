@@ -1,18 +1,23 @@
-import { Body, Controller, Get, Param, Patch, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { CatalogoService } from './catalogo.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { ClientesService } from '../clientes/clientes.service';
 
 @Controller()
 export class CatalogoController {
-  constructor(private catalogo: CatalogoService) {}
+  constructor(private catalogo: CatalogoService, private clientes: ClientesService) {}
 
-  /** Pública: la usa la carta QR del comensal. */
+  /**
+   * Pública: la usa la carta QR del comensal. Los combos exclusivos solo aparecen si la
+   * cabecera X-Cliente es de un cliente frecuente.
+   */
   @Get('carta')
-  carta(@Query('canal') canal?: string) {
-    return this.catalogo.carta(['LLEVAR', 'DELIVERY', 'APP_EXTERNA'].includes(canal ?? '') ? canal : 'SALON');
+  async carta(@Query('canal') canal?: string, @Headers('x-cliente') cliente?: string) {
+    const frecuente = await this.clientes.esFrecuentePorToken(cliente);
+    return this.catalogo.carta(['LLEVAR', 'DELIVERY', 'APP_EXTERNA'].includes(canal ?? '') ? canal : 'SALON', frecuente);
   }
 
   @Get('carta/destacados')

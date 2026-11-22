@@ -7,6 +7,8 @@ import { SelectorProducto } from '@/components/SelectorProducto';
 import { PanelPago } from '@/components/comensal/PanelPago';
 import { Calificar } from '@/components/comensal/Calificar';
 import { BotonLectura } from '@/components/comensal/Lectura';
+import { ClienteFrecuente } from '@/components/comensal/ClienteFrecuente';
+import { EstadoCliente, leerCliente, olvidarCliente } from '@/lib/cliente';
 import { Foto } from '@/components/Foto';
 import { Emblema, Logo } from '@/components/Logo';
 import { Campana, Check, Estrella, Lapiz, Libro, Lupa, Mas, Recibo, Reloj, Repetir } from '@/components/Iconos';
@@ -57,6 +59,9 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
   const [clave, setClave] = useState(uuid);
   const [enviando, setEnviando] = useState(false);
   const [, setTic] = useState(0);
+  // Programa de clientes frecuentes (opcional)
+  const [cliente, setCliente] = useState<EstadoCliente | null>(null);
+  const [verFrecuente, setVerFrecuente] = useState(false);
   const pie = useRef<HTMLElement>(null);
   const [altoPie, setAltoPie] = useState(140);
 
@@ -96,6 +101,11 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
     cargarCarta().catch(() => {});
     api<string[]>('GET', '/carta/destacados').then(setDestacados).catch(() => {});
     if (window.location.hash === '#cuenta') setVista('cuenta'); // al volver de la pasarela
+    // Si el comensal ya se identificó antes en este celular, se recupera su avance
+    if (leerCliente())
+      api<EstadoCliente>('GET', '/frecuentes/yo')
+        .then(setCliente)
+        .catch((e: ErrorApi) => (e.status === 401 || e.status === 404) && olvidarCliente());
     api<{ demora: boolean }>('GET', '/cocina/carga').then((c) => setDemora(c.demora)).catch(() => {});
     // El tiempo estimado se actualiza solo cada minuto
     const t = setInterval(() => setTic((x) => x + 1), 60_000);
@@ -124,6 +134,15 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
     },
     [mesaId, token],
   );
+
+  /** Al identificarse o salir, la carta se recarga: muestra u oculta los combos exclusivos. */
+  function cambiarCliente(c: EstadoCliente | null) {
+    const eraFrecuente = cliente?.frecuente;
+    setCliente(c);
+    cargarCarta().catch(() => {});
+    if (c?.frecuente && !eraFrecuente) avisar('¡Eres cliente frecuente! Tus combos exclusivos ya están en la carta.');
+    if (!c) setVerFrecuente(false);
+  }
 
   function avisar(texto: string, tipo: 'ok' | 'error' = 'ok') {
     setMensaje({ texto, tipo });
@@ -226,6 +245,11 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
       <span className="relative block aspect-[4/3] w-full overflow-hidden bg-brasa-50">
         <Foto src={fotoProducto(x.p, x.categoria)} inicial={x.p.nombre} className="h-full w-full transition duration-500 group-hover:scale-105" />
         {x.p.agotado && <span className="absolute left-2 top-2 rounded-full bg-slate-900/85 px-3 py-1 text-sm font-semibold text-white">Agotado por ahora</span>}
+        {x.p.soloFrecuentes && !x.p.agotado && (
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-amber-950 shadow">
+            <Estrella llena className="h-3.5 w-3.5" /> Exclusivo
+          </span>
+        )}
       </span>
       <span className="flex flex-1 flex-col p-3">
         <span className="break-words text-lg font-bold leading-snug text-slate-900">{x.p.nombre}</span>
@@ -281,6 +305,27 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
 
       {vista === 'carta' && (
         <>
+          <button
+            className={`mx-4 mt-3 flex w-[calc(100%-2rem)] items-center gap-3 rounded-2xl p-3 text-left ring-1 ${cliente?.frecuente ? 'bg-amber-50 ring-amber-300' : 'bg-brasa-50 ring-brasa-100'}`}
+            onClick={() => setVerFrecuente(true)}
+          >
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-400 text-amber-950">
+              <Estrella llena className="h-6 w-6" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-bold leading-tight text-slate-900">
+                {!cliente ? '¿Vienes seguido?' : cliente.frecuente ? 'Eres Cliente frecuente' : `Hola${cliente.nombre ? `, ${cliente.nombre.split(' ')[0]}` : ''} · ${cliente.compras} de ${cliente.meta} compras`}
+              </span>
+              <span className="block text-sm leading-snug text-slate-600">
+                {!cliente
+                  ? 'Identifícate con tu celular o correo y desbloquea combos exclusivos.'
+                  : cliente.frecuente
+                    ? 'Tus combos exclusivos están en «Para clientes frecuentes».'
+                    : `Te faltan ${cliente.faltan} para tus combos exclusivos.`}
+              </span>
+            </span>
+            <span aria-hidden className="text-2xl text-slate-400">›</span>
+          </button>
           <div className="relative px-4 pt-4">
             <Lupa className="pointer-events-none absolute left-8 top-1/2 mt-2 h-5 w-5 -translate-y-1/2 text-slate-500" />
             <input className="campo pl-12 text-lg" type="search" enterKeyHint="search" aria-label="Buscar en la carta" placeholder="Buscar (ej.: chicha, mostrito)" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
@@ -438,7 +483,7 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
               <p className="font-bold text-green-800">¡Cuenta pagada! Gracias por tu visita.</p>
             </div>
           ) : cuenta.saldo > 0 && token ? (
-            <PanelPago token={token} numero={numero} saldo={cuenta.saldo} totalCuenta={cuenta.total} disponible={cuenta.disponible} bloqueado={cuenta.porConfirmar} alError={(t) => avisar(t, 'error')} />
+            <PanelPago token={token} numero={numero} saldo={cuenta.saldo} totalCuenta={cuenta.total} disponible={cuenta.disponible} bloqueado={cuenta.porConfirmar} cliente={cliente} alIdentificar={() => setVerFrecuente(true)} alError={(t) => avisar(t, 'error')} />
           ) : null}
 
           {token && cuenta.pedidos.some((p) => p.estado === 'SERVIDO') && !cuenta.calificada && <Calificar token={token} alListo={() => (avisar('¡Gracias por tu opinión!'), cargarCuenta())} alError={(t) => avisar(t, 'error')} />}
@@ -481,6 +526,7 @@ export default function CartaQR({ params }: { params: Promise<{ numero: string }
           }}
         />
       )}
+      {verFrecuente && <ClienteFrecuente cliente={cliente} alCambiar={cambiarCliente} alCerrar={() => setVerFrecuente(false)} />}
       <footer className="mt-8 flex flex-wrap justify-center gap-x-5 px-4 text-sm text-slate-600">
         <a className="flex min-h-11 items-center gap-1 font-semibold underline" href="/reclamaciones">
           <Libro className="h-4 w-4" /> Libro de Reclamaciones

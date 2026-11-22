@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { soles } from '@/lib/util';
+import { EstadoCliente } from '@/lib/cliente';
 
 type Parte = 'todo' | 'dividir' | 'monto';
 type Comprobante = 'BOLETA' | 'DNI' | 'FACTURA';
@@ -21,6 +22,8 @@ export function PanelPago({
   totalCuenta,
   disponible,
   bloqueado,
+  cliente,
+  alIdentificar,
   alError,
 }: {
   token: string;
@@ -29,6 +32,8 @@ export function PanelPago({
   totalCuenta: number;
   disponible: number;
   bloqueado: boolean;
+  cliente: EstadoCliente | null;
+  alIdentificar: () => void;
   alError: (t: string) => void;
 }) {
   const router = useRouter();
@@ -194,6 +199,16 @@ export function PanelPago({
         <div className="mb-1 text-sm font-semibold">Recibe tu comprobante por WhatsApp (opcional)</div>
         <input className="campo" inputMode="numeric" maxLength={9} placeholder="Tu celular: 987654321" value={celular} onChange={(e) => setCelular(e.target.value.replace(/\D/g, ''))} />
       </section>
+
+      {cliente ? (
+        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+          <b>Cliente frecuente:</b> esta compra suma a tu programa ({cliente.frecuente ? `ya eres frecuente · ${cliente.compras} compras` : `${cliente.compras} de ${cliente.meta}`}).
+        </p>
+      ) : (
+        <button className="w-full rounded-xl bg-amber-50 p-3 text-left text-sm text-amber-900" onClick={alIdentificar}>
+          <b>¿Quieres que esta compra sume?</b> Identifícate como cliente frecuente con tu celular o correo <span className="underline">aquí</span>.
+        </button>
+      )}
 
       <div className="rounded-xl bg-slate-50 p-3 text-sm">
         <div className="flex justify-between">

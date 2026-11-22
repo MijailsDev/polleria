@@ -28,4 +28,5 @@ escribir('1_produccion', 'Preparación para producción: 06_produccion.', ['06_p
 escribir('2_comensal', 'Experiencia del comensal en la carta QR: 07_comensal.', ['07_comensal.sql']);
 escribir('3_seguridad', 'Equipos vinculados y verificación en dos pasos: 08_seguridad.', ['08_seguridad.sql']);
 escribir('4_octavos', 'Presas del octavo de pollo: 09_octavos.', ['09_octavos.sql']);
+escribir('5_clientes_frecuentes', 'Programa de clientes frecuentes: 10_clientes_frecuentes.', ['10_clientes_frecuentes.sql']);
 console.log('Migraciones generadas en', migraciones);

@@ -9,6 +9,8 @@ export interface Producto {
   destino: string;
   fotoUrl: string | null;
   agotado: boolean;
+  /** Combo exclusivo: solo lo ve y lo pide un cliente frecuente identificado. */
+  soloFrecuentes?: boolean;
   descripcion?: string | null;
   /** Contenido del combo, por ejemplo «1 Gaseosa 1.5 L» (REQ-CAT-03). */
   componentes?: string[];
